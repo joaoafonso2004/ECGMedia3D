@@ -39,6 +39,22 @@ function IconLogo() {
     </svg>
   );
 }
+function IconFolder() {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round"
+        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+    </svg>
+  );
+}
+function IconPerson() {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 20.25a8.25 8.25 0 0115 0" />
+    </svg>
+  );
+}
 function IconLogout() {
   return (
     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -52,9 +68,10 @@ function IconLogout() {
 const NAV_ITEMS = [
   { label: 'Dashboard',    href: '/admin/dashboard',    Icon: IconGrid },
   { label: 'Disciplinas',  href: '/admin/disciplinas',  Icon: IconBook },
+  { label: 'Projetos',     href: '/admin/projetos',     Icon: IconFolder },
   { label: 'Modelos 3D',   href: '/admin/modelos',      Icon: IconCube },
   { label: 'Logo',         href: '/admin/logo',         Icon: IconLogo },
-  { label: 'Gestores',     href: '/admin/gestores',     Icon: IconGrid },
+  { label: 'Gestores',     href: '/admin/gestores',     Icon: IconPerson },
 ];
 
 /* ─── Sidebar ───────────────────────────────────────────────────── */
