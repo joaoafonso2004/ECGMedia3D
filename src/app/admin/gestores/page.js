@@ -168,6 +168,7 @@ function GestorForm({ entidades, disciplinas, onSave, onCancel, saving }) {
 
 export default function GestoresPage() {
   const [gestores, setGestores] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(""); // <-- Estado da pesquisa
   const [entidades, setEntidades] = useState([]);
   const [disciplinas, setDisciplinas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -191,6 +192,7 @@ export default function GestoresPage() {
   const fetchGestores = useCallback(async () => {
     setLoading(true);
     const supabase = createSupabaseBrowser();
+    
     // Buscar utilizadores 
     const { data: users } = await supabase
       .from("utilizadores")
@@ -224,7 +226,7 @@ export default function GestoresPage() {
 
     // Mapear gestor -> disciplinas
     const gestoresComDisc = users
-      .filter(u => tipos?.some(t => t.id_utilizador === u.id_utilizadores && t.role === "gestor")) // <-- CORREÇÃO AQUI
+      .filter(u => tipos?.some(t => t.id_utilizador === u.id_utilizadores && t.role === "gestor"))
       .map(u => {
         const associaçõesDoGestor = (tipos || [])
           .filter(t => t.id_utilizador === u.id_utilizadores && t.role === "gestor_disciplina")
@@ -286,7 +288,6 @@ export default function GestoresPage() {
         })
       });
 
-      // Proteção extra para ajudar a detetar erros na API Route (Erro HTML vs JSON)
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
         throw new Error("A API falhou e devolveu HTML. Verifica se o ficheiro route.js está na pasta /api/create-gestor/ e não tem erros.");
@@ -298,7 +299,7 @@ export default function GestoresPage() {
         throw new Error(result.error || "Erro desconhecido ao criar o gestor.");
       }
 
-      setToast("Gestor criado com sucesso!");
+      showToast("Gestor criado com sucesso!");
       setModal(null);
       fetchGestores();
     } catch (err) {
@@ -308,6 +309,24 @@ export default function GestoresPage() {
       setSaving(false);
     }
   }
+
+  /* ─── Lógica Robusta de Filtragem ───────────────────────────── */
+  const filteredGestores = gestores.filter((g) => {
+    const q = searchQuery.toLowerCase();
+    
+    // Fallbacks para evitar crashes se houver campos a null
+    const nome = g.nome?.toLowerCase() || "";
+    const email = g.email?.toLowerCase() || "";
+    const entidade = g.entidade_nome?.toLowerCase() || "";
+    const programa = g.programa_nome?.toLowerCase() || "";
+
+    return (
+      nome.includes(q) ||
+      email.includes(q) ||
+      entidade.includes(q) ||
+      programa.includes(q)
+    );
+  });
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -337,6 +356,25 @@ export default function GestoresPage() {
         </button>
       </div>
 
+      {/* Barra de Pesquisa */}
+      <div className="mb-6">
+        <div className="relative">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-white/30">
+            {/* Ícone de Lupa */}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Pesquisar por nome, email, entidade ou programa..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-xl border border-white/10 bg-[#13131a] py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 focus:border-[#4f9eff]/50 focus:outline-none focus:ring-1 focus:ring-[#4f9eff]/30 transition shadow-sm"
+          />
+        </div>
+      </div>
+
       {/* Tabela */}
       <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
         {loading ? (
@@ -344,6 +382,10 @@ export default function GestoresPage() {
         ) : gestores.length === 0 ? (
           <div className="py-12 text-center text-sm text-white/25">
             Nenhum gestor encontrado.
+          </div>
+        ) : filteredGestores.length === 0 ? (
+          <div className="py-12 text-center text-sm text-white/25">
+            Nenhum gestor corresponde à pesquisa "{searchQuery}".
           </div>
         ) : (
           <table className="w-full text-sm">
@@ -357,10 +399,10 @@ export default function GestoresPage() {
               </tr>
             </thead>
             <tbody>
-              {gestores.map((g, i) => (
+              {filteredGestores.map((g, i) => (
                 <tr
                   key={g.id_utilizadores}
-                  className={`transition hover:bg-white/2 ${i !== gestores.length - 1 ? "border-b border-white/5" : ""}`}
+                  className={`transition hover:bg-white/2 ${i !== filteredGestores.length - 1 ? "border-b border-white/5" : ""}`}
                 >
                   <td className="px-5 py-3.5 font-medium text-white/85">{g.nome}</td>
                   <td className="px-5 py-3.5 text-white/60">{g.email}</td>

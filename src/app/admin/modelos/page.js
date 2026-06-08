@@ -26,7 +26,7 @@ function Modal({ title, onClose, children }) {
   );
 }
 
-/* ─── Formulário de novo modelo (COM SELEÇÃO DE DISCIPLINA) ──────── */
+/* ─── Formulário de novo modelo ──────────────────────────────────── */
 function NovoModeloForm({ onSave, onCancel, saving, disciplinas }) {
   const [titulo,    setTitulo]    = useState('');
   const [moduloId,  setModuloId]  = useState('');
@@ -256,13 +256,14 @@ function PreviewModel({ url, escala, animacaoTipo }) {
 
   return (
     <group ref={groupRef} position={[0, 0, PV_Z_START]} scale={[PV_S_START, PV_S_START, PV_S_START]}>
-      <primitive object={scene} />
+      <primitive object={scene.clone()} />
     </group>
   );
 }
 
 /* ─── Modal de edição com preview 3D ────────────────────────────── */
 function EditModelModal({ modelo, onClose, onSave, saving }) {
+  const [titulo,       setTitulo]       = useState(modelo.titulo ?? '');
   const [escala,       setEscala]       = useState(modelo.escala ?? 1.5);
   const [animacaoTipo, setAnimacaoTipo] = useState(modelo.animacao_tipo ?? 'zoom');
 
@@ -276,7 +277,8 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 bg-[#13131a] flex-shrink-0">
           <div>
             <h2 className="text-base font-semibold text-white">Editar Modelo</h2>
-            <p className="text-xs text-white/35 mt-0.5">{modelo.titulo}</p>
+            {/* O subtítulo agora mostra o estado atual dinamicamente em vez de apenas modelo.titulo */}
+            <p className="text-xs text-white/35 mt-0.5">{titulo}</p>
           </div>
           <button onClick={onClose} className="text-white/30 hover:text-white/70 transition text-2xl leading-none">×</button>
         </div>
@@ -298,9 +300,23 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
           </div>
 
           <div className="flex-1 bg-[#13131a] overflow-y-auto p-6 flex flex-col gap-6 border-l border-white/8">
+            
+            {/* Campo: Título do Modelo */}
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-3">Título do Modelo</label>
+              <input
+                type="text"
+                value={titulo}
+                onChange={e => setTitulo(e.target.value)}
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition"
+                placeholder="Ex: Motor V8"
+              />
+            </div>
+
+            {/* Campo: Escala */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-medium text-white/70">Escala</label>
+                <label className="text-sm font-medium text-white/70">Escala (Tamanho do Objeto)</label>
                 <span className="text-sm font-mono font-semibold text-[#4f9eff]">{escala.toFixed(1)}</span>
               </div>
               <input
@@ -310,6 +326,7 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
               />
             </div>
 
+            {/* Campo: Animação */}
             <div>
               <label className="block text-sm font-medium text-white/70 mb-3">Tipo de Animação</label>
               <div className="grid grid-cols-2 gap-2">
@@ -334,10 +351,11 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
 
             <div className="flex-1" />
 
+            {/* Botões do Modal */}
             <div className="flex gap-3 flex-shrink-0">
               <button
-                onClick={() => onSave({ escala, animacao_tipo: animacaoTipo })}
-                disabled={saving}
+                onClick={() => onSave({ titulo, escala, animacao_tipo: animacaoTipo })}
+                disabled={saving || !titulo.trim()}
                 className="flex-1 rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white
                            hover:bg-[#3d8aef] transition disabled:opacity-50"
               >
@@ -462,13 +480,13 @@ export default function ModelosPage() {
   }
 
   /* ─── Editar modelo ──────────────────────────────────────────── */
-  async function handleEdit({ escala, animacao_tipo }) {
+  async function handleEdit({ titulo, escala, animacao_tipo }) {
     setSavingEdit(true);
     const supabase = createSupabaseBrowser();
 
     const { error } = await supabase
       .from('media_items')
-      .update({ escala, animacao_tipo })
+      .update({ titulo: titulo.trim(), escala, animacao_tipo })
       .eq('id_media_items', editModelo.id_media_items);
 
     if (error) {
@@ -573,9 +591,22 @@ export default function ModelosPage() {
                   className={`transition hover:bg-white/2 ${i !== modelos.length - 1 ? 'border-b border-white/5' : ''}`}
                 >
                   <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base text-[#4f9eff]">🧊</span>
-                      <p className="font-medium text-white/85">{m.titulo ?? '—'}</p>
+                    <div className="flex items-center gap-3">
+                      {/* Mini Visualizador 3D na Tabela */}
+                      <div className="h-12 w-12 overflow-hidden rounded-md border border-white/10 bg-[#0c0c0f] flex-shrink-0 flex items-center justify-center">
+                        <Canvas
+                          camera={{ position: [0, 1, 0], fov: 45, near: 0.1, far: 200 }}
+                          gl={{ alpha: true, antialias: true }}
+                          style={{ width: '100%', height: '100%', background: 'transparent' }}
+                        >
+                          <ambientLight intensity={0.6} />
+                          <directionalLight position={[10, 10, 5]} intensity={1.5} />
+                          <Suspense fallback={null}>
+                            <PreviewModel url={m.url} escala={m.escala ?? 1.5} animacaoTipo={m.animacao_tipo ?? 'rotation'} />
+                          </Suspense>
+                        </Canvas>
+                      </div>
+                      <p className="font-medium text-white/85 truncate max-w-[150px]">{m.titulo ?? '—'}</p>
                     </div>
                   </td>
                   <td className="px-5 py-3.5 text-white/45 text-xs">
@@ -594,7 +625,7 @@ export default function ModelosPage() {
                       href={m.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-[#4f9eff]/60 hover:text-[#4f9eff] transition truncate block max-w-[150px]"
+                      className="text-xs text-[#4f9eff]/60 hover:text-[#4f9eff] transition truncate block max-w-[120px]"
                       title={m.url}
                     >
                       {m.url?.split('/').pop() ?? m.url}
@@ -674,7 +705,6 @@ export default function ModelosPage() {
           </div>
         </Modal>
       )}
-
 
     </div>
   );

@@ -95,7 +95,20 @@ function GaleriaProjeto({ id_projetos }) {
     fetchMedia();
   }
 
-  async function handleRemove(id) {
+  async function handleRemove(id, url) {
+    if (url) {
+      const fileName = url.split('/').pop();
+      try {
+        await fetch('/api/delete-file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName })
+        });
+      } catch (err) {
+        console.error('Erro ao comunicar com a API de eliminação:', err);
+      }
+    }
+
     const supabase = createSupabaseBrowser();
     await supabase.from('media_items').delete().eq('id_media_items', id);
     fetchMedia();
@@ -144,7 +157,7 @@ function GaleriaProjeto({ id_projetos }) {
               
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                 <button
-                  onClick={() => handleRemove(item.id_media_items)}
+                  onClick={() => handleRemove(item.id_media_items, item.url)}
                   className="text-xs font-semibold text-red-400 bg-red-500/20 px-3 py-1.5 rounded-md hover:bg-red-500 hover:text-white transition"
                 >
                   Remover
@@ -172,11 +185,9 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isN
     projeto_url: initial.projeto_url ?? '',
   });
   
-  // Ficheiro da capa
   const [file, setFile] = useState(null);
   const fileRef = useRef();
 
-  // Ficheiros da galeria (só usado se for um projeto NOVO)
   const [galleryFiles, setGalleryFiles] = useState([]);
   const galleryRef = useRef();
 
@@ -196,7 +207,6 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isN
 
     let finalUrl = form.projeto_url;
 
-    // 1. Fazer upload do recurso principal (Capa), se existir
     if (file) {
       const formData = new FormData();
       formData.append('file', file);
@@ -214,7 +224,6 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isN
       }
     }
 
-    // Passar os dados para a função do pai (incluindo a galeria se houver)
     await onSave({ ...form, id_modulo: Number(form.id_modulo), projeto_url: finalUrl, galleryFiles });
     setUploading(false);
   }
@@ -223,7 +232,6 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isN
 
   return (
     <div className="space-y-4">
-      {/* Upload do Ficheiro Principal (Capa) */}
       <div>
         <label className="block text-xs font-medium text-white/50 mb-1.5">Capa do projeto (Opcional)</label>
         <div
@@ -289,7 +297,6 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isN
         <textarea className={inputCls + ' resize-none'} rows={3} value={form.descricao} onChange={e => set('descricao', e.target.value)} />
       </Field>
 
-      {/* SECÇÃO DA GALERIA (SÓ VISÍVEL AO CRIAR UM PROJETO NOVO) */}
       {isNew && (
         <div className="pt-2 border-t border-white/10 mt-4">
           <div className="mb-4">
@@ -315,7 +322,6 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isN
             onChange={e => setGalleryFiles(prev => [...prev, ...Array.from(e.target.files)])}
           />
 
-          {/* Pré-visualização dos Ficheiros da Galeria a submeter */}
           {galleryFiles.length > 0 && (
             <div className="grid grid-cols-3 gap-2 mt-4">
               {galleryFiles.map((f, i) => {
@@ -373,7 +379,7 @@ export default function ProjetosPage() {
   const [loading, setLoading]             = useState(true);
   const [modal, setModal]                 = useState(null); 
   const [saving, setSaving]               = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null); // Agora armazena o objeto inteiro do projeto a eliminar
   const [deleting, setDeleting]           = useState(false);
   const [toast, setToast]                 = useState('');
 
@@ -410,7 +416,6 @@ export default function ProjetosPage() {
     setSaving(true);
     const supabase = createSupabaseBrowser();
     
-    // 1. Criar o Projeto
     const payload = {
       titulo:      form.titulo.trim(),
       descricao:   form.descricao.trim() || null,
@@ -419,7 +424,6 @@ export default function ProjetosPage() {
       projeto_url: form.projeto_url || null
     };
 
-    // A função .select().single() retorna o projeto criado (com o id_projetos recém-gerado)
     const { data: novoProjeto, error } = await supabase.from('projetos').insert([payload]).select().single();
 
     if (error) {
@@ -428,7 +432,6 @@ export default function ProjetosPage() {
       return;
     }
 
-    // 2. Se houver ficheiros na galeria para fazer upload
     if (form.galleryFiles && form.galleryFiles.length > 0) {
       showToast('Projeto base criado! A processar galeria...');
       
@@ -487,11 +490,59 @@ export default function ProjetosPage() {
     setSaving(false);
   }
 
+  /* ATUALIZADO: Lógica completa de eliminação limpa do projeto inteiro */
   async function handleDelete() {
     setDeleting(true);
     const supabase = createSupabaseBrowser();
-    await supabase.from('projetos').delete().eq('id_projetos', confirmDelete);
-    showToast('Projeto eliminado.');
+    
+    try {
+      const urlsToDelete = [];
+
+      // 1. Adicionar o URL da capa do projeto à lista de eliminação
+      if (confirmDelete.projeto_url) {
+        urlsToDelete.push(confirmDelete.projeto_url);
+      }
+
+      // 2. Buscar e adicionar todos os URLs da galeria associados a este projeto
+      const { data: mediaItems } = await supabase
+        .from('media_items')
+        .select('url')
+        .eq('id_projetos', confirmDelete.id_projetos);
+
+      if (mediaItems && mediaItems.length > 0) {
+        mediaItems.forEach(item => {
+          if (item.url) urlsToDelete.push(item.url);
+        });
+      }
+
+      // 3. Fazer o pedido à API para apagar os ficheiros físicos do Cloudflare R2
+      for (const url of urlsToDelete) {
+        const fileName = url.split('/').pop();
+        if (fileName) {
+          await fetch('/api/delete-file', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileName })
+          }).catch(err => console.error('Erro ao limpar ficheiro no R2:', err));
+        }
+      }
+
+      // 4. Apagar as referências da galeria na BD (para evitar erros de chaves estrangeiras)
+      if (mediaItems && mediaItems.length > 0) {
+        await supabase.from('media_items').delete().eq('id_projetos', confirmDelete.id_projetos);
+      }
+
+      // 5. Apagar o projeto na BD
+      const { error } = await supabase.from('projetos').delete().eq('id_projetos', confirmDelete.id_projetos);
+      
+      if (error) throw error;
+      
+      showToast('Projeto e todos os ficheiros eliminados com sucesso.');
+    } catch (err) {
+      console.error(err);
+      showToast('Erro ao eliminar projeto: ' + err.message);
+    }
+
     fetchData();
     setConfirmDelete(null);
     setDeleting(false);
@@ -561,7 +612,7 @@ export default function ProjetosPage() {
                   <td className="px-5 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={() => setModal({ projeto: p })} className="rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition">Gerir</button>
-                      <button onClick={() => setConfirmDelete(p.id_projetos)} className="rounded-md border border-red-500/20 px-3 py-1.5 text-xs font-medium text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition">Eliminar</button>
+                      <button onClick={() => setConfirmDelete(p)} className="rounded-md border border-red-500/20 px-3 py-1.5 text-xs font-medium text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition">Eliminar</button>
                     </div>
                   </td>
                 </tr>
@@ -578,7 +629,7 @@ export default function ProjetosPage() {
             onSave={handleCreate} 
             onCancel={() => setModal(null)} 
             saving={saving} 
-            isNew={true} /* Esta propriedade ativa a galeria no modo Novo Projeto */
+            isNew={true}
           />
         </Modal>
       )}
@@ -608,9 +659,9 @@ export default function ProjetosPage() {
 
       {confirmDelete !== null && (
         <Modal title="Confirmar eliminação" onClose={() => setConfirmDelete(null)}>
-          <p className="text-sm text-white/60 mb-6">Tens a certeza que queres eliminar este projeto?</p>
+          <p className="text-sm text-white/60 mb-6">Tens a certeza que queres eliminar o projeto <strong>{confirmDelete.titulo}</strong>?<br/>Esta ação também vai apagar fisicamente as fotografias e vídeos do sistema.</p>
           <div className="flex gap-3">
-            <button onClick={handleDelete} disabled={deleting} className="flex-1 rounded-lg bg-red-500/80 py-2.5 text-sm font-semibold text-white hover:bg-red-500 transition disabled:opacity-50">{deleting ? 'A eliminar…' : 'Eliminar'}</button>
+            <button onClick={handleDelete} disabled={deleting} className="flex-1 rounded-lg bg-red-500/80 py-2.5 text-sm font-semibold text-white hover:bg-red-500 transition disabled:opacity-50">{deleting ? 'A eliminar ficheiros e projeto…' : 'Eliminar Tudo'}</button>
             <button onClick={() => setConfirmDelete(null)} disabled={deleting} className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium text-white/50 hover:bg-white/5 transition">Cancelar</button>
           </div>
         </Modal>
