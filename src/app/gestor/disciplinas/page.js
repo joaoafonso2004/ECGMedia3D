@@ -217,7 +217,7 @@ export default function GestorDisciplinasPage() {
 
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">As Minhas Disciplinas</h1>
+          <h1 className="text-2xl font-bold text-white">Disciplinas</h1>
           <p className="text-sm text-white/35 mt-1">Apenas pode visualizar e gerir as disciplinas que lhe foram atribuídas.</p>
         </div>
       </div>

@@ -38,7 +38,7 @@ function Field({ label, children }) {
 
 const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition`;
 
-/* ─── Galeria de Imagens e Vídeos do Projeto ────────────────────── */
+/* ─── Galeria de Imagens e Vídeos do Projeto (Modo Edição) ──────── */
 function GaleriaProjeto({ id_projetos }) {
   const [media, setMedia]         = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -163,18 +163,25 @@ function GaleriaProjeto({ id_projetos }) {
 }
 
 /* ─── Formulário de Projeto ─────────────────────────────────────── */
-function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving }) {
+function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isNew = false }) {
   const [form, setForm] = useState({
-    titulo:    initial.titulo    ?? '',
-    descricao: initial.descricao ?? '',
-    autores:   initial.autores   ?? '',
-    id_modulo: initial.id_modulo ?? '',
+    titulo:      initial.titulo      ?? '',
+    descricao:   initial.descricao   ?? '',
+    autores:     initial.autores     ?? '',
+    id_modulo:   initial.id_modulo   ?? '',
     projeto_url: initial.projeto_url ?? '',
   });
+  
+  // Ficheiro da capa
   const [file, setFile] = useState(null);
+  const fileRef = useRef();
+
+  // Ficheiros da galeria (só usado se for um projeto NOVO)
+  const [galleryFiles, setGalleryFiles] = useState([]);
+  const galleryRef = useRef();
+
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
-  const fileRef = useRef();
 
   function set(field, value) {
     setForm(f => ({ ...f, [field]: value }));
@@ -189,6 +196,7 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving }) {
 
     let finalUrl = form.projeto_url;
 
+    // 1. Fazer upload do recurso principal (Capa), se existir
     if (file) {
       const formData = new FormData();
       formData.append('file', file);
@@ -206,7 +214,8 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving }) {
       }
     }
 
-    await onSave({ ...form, id_modulo: Number(form.id_modulo), projeto_url: finalUrl });
+    // Passar os dados para a função do pai (incluindo a galeria se houver)
+    await onSave({ ...form, id_modulo: Number(form.id_modulo), projeto_url: finalUrl, galleryFiles });
     setUploading(false);
   }
 
@@ -214,9 +223,9 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving }) {
 
   return (
     <div className="space-y-4">
-      {/* Upload do Ficheiro Principal (Atualizado para Imagem e Vídeo) */}
+      {/* Upload do Ficheiro Principal (Capa) */}
       <div>
-        <label className="block text-xs font-medium text-white/50 mb-1.5">Recurso Principal do Projeto (Opcional)</label>
+        <label className="block text-xs font-medium text-white/50 mb-1.5">Capa do projeto (Opcional)</label>
         <div
           onClick={() => fileRef.current?.click()}
           className={`flex items-center gap-3 rounded-lg border-2 border-dashed px-4 py-4 cursor-pointer transition
@@ -234,7 +243,7 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving }) {
             ) : form.projeto_url ? (
               <p className="text-sm text-white/80 truncate">Recurso definido (Clica para alterar)</p>
             ) : (
-              <p className="text-sm text-white/30">Clica para selecionar imagem ou vídeo (MP4)</p>
+              <p className="text-sm text-white/30">Clica para selecionar uma imagem ou vídeo</p>
             )}
           </div>
           {(file || form.projeto_url) && (
@@ -252,7 +261,7 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving }) {
         <input
           ref={fileRef}
           type="file"
-          accept="image/*,video/mp4,video/webm" // Aceita vídeos também
+          accept="image/*,video/mp4,video/webm"
           className="hidden"
           onChange={e => { setFile(e.target.files[0] ?? null); setError(''); }}
         />
@@ -280,19 +289,74 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving }) {
         <textarea className={inputCls + ' resize-none'} rows={3} value={form.descricao} onChange={e => set('descricao', e.target.value)} />
       </Field>
 
+      {/* SECÇÃO DA GALERIA (SÓ VISÍVEL AO CRIAR UM PROJETO NOVO) */}
+      {isNew && (
+        <div className="pt-2 border-t border-white/10 mt-4">
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-[#4f9eff]">Galeria do Projeto (Opcional)</h3>
+            <p className="text-xs text-white/40 mt-0.5">Podes já adicionar imagens ou vídeos detalhados.</p>
+          </div>
+          <div
+            onClick={() => galleryRef.current?.click()}
+            className="flex items-center justify-center gap-3 rounded-lg border-2 border-dashed border-white/10 hover:border-[#4f9eff]/40 hover:bg-[#4f9eff]/5 px-4 py-6 cursor-pointer transition"
+          >
+             <span className="text-3xl">📥</span>
+             <div>
+               <p className="text-sm font-medium text-white/80">Selecionar Ficheiros</p>
+               <p className="text-xs text-white/30 mt-0.5">Múltiplas imagens (JPG/PNG) ou vídeos (MP4)</p>
+             </div>
+          </div>
+          <input
+            ref={galleryRef}
+            type="file"
+            multiple
+            accept="image/*,video/mp4,video/webm"
+            className="hidden"
+            onChange={e => setGalleryFiles(prev => [...prev, ...Array.from(e.target.files)])}
+          />
+
+          {/* Pré-visualização dos Ficheiros da Galeria a submeter */}
+          {galleryFiles.length > 0 && (
+            <div className="grid grid-cols-3 gap-2 mt-4">
+              {galleryFiles.map((f, i) => {
+                const isVid = f.type.startsWith('video/');
+                const objUrl = URL.createObjectURL(f);
+                return (
+                  <div key={i} className="relative group rounded-lg overflow-hidden border border-white/10 bg-[#0c0c0f] aspect-video">
+                    {isVid ? (
+                      <video src={objUrl} className="w-full h-full object-cover" muted />
+                    ) : (
+                      <img src={objUrl} alt={f.name} className="w-full h-full object-cover" />
+                    )}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setGalleryFiles(prev => prev.filter((_, idx) => idx !== i)); }}
+                        className="text-xs font-semibold text-red-400 bg-red-500/20 px-3 py-1.5 rounded-md hover:bg-red-500 hover:text-white transition"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {error && (
         <div className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-2.5">
           <p className="text-xs text-red-400">{error}</p>
         </div>
       )}
 
-      <div className="flex gap-3 pt-2">
+      <div className="flex gap-3 pt-4">
         <button
           onClick={handleSave}
           disabled={isBusy}
           className="flex-1 rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white hover:bg-[#3d8aef] transition disabled:opacity-50"
         >
-          {uploading ? 'A fazer upload…' : saving ? 'A guardar…' : 'Guardar Projeto'}
+          {uploading || saving ? 'A processar e guardar…' : 'Guardar Projeto'}
         </button>
         <button onClick={onCancel} disabled={isBusy} className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium text-white/50 hover:bg-white/5 transition">
           Cancelar
@@ -345,23 +409,55 @@ export default function ProjetosPage() {
   async function handleCreate(form) {
     setSaving(true);
     const supabase = createSupabaseBrowser();
-    const payload  = {
-      titulo:    form.titulo.trim(),
-      descricao: form.descricao.trim() || null,
-      autores:   form.autores.trim() || null,
-      id_modulo: form.id_modulo,
+    
+    // 1. Criar o Projeto
+    const payload = {
+      titulo:      form.titulo.trim(),
+      descricao:   form.descricao.trim() || null,
+      autores:     form.autores.trim() || null,
+      id_modulo:   form.id_modulo,
       projeto_url: form.projeto_url || null
     };
 
-    const { error } = await supabase.from('projetos').insert([payload]);
+    // A função .select().single() retorna o projeto criado (com o id_projetos recém-gerado)
+    const { data: novoProjeto, error } = await supabase.from('projetos').insert([payload]).select().single();
 
     if (error) {
       showToast('Erro ao criar projeto: ' + error.message);
-    } else {
-      showToast('Projeto criado com sucesso!');
-      setModal(null);
-      fetchData();
+      setSaving(false);
+      return;
     }
+
+    // 2. Se houver ficheiros na galeria para fazer upload
+    if (form.galleryFiles && form.galleryFiles.length > 0) {
+      showToast('Projeto base criado! A processar galeria...');
+      
+      for (const file of form.galleryFiles) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+          const res = await fetch('/api/upload', { method: 'POST', body: formData });
+          const json = await res.json();
+          
+          if (res.ok) {
+            const tipo = file.type.startsWith('video/') ? 'video' : 'imagem';
+            await supabase.from('media_items').insert([{
+              id_projetos: novoProjeto.id_projetos,
+              url: json.url,
+              tipo: tipo,
+              titulo: file.name
+            }]);
+          }
+        } catch (err) {
+          console.error('Erro no upload da galeria do novo projeto:', err);
+        }
+      }
+    }
+
+    showToast('Projeto criado com sucesso!');
+    setModal(null);
+    fetchData();
     setSaving(false);
   }
 
@@ -369,10 +465,10 @@ export default function ProjetosPage() {
     setSaving(true);
     const supabase = createSupabaseBrowser();
     const payload  = {
-      titulo:    form.titulo.trim(),
-      descricao: form.descricao.trim() || null,
-      autores:   form.autores.trim() || null,
-      id_modulo: form.id_modulo,
+      titulo:      form.titulo.trim(),
+      descricao:   form.descricao.trim() || null,
+      autores:     form.autores.trim() || null,
+      id_modulo:   form.id_modulo,
       projeto_url: form.projeto_url || null
     };
 
@@ -384,7 +480,7 @@ export default function ProjetosPage() {
     if (error) {
       showToast('Erro ao editar: ' + error.message);
     } else {
-      showToast('Projeto updated com sucesso!');
+      showToast('Projeto atualizado com sucesso!');
       setModal(null);
       fetchData();
     }
@@ -431,7 +527,7 @@ export default function ProjetosPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-white/30 border-b border-white/5 bg-white/2">
-                <th className="text-left px-5 py-3 font-medium w-16">Mídia</th>
+                <th className="text-left px-5 py-3 font-medium w-16">Capa</th>
                 <th className="text-left px-5 py-3 font-medium">Título do Projeto</th>
                 <th className="text-left px-5 py-3 font-medium">Disciplina Associada</th>
                 <th className="text-left px-5 py-3 font-medium">Autores</th>
@@ -464,7 +560,7 @@ export default function ProjetosPage() {
                   <td className="px-5 py-3.5 text-white/45 text-xs">{p.autores ?? '—'}</td>
                   <td className="px-5 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => setModal({ projeto: p })} className="rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition">Editar</button>
+                      <button onClick={() => setModal({ projeto: p })} className="rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition">Gerir</button>
                       <button onClick={() => setConfirmDelete(p.id_projetos)} className="rounded-md border border-red-500/20 px-3 py-1.5 text-xs font-medium text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition">Eliminar</button>
                     </div>
                   </td>
@@ -477,7 +573,13 @@ export default function ProjetosPage() {
 
       {modal === 'novo' && (
         <Modal title="Novo Projeto" onClose={() => setModal(null)}>
-          <ProjetoForm modulos={modulosList} onSave={handleCreate} onCancel={() => setModal(null)} saving={saving} />
+          <ProjetoForm 
+            modulos={modulosList} 
+            onSave={handleCreate} 
+            onCancel={() => setModal(null)} 
+            saving={saving} 
+            isNew={true} /* Esta propriedade ativa a galeria no modo Novo Projeto */
+          />
         </Modal>
       )}
 
@@ -485,7 +587,13 @@ export default function ProjetosPage() {
         <Modal title="Gerir Projeto" onClose={() => setModal(null)}>
           <div className="mb-8">
             <h3 className="text-sm font-semibold text-white/80 mb-3">Informações e Recurso Principal</h3>
-            <ProjetoForm initial={modal.projeto} modulos={modulosList} onSave={handleEdit} onCancel={() => setModal(null)} saving={saving} />
+            <ProjetoForm 
+              initial={modal.projeto} 
+              modulos={modulosList} 
+              onSave={handleEdit} 
+              onCancel={() => setModal(null)} 
+              saving={saving} 
+            />
           </div>
           <hr className="border-white/5 mb-6" />
           <div>

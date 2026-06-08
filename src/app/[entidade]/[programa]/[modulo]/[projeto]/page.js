@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import GaleriaProjeto from './galeriaProjeto';
 
 /* ─── Fetches ───────────────────────────────────────────────────── */
 
@@ -144,50 +145,8 @@ export default async function ProjetoPage({ params }) {
         </div>
       </section>
 
-      {/* ── Galeria (Imagens, Vídeos, Modelos 3D) ───────────────── */}
-      {galeria.length > 0 && (
-        <section className="mx-auto max-w-6xl px-6 pb-24 border-t border-white/5 pt-16">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-semibold text-white/90">Galeria do Projeto</h2>
-            <span className="text-sm font-mono text-white/30 bg-white/5 px-3 py-1 rounded-md">{galeria.length} itens</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {galeria.map((item) => (
-              <div key={item.id_media_items} className="group relative rounded-xl border border-white/10 bg-[#13131a] overflow-hidden aspect-video">
-                
-                {/* Imagem / Video */}
-                {item.tipo === 'imagem' && (
-                  <img src={item.url} alt={item.titulo || 'Imagem do projeto'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                )}
-                {item.tipo === 'video' && (
-                  <video src={item.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" muted loop playsInline autoPlay />
-                )}
-                
-                {/* Modelo 3D (Placeholder simples por agora, até teres o visualizador 3D) */}
-                {item.tipo === 'modelo3d' && (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#4f9eff]/10 to-transparent">
-                    <span className="text-4xl mb-3 group-hover:scale-110 transition-transform">🧊</span>
-                    <a 
-                      href={item.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="px-4 py-2 bg-[#4f9eff] hover:bg-[#3d8aef] text-white text-xs font-semibold rounded-lg transition"
-                    >
-                      Abrir Modelo 3D
-                    </a>
-                  </div>
-                )}
-
-                {/* Etiqueta de Tipo */}
-                <div className="absolute top-3 left-3 bg-black/60 text-white px-2 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider backdrop-blur-md border border-white/10">
-                  {item.tipo}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* ── Galeria (Renderizada no Client Side) ────────────────── */}
+      <GaleriaProjeto galeria={galeria} />
 
     </main>
   );

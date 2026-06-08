@@ -134,6 +134,7 @@ function DisciplinaForm({ initial = {}, onSave, onCancel, saving }) {
 /* ─── Página principal ──────────────────────────────────────────── */
 export default function DisciplinasPage() {
   const [disciplinas, setDisciplinas] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(''); // <-- Estado para a pesquisa
   const [loading, setLoading]         = useState(true);
   const [modal, setModal]             = useState(null); // null | 'nova' | { disciplina }
   const [saving, setSaving]           = useState(false);
@@ -235,6 +236,16 @@ export default function DisciplinasPage() {
     setDeleting(false);
   }
 
+  /* ─── Lógica de Filtragem ──────────────────────────────────── */
+  const filteredDisciplinas = disciplinas.filter((d) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      (d.nome && d.nome.toLowerCase().includes(query)) ||
+      (d.codigo && d.codigo.toLowerCase().includes(query)) ||
+      (d.descricao && d.descricao.toLowerCase().includes(query))
+    );
+  });
+
   return (
     <div className="p-8 max-w-5xl mx-auto">
 
@@ -264,6 +275,25 @@ export default function DisciplinasPage() {
         </button>
       </div>
 
+      {/* Barra de Pesquisa */}
+      <div className="mb-6">
+        <div className="relative">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-white/30">
+            {/* Ícone de Lupa */}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Pesquisar por nome, código ou descrição..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-xl border border-white/10 bg-[#13131a] py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 focus:border-[#4f9eff]/50 focus:outline-none focus:ring-1 focus:ring-[#4f9eff]/30 transition shadow-sm"
+          />
+        </div>
+      </div>
+
       {/* Tabela */}
       <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
         {loading ? (
@@ -271,6 +301,10 @@ export default function DisciplinasPage() {
         ) : disciplinas.length === 0 ? (
           <div className="py-12 text-center text-sm text-white/25">
             Nenhuma disciplina encontrada. Cria a primeira!
+          </div>
+        ) : filteredDisciplinas.length === 0 ? (
+          <div className="py-12 text-center text-sm text-white/25">
+            Nenhuma disciplina corresponde à pesquisa "{searchQuery}".
           </div>
         ) : (
           <table className="w-full text-sm">
@@ -284,10 +318,10 @@ export default function DisciplinasPage() {
               </tr>
             </thead>
             <tbody>
-              {disciplinas.map((d, i) => (
+              {filteredDisciplinas.map((d, i) => (
                 <tr
                   key={d.id_modulo}
-                  className={`transition hover:bg-white/2 ${i !== disciplinas.length - 1 ? 'border-b border-white/5' : ''}`}
+                  className={`transition hover:bg-white/2 ${i !== filteredDisciplinas.length - 1 ? 'border-b border-white/5' : ''}`}
                 >
                   <td className="px-5 py-3.5">
                     <div className="font-medium text-white/85">{d.nome}</div>
