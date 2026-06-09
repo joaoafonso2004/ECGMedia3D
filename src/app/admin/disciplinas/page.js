@@ -496,11 +496,11 @@ export default function DisciplinasPage() {
           <div className="py-12 text-center text-sm text-white/25">A carregar…</div>
         ) : disciplinasFiltradas.length === 0 ? (
           <div className="py-12 text-center text-sm text-white/25">
-            {disciplinas.length === 0 ? 'Nenhuma disciplina encontrada. Cria a primeira!' : 'Nenhuma disciplina para o filtro selecionado.'}
-          </div>
-        ) : filteredDisciplinas.length === 0 ? (
-          <div className="py-12 text-center text-sm text-white/25">
-            Nenhuma disciplina corresponde à pesquisa "{searchQuery}".
+            {disciplinas.length === 0
+              ? 'Nenhuma disciplina encontrada. Cria a primeira!'
+              : searchQuery
+                ? `Nenhuma disciplina corresponde à pesquisa "${searchQuery}".`
+                : 'Nenhuma disciplina para o filtro selecionado.'}
           </div>
         ) : (
           <table className="w-full text-sm">
