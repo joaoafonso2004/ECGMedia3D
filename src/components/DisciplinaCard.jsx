@@ -108,6 +108,7 @@ export default function DisciplinaCard({ disciplina, basePath = '' }) {
               <video
                 ref={videoRef}
                 src={videoUrl}
+                crossOrigin="anonymous"
                 loop
                 muted
                 playsInline

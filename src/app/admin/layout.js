@@ -3,6 +3,7 @@
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { AdminFilterProvider } from './AdminFilterContext';
 
 /* ─── Ícones inline (sem biblioteca extra) ─────────────────────── */
 function IconGrid() {
@@ -55,6 +56,14 @@ function IconPerson() {
     </svg>
   );
 }
+function IconVideo() {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round"
+        d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 9.75v9A2.25 2.25 0 004.5 18.75z" />
+    </svg>
+  );
+}
 function IconLogout() {
   return (
     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -71,7 +80,8 @@ const NAV_ITEMS = [
   { label: 'Projetos',     href: '/admin/projetos',     Icon: IconFolder },
   { label: 'Modelos 3D',   href: '/admin/modelos',      Icon: IconCube },
   { label: 'Logo',         href: '/admin/logo',         Icon: IconLogo },
-  { label: 'Gestores',     href: '/admin/gestores',     Icon: IconPerson },
+  { label: 'Gestores',      href: '/admin/gestores',      Icon: IconPerson },
+  { label: 'Criador Video', href: '/admin/video-creator', Icon: IconVideo  },
 ];
 
 /* ─── Sidebar ───────────────────────────────────────────────────── */
@@ -146,11 +156,13 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0c0c0f]">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto">
-        {children}
-      </main>
-    </div>
+    <AdminFilterProvider>
+      <div className="flex min-h-screen bg-[#0c0c0f]">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto">
+          {children}
+        </main>
+      </div>
+    </AdminFilterProvider>
   );
 }

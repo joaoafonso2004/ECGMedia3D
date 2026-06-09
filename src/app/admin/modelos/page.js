@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
+import { useAdminFilter } from '../AdminFilterContext';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
@@ -359,6 +360,8 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
 
 /* ─── Página principal ───────────────────────────────────────────── */
 export default function ModelosPage() {
+  const { entidadeId, programaId, programas } = useAdminFilter();
+
   const [modelos,           setModelos]           = useState([]);
   const [todasDisciplinas,  setTodasDisciplinas]  = useState([]);
   const [loading,           setLoading]           = useState(true);
@@ -518,6 +521,13 @@ export default function ModelosPage() {
     setDeleting(false);
   }
 
+  const programaIdsEntidade = programas.map(p => p.id_programa);
+  const modelosFiltrados = modelos.filter(m => {
+    if (programaId) return m.id_programa == programaId;
+    if (entidadeId) return programaIdsEntidade.includes(m.id_programa);
+    return true;
+  });
+
   return (
     <div className="p-8 max-w-5xl mx-auto">
 
@@ -533,7 +543,7 @@ export default function ModelosPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Modelos 3D</h1>
           <p className="text-sm text-white/35 mt-1">
-            {loading ? '…' : `${modelos.length} modelo${modelos.length !== 1 ? 's' : ''}`}
+            {loading ? '…' : `${modelosFiltrados.length} modelo${modelosFiltrados.length !== 1 ? 's' : ''}`}
           </p>
         </div>
         <button
@@ -550,9 +560,9 @@ export default function ModelosPage() {
       <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
         {loading ? (
           <div className="py-12 text-center text-sm text-white/25">A carregar…</div>
-        ) : modelos.length === 0 ? (
+        ) : modelosFiltrados.length === 0 ? (
           <div className="py-12 text-center text-sm text-white/25">
-            Nenhum modelo encontrado. Faz o upload do primeiro!
+            {modelos.length === 0 ? 'Nenhum modelo encontrado. Faz o upload do primeiro!' : 'Nenhum modelo para o filtro selecionado.'}
           </div>
         ) : (
           <table className="w-full text-sm">
@@ -567,10 +577,10 @@ export default function ModelosPage() {
               </tr>
             </thead>
             <tbody>
-              {modelos.map((m, i) => (
+              {modelosFiltrados.map((m, i) => (
                 <tr
                   key={m.id_media_items}
-                  className={`transition hover:bg-white/2 ${i !== modelos.length - 1 ? 'border-b border-white/5' : ''}`}
+                  className={`transition hover:bg-white/2 ${i !== modelosFiltrados.length - 1 ? 'border-b border-white/5' : ''}`}
                 >
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2">
