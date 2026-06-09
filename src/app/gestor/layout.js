@@ -25,6 +25,14 @@ function IconCube() {
     </svg>
   );
 }
+// Adicionado o ícone da pasta para os projetos
+function IconFolder() {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+    </svg>
+  );
+}
 function IconLogout() {
   return (
     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -33,9 +41,11 @@ function IconLogout() {
   );
 }
 
+// Atualizada a lista de itens com a rota dos Projetos
 const NAV_ITEMS = [
   { label: 'Dashboard',   href: '/gestor/dashboard',   Icon: IconGrid },
   { label: 'Disciplinas', href: '/gestor/disciplinas', Icon: IconBook },
+  { label: 'Projetos',    href: '/gestor/projetos',    Icon: IconFolder },
   { label: 'Modelos 3D',  href: '/gestor/modelos',     Icon: IconCube },
 ];
 

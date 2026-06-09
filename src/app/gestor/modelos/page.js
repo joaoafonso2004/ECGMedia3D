@@ -710,7 +710,7 @@ export default function GestorModelosPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-white">
-              Modelos 3D <span className="text-[#a78bfa] text-base">(Gestor)</span>
+              Modelos 3D <span className="text-[#a78bfa] text-base">(Área do Gestor)</span>
             </h1>
             <p className="text-sm text-white/35 mt-1">
               {loading ? '…' : `${modelos.length} modelo${modelos.length !== 1 ? 's' : ''} nas suas disciplinas`}

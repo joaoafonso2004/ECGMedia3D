@@ -79,6 +79,7 @@ function DisciplinaForm({ initial = {}, onSave, saving }) {
 /* ─── Página Principal ──────────────────────────────────────────── */
 export default function GestorDisciplinasPage() {
   const [disciplinas, setDisciplinas] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(''); // <-- Estado para a pesquisa
   const [loading, setLoading]         = useState(true);
   const [modal, setModal]             = useState(null); 
   const [savingEdit, setSavingEdit]   = useState(false);
@@ -207,26 +208,68 @@ export default function GestorDisciplinasPage() {
     }
   }
 
+  /* ─── Lógica Robusta de Filtragem ─────────────────────────────── */
+  const filteredDisciplinas = disciplinas.filter((d) => {
+    const query = searchQuery.toLowerCase();
+    
+    // Fallbacks para evitar crashes
+    const nome = d.nome?.toLowerCase() || '';
+    const codigo = d.codigo?.toLowerCase() || '';
+    const descricao = d.descricao?.toLowerCase() || '';
+
+    return (
+      nome.includes(query) ||
+      codigo.includes(query) ||
+      descricao.includes(query)
+    );
+  });
+
   return (
     <div className="p-8 max-w-5xl mx-auto">
+      {/* Toast */}
       {toast && (
         <div className="fixed top-5 right-5 z-50 rounded-lg border border-white/10 bg-[#13131a] px-4 py-2.5 text-sm text-white shadow-xl">
           {toast}
         </div>
       )}
 
+      {/* Cabeçalho */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">As Minhas Disciplinas</h1>
+          <h1 className="text-2xl font-bold text-white">Disciplinas</h1>
           <p className="text-sm text-white/35 mt-1">Apenas pode visualizar e gerir as disciplinas que lhe foram atribuídas.</p>
         </div>
       </div>
 
+      {/* Barra de Pesquisa */}
+      <div className="mb-6">
+        <div className="relative">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-white/30">
+            {/* Ícone de Lupa */}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Pesquisar por nome, código ou descrição..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-xl border border-white/10 bg-[#13131a] py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 focus:border-[#a78bfa]/50 focus:outline-none focus:ring-1 focus:ring-[#a78bfa]/30 transition shadow-sm"
+          />
+        </div>
+      </div>
+
+      {/* Tabela */}
       <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
         {loading ? (
           <div className="py-12 text-center text-sm text-white/25">A carregar…</div>
         ) : disciplinas.length === 0 ? (
           <div className="py-12 text-center text-sm text-white/25">Não tem nenhuma disciplina atribuída.</div>
+        ) : filteredDisciplinas.length === 0 ? (
+          <div className="py-12 text-center text-sm text-white/25">
+            Nenhuma disciplina corresponde à pesquisa "{searchQuery}".
+          </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
@@ -238,8 +281,8 @@ export default function GestorDisciplinasPage() {
               </tr>
             </thead>
             <tbody>
-              {disciplinas.map((d, i) => (
-                <tr key={d.id_modulo} className={`transition hover:bg-white/2 ${i !== disciplinas.length - 1 ? 'border-b border-white/5' : ''}`}>
+              {filteredDisciplinas.map((d, i) => (
+                <tr key={d.id_modulo} className={`transition hover:bg-white/2 ${i !== filteredDisciplinas.length - 1 ? 'border-b border-white/5' : ''}`}>
                   <td className="px-5 py-3.5">
                     <div className="font-medium text-white/85">{d.nome}</div>
                     {d.descricao && <div className="text-xs text-white/30 mt-0.5 truncate max-w-xs">{d.descricao}</div>}
