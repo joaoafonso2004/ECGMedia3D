@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
+import { useGestorFilter } from '../GestorFilterContext';
 
 /* ─── Modal genérico ────────────────────────────────────────────── */
 function Modal({ title, onClose, children }) {
@@ -78,6 +79,7 @@ function DisciplinaForm({ initial = {}, onSave, saving }) {
 
 /* ─── Página Principal ──────────────────────────────────────────── */
 export default function GestorDisciplinasPage() {
+  const { entidadeId, programaId, programas } = useGestorFilter();
   const [disciplinas, setDisciplinas] = useState([]);
   const [searchQuery, setSearchQuery] = useState(''); // <-- Estado para a pesquisa
   const [loading, setLoading]         = useState(true);
@@ -208,20 +210,17 @@ export default function GestorDisciplinasPage() {
     }
   }
 
-  /* ─── Lógica Robusta de Filtragem ─────────────────────────────── */
-  const filteredDisciplinas = disciplinas.filter((d) => {
+  const programaIdsEntidade = programas.map(p => p.id_programa);
+  const filteredDisciplinas = disciplinas.filter(d => {
+    if (programaId && d.id_programa != programaId) return false;
+    if (entidadeId && !programaId && !programaIdsEntidade.includes(d.id_programa)) return false;
     const query = searchQuery.toLowerCase();
-    
-    // Fallbacks para evitar crashes
-    const nome = d.nome?.toLowerCase() || '';
-    const codigo = d.codigo?.toLowerCase() || '';
-    const descricao = d.descricao?.toLowerCase() || '';
-
-    return (
-      nome.includes(query) ||
-      codigo.includes(query) ||
-      descricao.includes(query)
+    if (query) return (
+      (d.nome?.toLowerCase()     || '').includes(query) ||
+      (d.codigo?.toLowerCase()   || '').includes(query) ||
+      (d.descricao?.toLowerCase()|| '').includes(query)
     );
+    return true;
   });
 
   return (
@@ -268,7 +267,9 @@ export default function GestorDisciplinasPage() {
           <div className="py-12 text-center text-sm text-white/25">Não tem nenhuma disciplina atribuída.</div>
         ) : filteredDisciplinas.length === 0 ? (
           <div className="py-12 text-center text-sm text-white/25">
-            Nenhuma disciplina corresponde à pesquisa "{searchQuery}".
+            {searchQuery
+              ? `Nenhuma disciplina corresponde à pesquisa "${searchQuery}".`
+              : 'Nenhuma disciplina para o filtro selecionado.'}
           </div>
         ) : (
           <table className="w-full text-sm">
