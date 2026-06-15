@@ -578,7 +578,7 @@ export default function GestorProjetosPage() {
                   <td className="px-5 py-3.5 text-white/45 text-xs">{p.autores ?? '—'}</td>
                   <td className="px-5 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => setModal({ projeto: p })} className="rounded-md border border-[#a78bfa]/20 px-3 py-1.5 text-xs font-medium text-[#a78bfa]/60 hover:bg-[#a78bfa]/10 hover:text-[#a78bfa] transition">Gerir</button>
+                      <button onClick={() => setModal({ projeto: p })} className="rounded-md border border-[#a78bfa]/20 px-3 py-1.5 text-xs font-medium text-[#a78bfa]/60 hover:bg-[#a78bfa]/10 hover:text-[#a78bfa] transition">Editar</button>
                       <button onClick={() => setConfirmDelete(p.id_projetos)} className="rounded-md border border-red-500/20 px-3 py-1.5 text-xs font-medium text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition">Eliminar</button>
                     </div>
                   </td>
