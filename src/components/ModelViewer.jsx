@@ -25,10 +25,21 @@ function eio(t) {
 /* ─── Cena com animação ────────────────────────────────────────── */
 function AnimScene({ url, escala, offsetY, animacaoTipo }) {
   const { scene, animations } = useGLTF(url);
-  const groupRef   = useRef(null);
-  const timeRef    = useRef(0);
-  const { camera } = useThree();
+  const groupRef    = useRef(null);
+  const timeRef     = useRef(0);
+  const autoScaleRef = useRef(1);
+  const { camera }  = useThree();
   const { actions } = useAnimations(animations, groupRef);
+
+  /* Normalização automática de escala ao carregar o modelo */
+  useEffect(() => {
+    if (!scene) return;
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const maiorDimensao = Math.max(size.x, size.y, size.z);
+    if (maiorDimensao > 0) autoScaleRef.current = 2.0 / maiorDimensao;
+  }, [scene]);
 
   /* Reposiciona câmara conforme o modo de animação */
   useEffect(() => {
@@ -66,21 +77,22 @@ function AnimScene({ url, escala, offsetY, animacaoTipo }) {
     switch (animacaoTipo) {
       case 'breakout': {
         const c = (t % BCYCLE_SEC) / BCYCLE_SEC;
+        const effScale = escala * autoScaleRef.current;
         let posZ, sc;
         if (c < 0.45) {
           /* avança: atrás → frente */
           const p = eio(c / 0.45);
           posZ = THREE.MathUtils.lerp(BZ_START, BZ_END, p);
-          sc   = THREE.MathUtils.lerp(S_START, escala, p);
+          sc   = THREE.MathUtils.lerp(S_START, effScale, p);
         } else if (c < 0.55) {
           /* pausa na frente */
           posZ = BZ_END;
-          sc   = escala;
+          sc   = effScale;
         } else {
           /* recua */
           const p = eio((c - 0.55) / 0.45);
           posZ = THREE.MathUtils.lerp(BZ_END, BZ_START, p);
-          sc   = THREE.MathUtils.lerp(escala, S_START, p);
+          sc   = THREE.MathUtils.lerp(effScale, S_START, p);
         }
         groupRef.current.position.set(0, offsetY, posZ);
         groupRef.current.scale.setScalar(sc);
@@ -90,19 +102,20 @@ function AnimScene({ url, escala, offsetY, animacaoTipo }) {
       }
       case 'zoom': {
         const c = (t % CYCLE_SEC) / CYCLE_SEC;
+        const effScale = escala * autoScaleRef.current;
         let posZ, sc, rotY;
         if (c < T_IN) {
           const p = eio(c / T_IN);
           posZ = THREE.MathUtils.lerp(Z_START, Z_END, p);
-          sc   = THREE.MathUtils.lerp(S_START, escala, p);
+          sc   = THREE.MathUtils.lerp(S_START, effScale, p);
           rotY = 0;
         } else if (c < T_ROT) {
           const p = (c - T_IN) / (T_ROT - T_IN);
-          posZ = Z_END; sc = escala; rotY = p * Math.PI * 2;
+          posZ = Z_END; sc = effScale; rotY = p * Math.PI * 2;
         } else {
           const p = eio((c - T_ROT) / (1 - T_ROT));
           posZ = THREE.MathUtils.lerp(Z_END, Z_START, p);
-          sc   = THREE.MathUtils.lerp(escala, S_START, p);
+          sc   = THREE.MathUtils.lerp(effScale, S_START, p);
           rotY = Math.PI * 2;
         }
         groupRef.current.position.set(0, offsetY, posZ);
@@ -113,23 +126,23 @@ function AnimScene({ url, escala, offsetY, animacaoTipo }) {
       }
       case 'rotation':
         groupRef.current.position.set(0, offsetY, Z_END);
-        groupRef.current.scale.setScalar(escala);
+        groupRef.current.scale.setScalar(escala * autoScaleRef.current);
         groupRef.current.rotation.y += delta * 1.5;
         camera.lookAt(0, offsetY, Z_END);
         break;
       case 'float':
         groupRef.current.position.set(0, offsetY + Math.sin(t * 1.5) * 0.5, Z_END);
-        groupRef.current.scale.setScalar(escala);
+        groupRef.current.scale.setScalar(escala * autoScaleRef.current);
         camera.lookAt(0, offsetY, Z_END);
         break;
       case 'pulse':
         groupRef.current.position.set(0, offsetY, Z_END);
-        groupRef.current.scale.setScalar(escala + Math.sin(t * 2) * 0.1);
+        groupRef.current.scale.setScalar((escala + Math.sin(t * 2) * 0.1) * autoScaleRef.current);
         camera.lookAt(0, offsetY, Z_END);
         break;
       default: /* null, 'none', 'custom' */
         groupRef.current.position.set(0, offsetY, Z_END);
-        groupRef.current.scale.setScalar(escala);
+        groupRef.current.scale.setScalar(escala * autoScaleRef.current);
         groupRef.current.rotation.y = 0;
         camera.lookAt(0, offsetY, Z_END);
         break;
@@ -139,7 +152,7 @@ function AnimScene({ url, escala, offsetY, animacaoTipo }) {
   const initZ = animacaoTipo === 'breakout' ? BZ_START
               : animacaoTipo === 'zoom'     ? Z_START
               : Z_END;
-  const initS = (animacaoTipo === 'zoom' || animacaoTipo === 'breakout') ? S_START : escala;
+  const initS = (animacaoTipo === 'zoom' || animacaoTipo === 'breakout') ? S_START : escala * autoScaleRef.current;
 
   return (
     <group ref={groupRef} position={[0, offsetY, initZ]} scale={[initS, initS, initS]}>

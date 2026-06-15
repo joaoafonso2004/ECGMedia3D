@@ -42,6 +42,7 @@ export default function LogoPage() {
   const [escala,        setEscala]        = useState(1.0);
   const [animacao,      setAnimacao]      = useState('rotation');
   const [editAnimacao,  setEditAnimacao]  = useState('rotation');
+  const [editEscala,    setEditEscala]    = useState(1.0);
   const [savingAnim,    setSavingAnim]    = useState(false);
   const [saving,        setSaving]        = useState(false);
   const [deleting,      setDeleting]      = useState(false);
@@ -67,6 +68,7 @@ export default function LogoPage() {
       .then(({ data }) => {
         setLogoExistente(data ?? null);
         setEditAnimacao(data?.animacao_tipo ?? 'rotation');
+        setEditEscala(data?.escala ?? 1.0);
         setStatus('loaded');
       });
   }, [programaId]);
@@ -78,19 +80,19 @@ export default function LogoPage() {
     setFileUrl(f ? URL.createObjectURL(f) : '');
   }
 
-  async function handleSalvarAnimacao() {
+  async function handleSalvarAlteracoes() {
     if (!logoExistente) return;
     setSavingAnim(true);
     const supabase = createSupabaseBrowser();
     const { error } = await supabase
       .from('media_items')
-      .update({ animacao_tipo: editAnimacao })
+      .update({ animacao_tipo: editAnimacao, escala: editEscala })
       .eq('id_media_items', logoExistente.id_media_items);
     if (error) {
-      showToast('Erro ao guardar animação: ' + error.message);
+      showToast('Erro ao guardar: ' + error.message);
     } else {
-      showToast('Animação guardada!');
-      setLogoExistente({ ...logoExistente, animacao_tipo: editAnimacao });
+      showToast('Alterações guardadas!');
+      setLogoExistente({ ...logoExistente, animacao_tipo: editAnimacao, escala: editEscala });
     }
     setSavingAnim(false);
   }
@@ -142,6 +144,7 @@ export default function LogoPage() {
         .maybeSingle();
       setLogoExistente(data ?? null);
       setEditAnimacao(data?.animacao_tipo ?? 'rotation');
+      setEditEscala(data?.escala ?? 1.0);
       setStatus('loaded');
     }
     setSaving(false);
@@ -260,7 +263,7 @@ export default function LogoPage() {
                   >
                     <LogoModelo3D
                       url={logoExistente.url}
-                      escala={logoExistente.escala ?? 1.0}
+                      escala={editEscala}
                       animacao={editAnimacao}
                       width={200}
                       height={200}
@@ -279,17 +282,29 @@ export default function LogoPage() {
                       </a>
                     </div>
                     <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <p className="text-xs text-white/35">Escala (Multiplicador)</p>
+                        <span className="text-xs font-mono text-[#4f9eff]">{editEscala.toFixed(1)}x</span>
+                      </div>
+                      <input
+                        type="range" min={0.1} max={5} step={0.1}
+                        value={editEscala}
+                        onChange={e => setEditEscala(parseFloat(e.target.value))}
+                        className="w-full accent-[#4f9eff] cursor-pointer"
+                      />
+                    </div>
+                    <div>
                       <p className="text-xs text-white/35 mb-2">Animação</p>
                       <AnimPicker value={editAnimacao} onChange={setEditAnimacao} />
                     </div>
                     <div className="flex gap-2 pt-1">
                       <button
-                        onClick={handleSalvarAnimacao}
-                        disabled={savingAnim || editAnimacao === (logoExistente.animacao_tipo ?? 'rotation')}
+                        onClick={handleSalvarAlteracoes}
+                        disabled={savingAnim || (editAnimacao === (logoExistente.animacao_tipo ?? 'rotation') && editEscala === (logoExistente.escala ?? 1.0))}
                         className="rounded-lg bg-[#4f9eff] px-4 py-2 text-xs font-semibold text-white
                                    hover:bg-[#3d8aef] transition disabled:opacity-40 disabled:cursor-not-allowed"
                       >
-                        {savingAnim ? 'A guardar…' : 'Guardar animação'}
+                        {savingAnim ? 'A guardar…' : 'Guardar alterações'}
                       </button>
                       <button
                         onClick={handleEliminar}
@@ -361,8 +376,8 @@ export default function LogoPage() {
                         </div>
                         <div className="flex-1 pt-2">
                           <div className="flex items-center justify-between mb-2">
-                            <label className="text-xs font-medium text-white/50">Escala</label>
-                            <span className="text-xs font-mono text-[#4f9eff]">{escala.toFixed(1)}</span>
+                            <label className="text-xs font-medium text-white/50">Escala (Multiplicador)</label>
+                            <span className="text-xs font-mono text-[#4f9eff]">{escala.toFixed(1)}x</span>
                           </div>
                           <input
                             type="range" min={0.1} max={5} step={0.1}

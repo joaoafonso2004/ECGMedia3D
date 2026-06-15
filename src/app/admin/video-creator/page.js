@@ -117,10 +117,21 @@ function SceneBackground({ url, type, onVideoReady }) {
 /* ─── Modelo 3D animado ───────────────────────────────────────────── */
 function VideoModel({ url, escala, animacaoTipo, tempoManual }) {
   const { scene, animations } = useGLTF(url);
-  const groupRef  = useRef(null);
-  const clockRef  = useRef(0);
+  const groupRef    = useRef(null);
+  const clockRef    = useRef(0);
+  const autoScaleRef = useRef(1);
   const { camera } = useThree();
   const { actions, mixer } = useAnimations(animations, groupRef);
+
+  /* Normalização automática de escala ao carregar o modelo */
+  useEffect(() => {
+    if (!scene) return;
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const maiorDimensao = Math.max(size.x, size.y, size.z);
+    if (maiorDimensao > 0) autoScaleRef.current = 2.0 / maiorDimensao;
+  }, [scene]);
 
   /* Setup das animações internas (custom) */
   useEffect(() => {
@@ -159,12 +170,12 @@ function VideoModel({ url, escala, animacaoTipo, tempoManual }) {
         // Automático — o mixer já avança sozinho via useAnimations
       }
       groupRef.current.position.set(0, 0, PV_Z_END);
-      groupRef.current.scale.setScalar(escala);
+      groupRef.current.scale.setScalar(escala * autoScaleRef.current);
       camera.lookAt(0, 0, PV_Z_END);
       return;
     }
 
-    const { pos, scale, rotY, lookAt } = computeTransform(t, escala, animacaoTipo);
+    const { pos, scale, rotY, lookAt } = computeTransform(t, escala * autoScaleRef.current, animacaoTipo);
     groupRef.current.position.set(...pos);
     groupRef.current.scale.setScalar(scale);
     groupRef.current.rotation.y = rotY;
@@ -220,7 +231,7 @@ export default function VideoCreatorPage() {
   const [libModelUrl,     setLibModelUrl]     = useState('');
   const [uploadFile,      setUploadFile]      = useState(null);
   const [uploadUrl,       setUploadUrl]       = useState('');
-  const [escala,          setEscala]          = useState(1.5);
+  const [escala,          setEscala]          = useState(1.0);
   const [animacao,        setAnimacao]        = useState('zoom');
   const modelFileRef = useRef();
 
@@ -572,9 +583,9 @@ export default function VideoCreatorPage() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-medium text-white/50">Escala</label>
-                <span className="text-xs font-mono text-[#4f9eff]">{escala.toFixed(1)}</span>
+                <span className="text-xs font-mono text-[#4f9eff]">{escala.toFixed(1)}x</span>
               </div>
-              <input type="range" min={0.1} max={35} step={0.1} value={escala}
+              <input type="range" min={0.1} max={5} step={0.1} value={escala}
                 onChange={e => setEscala(parseFloat(e.target.value))}
                 className="w-full accent-[#4f9eff] cursor-pointer" />
             </div>

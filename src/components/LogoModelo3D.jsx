@@ -1,13 +1,25 @@
 'use client';
 
-import { useRef, Suspense } from 'react';
+import { useRef, useEffect, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
+import { Box3, Vector3 } from 'three';
 
 function LogoScene({ url, escala, animacao }) {
   const { scene } = useGLTF(url);
-  const ref = useRef(null);
-  const t   = useRef(0);
+  const ref          = useRef(null);
+  const t            = useRef(0);
+  const autoScaleRef = useRef(1);
+
+  useEffect(() => {
+    if (!scene) return;
+    const box = new Box3().setFromObject(scene);
+    const size = new Vector3();
+    box.getSize(size);
+    const maiorDimensao = Math.max(size.x, size.y, size.z);
+    if (maiorDimensao > 0) autoScaleRef.current = 2.0 / maiorDimensao;
+    if (ref.current) ref.current.scale.setScalar(autoScaleRef.current * escala);
+  }, [scene, escala]);
 
   useFrame((_, delta) => {
     if (!ref.current) return;
@@ -25,7 +37,7 @@ function LogoScene({ url, escala, animacao }) {
   });
 
   return (
-    <group ref={ref} scale={[escala, escala, escala]}>
+    <group ref={ref}>
       <primitive object={scene} />
     </group>
   );

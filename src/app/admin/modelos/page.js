@@ -182,10 +182,20 @@ const ANIM_OPTS = [
 /* ─── Modelo 3D com animação para o preview ──────────────────────── */
 function PreviewModel({ url, escala, animacaoTipo }) {
   const { scene, animations } = useGLTF(url);
-  const groupRef  = useRef(null);
-  const clockRef  = useRef(0);
+  const groupRef    = useRef(null);
+  const clockRef    = useRef(0);
+  const autoScaleRef = useRef(1);
   const { camera } = useThree();
   const { actions } = useAnimations(animations, groupRef);
+
+  useEffect(() => {
+    if (!scene) return;
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const maiorDimensao = Math.max(size.x, size.y, size.z);
+    if (maiorDimensao > 0) autoScaleRef.current = 2.0 / maiorDimensao;
+  }, [scene]);
 
   useEffect(() => {
     const all = Object.values(actions);
@@ -209,19 +219,20 @@ function PreviewModel({ url, escala, animacaoTipo }) {
     switch (animacaoTipo) {
       case 'zoom': {
         const c = (t % PV_CYCLE_SEC) / PV_CYCLE_SEC;
+        const effScale = escala * autoScaleRef.current;
         let posZ, sc, rotY;
         if (c < PV_T_IN) {
           const p = pvEio(c / PV_T_IN);
           posZ = THREE.MathUtils.lerp(PV_Z_START, PV_Z_END, p);
-          sc   = THREE.MathUtils.lerp(PV_S_START, escala, p);
+          sc   = THREE.MathUtils.lerp(PV_S_START, effScale, p);
           rotY = 0;
         } else if (c < PV_T_ROT) {
           const p = (c - PV_T_IN) / (PV_T_ROT - PV_T_IN);
-          posZ = PV_Z_END; sc = escala; rotY = p * Math.PI * 2;
+          posZ = PV_Z_END; sc = effScale; rotY = p * Math.PI * 2;
         } else {
           const p = pvEio((c - PV_T_ROT) / (1 - PV_T_ROT));
           posZ = THREE.MathUtils.lerp(PV_Z_END, PV_Z_START, p);
-          sc   = THREE.MathUtils.lerp(escala, PV_S_START, p);
+          sc   = THREE.MathUtils.lerp(effScale, PV_S_START, p);
           rotY = Math.PI * 2;
         }
         groupRef.current.position.set(0, 0, posZ);
@@ -232,23 +243,23 @@ function PreviewModel({ url, escala, animacaoTipo }) {
       }
       case 'rotation':
         groupRef.current.position.set(0, 0, PV_Z_END);
-        groupRef.current.scale.setScalar(escala);
+        groupRef.current.scale.setScalar(escala * autoScaleRef.current);
         groupRef.current.rotation.y += delta * 1.5;
         camera.lookAt(0, 0, PV_Z_END);
         break;
       case 'float':
         groupRef.current.position.set(0, Math.sin(t * 1.5) * 0.5, PV_Z_END);
-        groupRef.current.scale.setScalar(escala);
+        groupRef.current.scale.setScalar(escala * autoScaleRef.current);
         camera.lookAt(0, 0, PV_Z_END);
         break;
       case 'pulse':
         groupRef.current.position.set(0, 0, PV_Z_END);
-        groupRef.current.scale.setScalar(escala + Math.sin(t * 2) * 0.1);
+        groupRef.current.scale.setScalar((escala + Math.sin(t * 2) * 0.1) * autoScaleRef.current);
         camera.lookAt(0, 0, PV_Z_END);
         break;
       default:
         groupRef.current.position.set(0, 0, PV_Z_END);
-        groupRef.current.scale.setScalar(escala);
+        groupRef.current.scale.setScalar(escala * autoScaleRef.current);
         groupRef.current.rotation.y = 0;
         camera.lookAt(0, 0, PV_Z_END);
         break;
@@ -317,11 +328,11 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
             {/* Campo: Escala */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-medium text-white/70">Escala (Tamanho do Objeto)</label>
-                <span className="text-sm font-mono font-semibold text-[#4f9eff]">{escala.toFixed(1)}</span>
+                <label className="text-sm font-medium text-white/70">Escala (Multiplicador)</label>
+                <span className="text-sm font-mono font-semibold text-[#4f9eff]">{escala.toFixed(1)}x</span>
               </div>
               <input
-                type="range" min={0.1} max={35} step={0.1}
+                type="range" min={0.1} max={5} step={0.1}
                 value={escala} onChange={e => setEscala(parseFloat(e.target.value))}
                 className="w-full accent-[#4f9eff] cursor-pointer"
               />
