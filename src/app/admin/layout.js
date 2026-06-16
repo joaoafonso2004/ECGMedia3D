@@ -3,6 +3,7 @@
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { AdminFilterProvider } from './AdminFilterContext';
 
 /* ─── Ícones inline (sem biblioteca extra) ─────────────────────── */
@@ -149,10 +150,64 @@ function Sidebar() {
 /* ─── Layout ────────────────────────────────────────────────────── */
 export default function AdminLayout({ children }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [hasAccess, setHasAccess] = useState(false);
+
+  useEffect(() => {
+    async function checkRole() {
+      // Página de login: sem proteção
+      if (pathname === '/admin/login') {
+        setLoading(false);
+        return;
+      }
+
+      const supabase = createSupabaseBrowser();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push('/admin/login');
+        return;
+      }
+
+      const { data: tiposUtilizador } = await supabase
+        .from('tipo_utilizador')
+        .select('role')
+        .eq('id_utilizador', user.id);
+
+      const isSuperAdmin = tiposUtilizador?.some(t => t.role === 'superadmin');
+      const isGestor = tiposUtilizador?.some(t => t.role === 'gestor' || t.role === 'gestor_disciplina');
+
+      if (isSuperAdmin || isGestor) {
+        setHasAccess(true);
+        setLoading(false);
+      } else {
+        router.push('/utilizador/dashboard');
+      }
+    }
+
+    checkRole();
+  }, [pathname, router]);
 
   // Página de login: sem sidebar
   if (pathname === '/admin/login') {
     return <>{children}</>;
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0c0c0f] text-white/30 text-sm">
+        A verificar permissões...
+      </div>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0c0c0f] text-white/30 text-sm">
+        A redirecionar...
+      </div>
+    );
   }
 
   return (

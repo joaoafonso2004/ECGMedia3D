@@ -378,11 +378,12 @@ export default function ProjetosPage() {
   const { entidadeId, programaId, programas } = useAdminFilter();
 
   const [projetos, setProjetos]           = useState([]);
+  const [searchQuery, setSearchQuery]     = useState(''); // <-- Estado para a pesquisa
   const [modulosList, setModulosList]     = useState([]);
   const [loading, setLoading]             = useState(true);
   const [modal, setModal]                 = useState(null); 
   const [saving, setSaving]               = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(null); // Agora armazena o objeto inteiro do projeto a eliminar
+  const [confirmDelete, setConfirmDelete] = useState(null); 
   const [deleting, setDeleting]           = useState(false);
   const [toast, setToast]                 = useState('');
 
@@ -493,7 +494,6 @@ export default function ProjetosPage() {
     setSaving(false);
   }
 
-  /* ATUALIZADO: Lógica completa de eliminação limpa do projeto inteiro */
   async function handleDelete() {
     setDeleting(true);
     const supabase = createSupabaseBrowser();
@@ -501,12 +501,10 @@ export default function ProjetosPage() {
     try {
       const urlsToDelete = [];
 
-      // 1. Adicionar o URL da capa do projeto à lista de eliminação
       if (confirmDelete.projeto_url) {
         urlsToDelete.push(confirmDelete.projeto_url);
       }
 
-      // 2. Buscar e adicionar todos os URLs da galeria associados a este projeto
       const { data: mediaItems } = await supabase
         .from('media_items')
         .select('url')
@@ -518,7 +516,6 @@ export default function ProjetosPage() {
         });
       }
 
-      // 3. Fazer o pedido à API para apagar os ficheiros físicos do Cloudflare R2
       for (const url of urlsToDelete) {
         const fileName = url.split('/').pop();
         if (fileName) {
@@ -530,12 +527,10 @@ export default function ProjetosPage() {
         }
       }
 
-      // 4. Apagar as referências da galeria na BD (para evitar erros de chaves estrangeiras)
       if (mediaItems && mediaItems.length > 0) {
         await supabase.from('media_items').delete().eq('id_projetos', confirmDelete.id_projetos);
       }
 
-      // 5. Apagar o projeto na BD
       const { error } = await supabase.from('projetos').delete().eq('id_projetos', confirmDelete.id_projetos);
       
       if (error) throw error;
@@ -551,10 +546,23 @@ export default function ProjetosPage() {
     setDeleting(false);
   }
 
+  /* ─── Lógica de Filtragem ───────────────────────────────────────── */
   const programaIdsEntidade = programas.map(p => p.id_programa);
   const projetosFiltrados = projetos.filter(p => {
-    if (programaId) return p.modulo?.id_programa == programaId;
-    if (entidadeId) return programaIdsEntidade.includes(p.modulo?.id_programa);
+    // 1. Filtros Globais (Barra Superior Admin)
+    if (programaId && p.modulo?.id_programa != programaId) return false;
+    if (entidadeId && !programaIdsEntidade.includes(p.modulo?.id_programa)) return false;
+
+    // 2. Filtro de Pesquisa Textual
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const titulo = p.titulo?.toLowerCase() || '';
+      const disciplina = p.modulo?.nome?.toLowerCase() || '';
+      const autores = p.autores?.toLowerCase() || '';
+      
+      return titulo.includes(query) || disciplina.includes(query) || autores.includes(query);
+    }
+
     return true;
   });
 
@@ -566,10 +574,11 @@ export default function ProjetosPage() {
         </div>
       )}
 
+      {/* Cabeçalho */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white">Projetos</h1>
-          <p className="text-sm text-white/35 mt-1">{loading ? '…' : `${projetosFiltrados.length} projeto${projetosFiltrados.length !== 1 ? 's' : ''} registados`}</p>
+          <p className="text-sm text-white/35 mt-1">{loading ? '…' : `${projetosFiltrados.length} projeto${projetosFiltrados.length !== 1 ? 's' : ''} encontrados`}</p>
         </div>
         <button
           onClick={() => setModal('novo')}
@@ -579,12 +588,32 @@ export default function ProjetosPage() {
         </button>
       </div>
 
+      {/* Barra de Pesquisa */}
+      <div className="mb-6">
+        <div className="relative">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-white/30">
+            {/* Ícone de Lupa */}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Pesquisar por título, disciplina ou autores..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-xl border border-white/10 bg-[#13131a] py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 focus:border-[#4f9eff]/50 focus:outline-none focus:ring-1 focus:ring-[#4f9eff]/30 transition shadow-sm"
+          />
+        </div>
+      </div>
+
+      {/* Tabela */}
       <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
         {loading ? (
           <div className="py-12 text-center text-sm text-white/25">A carregar…</div>
         ) : projetosFiltrados.length === 0 ? (
           <div className="py-12 text-center text-sm text-white/25">
-            {projetos.length === 0 ? 'Nenhum projeto encontrado. Cria o primeiro!' : 'Nenhum projeto para o filtro selecionado.'}
+            {projetos.length === 0 ? 'Nenhum projeto encontrado. Cria o primeiro!' : 'Nenhum projeto para a pesquisa atual.'}
           </div>
         ) : (
           <table className="w-full text-sm">
@@ -623,7 +652,7 @@ export default function ProjetosPage() {
                   <td className="px-5 py-3.5 text-white/45 text-xs">{p.autores ?? '—'}</td>
                   <td className="px-5 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => setModal({ projeto: p })} className="rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition">Editar</button>
+                      <button onClick={() => setModal({ projeto: p })} className="rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition">Gerir</button>
                       <button onClick={() => setConfirmDelete(p)} className="rounded-md border border-red-500/20 px-3 py-1.5 text-xs font-medium text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition">Eliminar</button>
                     </div>
                   </td>

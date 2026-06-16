@@ -278,7 +278,6 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 bg-[#13131a] flex-shrink-0">
           <div>
             <h2 className="text-base font-semibold text-white">Editar Modelo</h2>
-            {/* O subtítulo agora mostra o estado atual dinamicamente em vez de apenas modelo.titulo */}
             <p className="text-xs text-white/35 mt-0.5">{titulo}</p>
           </div>
           <button onClick={onClose} className="text-white/30 hover:text-white/70 transition text-2xl leading-none">×</button>
@@ -302,22 +301,21 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
 
           <div className="flex-1 bg-[#13131a] overflow-y-auto p-6 flex flex-col gap-6 border-l border-white/8">
             
-            {/* Campo: Título do Modelo */}
+            {/* Campo de edição do Título */}
             <div>
               <label className="block text-sm font-medium text-white/70 mb-3">Título do Modelo</label>
               <input
                 type="text"
                 value={titulo}
                 onChange={e => setTitulo(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition"
-                placeholder="Ex: Motor V8"
+                className={inputCls}
+                placeholder="Ex: Célula Animal"
               />
             </div>
 
-            {/* Campo: Escala */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-medium text-white/70">Escala (Tamanho do Objeto)</label>
+                <label className="text-sm font-medium text-white/70">Escala</label>
                 <span className="text-sm font-mono font-semibold text-[#4f9eff]">{escala.toFixed(1)}</span>
               </div>
               <input
@@ -327,7 +325,6 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
               />
             </div>
 
-            {/* Campo: Animação */}
             <div>
               <label className="block text-sm font-medium text-white/70 mb-3">Tipo de Animação</label>
               <div className="grid grid-cols-2 gap-2">
@@ -352,7 +349,6 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
 
             <div className="flex-1" />
 
-            {/* Botões do Modal */}
             <div className="flex gap-3 flex-shrink-0">
               <button
                 onClick={() => onSave({ titulo, escala, animacao_tipo: animacaoTipo })}
@@ -362,10 +358,8 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
               >
                 {saving ? 'A guardar…' : 'Guardar'}
               </button>
-              <button
-                onClick={onClose} disabled={saving}
-                className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium text-white/50 hover:bg-white/5 transition"
-              >
+              <button onClick={onClose} disabled={saving}
+                className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium text-white/50 hover:bg-white/5 transition">
                 Cancelar
               </button>
             </div>
@@ -382,6 +376,7 @@ export default function ModelosPage() {
 
   const [modelos,           setModelos]           = useState([]);
   const [todasDisciplinas,  setTodasDisciplinas]  = useState([]);
+  const [searchQuery,       setSearchQuery]       = useState(''); // <-- Estado para a pesquisa
   const [loading,           setLoading]           = useState(true);
   const [showModal,         setShowModal]         = useState(false);
   const [saving,            setSaving]            = useState(false);
@@ -390,6 +385,10 @@ export default function ModelosPage() {
   const [editModelo,        setEditModelo]        = useState(null);
   const [savingEdit,        setSavingEdit]        = useState(false);
   const [toast,             setToast]             = useState('');
+
+  /* ESTADOS DE PAGINAÇÃO */
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5; // Reduzido de 10 para 5
 
   function showToast(msg) {
     setToast(msg);
@@ -436,6 +435,11 @@ export default function ModelosPage() {
   }, []);
 
   useEffect(() => { fetchDados(); }, [fetchDados]);
+
+  // Sempre que os filtros globais ou a pesquisa mudam, voltamos à primeira página
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [entidadeId, programaId, searchQuery]);
 
   /* ─── Adicionar Novo Modelo e Associar à Disciplina ────────────── */
   async function handleCreate({ titulo, url, id_modulo, id_programa, id_entidade }) {
@@ -534,17 +538,37 @@ export default function ModelosPage() {
     } else {
       showToast('Modelo eliminado.');
       fetchDados();
+      
+      // Se apagar o último elemento da página, recuar uma página
+      if (paginatedModelos.length === 1 && currentPage > 1) {
+        setCurrentPage(prev => prev - 1);
+      }
     }
     setConfirmDelete(null);
     setDeleting(false);
   }
 
+  /* Lógica de Filtragem e Paginação */
   const programaIdsEntidade = programas.map(p => p.id_programa);
   const modelosFiltrados = modelos.filter(m => {
-    if (programaId) return m.id_programa == programaId;
-    if (entidadeId) return programaIdsEntidade.includes(m.id_programa);
+    // 1. Filtragem Contextual (Barra Superior Admin)
+    if (programaId && m.id_programa != programaId) return false;
+    if (entidadeId && !programaIdsEntidade.includes(m.id_programa)) return false;
+
+    // 2. Filtragem de Pesquisa Textual
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const titulo = m.titulo?.toLowerCase() || '';
+      const disciplina = m.nome_disciplina?.toLowerCase() || '';
+      return titulo.includes(query) || disciplina.includes(query);
+    }
+
     return true;
   });
+
+  const totalPages = Math.ceil(modelosFiltrados.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedModelos = modelosFiltrados.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -561,7 +585,7 @@ export default function ModelosPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Modelos 3D</h1>
           <p className="text-sm text-white/35 mt-1">
-            {loading ? '…' : `${modelosFiltrados.length} modelo${modelosFiltrados.length !== 1 ? 's' : ''}`}
+            {loading ? '…' : `${modelosFiltrados.length} modelo${modelosFiltrados.length !== 1 ? 's' : ''} encontrados`}
           </p>
         </div>
         <button
@@ -574,95 +598,152 @@ export default function ModelosPage() {
         </button>
       </div>
 
+      {/* Barra de Pesquisa */}
+      <div className="mb-6">
+        <div className="relative">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-white/30">
+            {/* Ícone de Lupa */}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Pesquisar por título ou disciplina..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-xl border border-white/10 bg-[#13131a] py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 focus:border-[#4f9eff]/50 focus:outline-none focus:ring-1 focus:ring-[#4f9eff]/30 transition shadow-sm"
+          />
+        </div>
+      </div>
+
       {/* Tabela */}
-      <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
+      <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden flex flex-col">
         {loading ? (
           <div className="py-12 text-center text-sm text-white/25">A carregar…</div>
         ) : modelosFiltrados.length === 0 ? (
           <div className="py-12 text-center text-sm text-white/25">
-            {modelos.length === 0 ? 'Nenhum modelo encontrado. Faz o upload do primeiro!' : 'Nenhum modelo para o filtro selecionado.'}
+            {modelos.length === 0 
+              ? 'Nenhum modelo encontrado. Faz o upload do primeiro!' 
+              : 'Nenhum modelo para a pesquisa ou filtro atual.'}
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-xs text-white/30 border-b border-white/5 bg-white/2">
-                <th className="text-left px-5 py-3 font-medium">Título</th>
-                <th className="text-left px-5 py-3 font-medium">Disciplina</th>
-                <th className="text-left px-5 py-3 font-medium">Escala</th>
-                <th className="text-left px-5 py-3 font-medium">Animação</th>
-                <th className="text-left px-5 py-3 font-medium">URL</th>
-                <th className="px-5 py-3 font-medium text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {modelosFiltrados.map((m, i) => (
-                <tr
-                  key={m.id_media_items}
-                  className={`transition hover:bg-white/2 ${i !== modelosFiltrados.length - 1 ? 'border-b border-white/5' : ''}`}
-                >
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      {/* Mini Visualizador 3D na Tabela */}
-                      <div className="h-12 w-12 overflow-hidden rounded-md border border-white/10 bg-[#0c0c0f] flex-shrink-0 flex items-center justify-center">
-                        <Canvas
-                          camera={{ position: [0, 1, 0], fov: 45, near: 0.1, far: 200 }}
-                          gl={{ alpha: true, antialias: true }}
-                          style={{ width: '100%', height: '100%', background: 'transparent' }}
-                        >
-                          <ambientLight intensity={0.6} />
-                          <directionalLight position={[10, 10, 5]} intensity={1.5} />
-                          <Suspense fallback={null}>
-                            <PreviewModel url={m.url} escala={m.escala ?? 1.5} animacaoTipo={m.animacao_tipo ?? 'rotation'} />
-                          </Suspense>
-                        </Canvas>
-                      </div>
-                      <p className="font-medium text-white/85 truncate max-w-[150px]">{m.titulo ?? '—'}</p>
-                    </div>
-                  </td>
-                  <td className="px-5 py-3.5 text-white/45 text-xs">
-                    {m.nome_disciplina ?? '—'}
-                  </td>
-                  <td className="px-5 py-3.5 text-white/45 font-mono text-xs">
-                    {m.escala ?? 1.5}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span className="text-xs text-[#4f9eff] bg-[#4f9eff]/10 px-2 py-1 rounded-md font-mono">
-                      {m.animacao_tipo ?? 'none'}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <a
-                      href={m.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-[#4f9eff]/60 hover:text-[#4f9eff] transition truncate block max-w-[120px]"
-                      title={m.url}
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-xs text-white/30 border-b border-white/5 bg-white/2">
+                    <th className="text-left px-5 py-3 font-medium">Título</th>
+                    <th className="text-left px-5 py-3 font-medium">Disciplina</th>
+                    <th className="text-left px-5 py-3 font-medium">Escala</th>
+                    <th className="text-left px-5 py-3 font-medium">Animação</th>
+                    <th className="text-left px-5 py-3 font-medium">URL</th>
+                    <th className="px-5 py-3 font-medium text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedModelos.map((m, i) => (
+                    <tr
+                      key={m.id_media_items}
+                      className={`transition hover:bg-white/2 ${i !== paginatedModelos.length - 1 ? 'border-b border-white/5' : ''}`}
                     >
-                      {m.url?.split('/').pop() ?? m.url}
-                    </a>
-                  </td>
-                  <td className="px-5 py-3.5 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => setEditModelo(m)}
-                        className="rounded-md border border-[#4f9eff]/20 px-3 py-1.5 text-xs font-medium
-                                   text-[#4f9eff]/60 hover:bg-[#4f9eff]/10 hover:text-[#4f9eff] transition"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => setConfirmDelete(m.id_media_items)}
-                        className="rounded-md border border-red-500/20 px-3 py-1.5 text-xs font-medium
-                                   text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-3">
+                          {/* Mini Visualizador 3D na Tabela */}
+                          <div className="h-12 w-12 overflow-hidden rounded-md border border-white/10 bg-[#0c0c0f] flex-shrink-0 flex items-center justify-center">
+                            <Canvas
+                              camera={{ position: [0, 1, 0], fov: 45, near: 0.1, far: 200 }}
+                              gl={{ alpha: true, antialias: true }}
+                              style={{ width: '100%', height: '100%', background: 'transparent' }}
+                            >
+                              <ambientLight intensity={0.6} />
+                              <directionalLight position={[10, 10, 5]} intensity={1.5} />
+                              <Suspense fallback={null}>
+                                <PreviewModel url={m.url} escala={m.escala ?? 1.5} animacaoTipo={m.animacao_tipo ?? 'rotation'} />
+                              </Suspense>
+                            </Canvas>
+                          </div>
+                          <p className="font-medium text-white/85 truncate max-w-[150px]">{m.titulo ?? '—'}</p>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3.5 text-white/45 text-xs">
+                        {m.nome_disciplina ?? '—'}
+                      </td>
+                      <td className="px-5 py-3.5 text-white/45 font-mono text-xs">
+                        {m.escala ?? 1.5}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span className="text-xs text-[#4f9eff] bg-[#4f9eff]/10 px-2 py-1 rounded-md font-mono">
+                          {m.animacao_tipo ?? 'none'}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <a
+                          href={m.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-[#4f9eff]/60 hover:text-[#4f9eff] transition truncate block max-w-[120px]"
+                          title={m.url}
+                        >
+                          {m.url?.split('/').pop() ?? m.url}
+                        </a>
+                      </td>
+                      <td className="px-5 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setEditModelo(m)}
+                            className="rounded-md border border-[#4f9eff]/20 px-3 py-1.5 text-xs font-medium
+                                       text-[#4f9eff]/60 hover:bg-[#4f9eff]/10 hover:text-[#4f9eff] transition"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => setConfirmDelete(m.id_media_items)}
+                            className="rounded-md border border-red-500/20 px-3 py-1.5 text-xs font-medium
+                                       text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Controlos de Paginação (Só mostram se houver mais que 1 página) */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-white/5 bg-[#0c0c0f] px-6 py-4">
+                <p className="text-xs text-white/40">
+                  A mostrar <span className="font-semibold text-white/80">{startIndex + 1}</span> a{' '}
+                  <span className="font-semibold text-white/80">
+                    {Math.min(startIndex + ITEMS_PER_PAGE, modelosFiltrados.length)}
+                  </span>{' '}
+                  de <span className="font-semibold text-white/80">{modelosFiltrados.length}</span> modelos
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    Anterior
+                  </button>
+                  <span className="text-xs text-white/40 font-mono px-2">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    Próxima
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 

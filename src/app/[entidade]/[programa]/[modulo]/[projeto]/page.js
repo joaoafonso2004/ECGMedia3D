@@ -97,7 +97,7 @@ export default async function ProjetoPage({ params }) {
 
           <div className="flex items-center gap-4 shrink-0">
             {nomeEscola && <span className="text-xs text-white/25 hidden md:block">{nomeEscola}</span>}
-            <Link href="/admin/login" className="rounded-lg border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-white/50 transition hover:border-white/20 hover:text-white/80">Área Admin</Link>
+            <Link href="/admin/login" className="rounded-lg border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-white/50 transition hover:border-white/20 hover:text-white/80">Entrar</Link>
           </div>
         </div>
       </header>

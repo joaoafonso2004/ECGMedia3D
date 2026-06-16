@@ -3,6 +3,7 @@
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 function IconGrid() {
   return (
@@ -108,6 +109,55 @@ function Sidebar() {
 }
 
 export default function GestorLayout({ children }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [hasAccess, setHasAccess] = useState(false);
+
+  useEffect(() => {
+    async function checkRole() {
+      const supabase = createSupabaseBrowser();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push('/admin/login');
+        return;
+      }
+
+      const { data: tiposUtilizador } = await supabase
+        .from('tipo_utilizador')
+        .select('role')
+        .eq('id_utilizador', user.id);
+
+      const isGestor = tiposUtilizador?.some(t => t.role === 'gestor' || t.role === 'gestor_disciplina');
+      const isSuperAdmin = tiposUtilizador?.some(t => t.role === 'superadmin');
+
+      if (isGestor || isSuperAdmin) {
+        setHasAccess(true);
+        setLoading(false);
+      } else {
+        router.push('/utilizador/dashboard');
+      }
+    }
+
+    checkRole();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0c0c0f] text-white/30 text-sm">
+        A verificar permissões...
+      </div>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0c0c0f] text-white/30 text-sm">
+        A redirecionar...
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-[#0c0c0f]">
       <Sidebar />
