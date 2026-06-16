@@ -71,6 +71,10 @@ export default function ModelViewerGlobal() {
           escala={activeModel?.escala        ?? 1.5}
           offsetY={activeModel?.offset_y     ?? 0}
           animacaoTipo={activeModel?.animacao_tipo ?? null}
+          rotacaoX={activeModel?.rotacao_x   ?? 0}
+          rotacaoY={activeModel?.rotacao_y   ?? 0}
+          rotacaoZ={activeModel?.rotacao_z   ?? 0}
+          posicaoX={activeModel?.posicao_x   ?? 0}
         />
       )}
     </div>

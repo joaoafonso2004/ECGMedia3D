@@ -2,11 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
-import { useAdminFilter } from '../AdminFilterContext';
-
-const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white
-  placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1
-  focus:ring-[#4f9eff]/30 transition`;
 
 /* ─── Card de estatística ───────────────────────────────────────── */
 function StatCard({ label, value, icon, color = '#4f9eff' }) {
@@ -29,7 +24,6 @@ function StatCard({ label, value, icon, color = '#4f9eff' }) {
 }
 
 export default function DashboardPage() {
-  const { entidades, entidadeId, selectEntidade, programas, programaId, setProgramaId } = useAdminFilter();
 
   const [stats, setStats]       = useState({ disciplinas: null, modelos: null, relacoes: null });
   const [recentes, setRecentes] = useState([]);
@@ -63,10 +57,6 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
-  const entidadeNome  = entidades.find(e => e.id_entidade == entidadeId)?.nome;
-  const programaNome  = programas.find(p => p.id_programa == programaId)?.nome;
-  const filtroAtivo   = entidadeId || programaId;
-
   return (
     <div className="p-8 max-w-5xl mx-auto">
 
@@ -74,66 +64,6 @@ export default function DashboardPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <p className="text-sm text-white/35 mt-1">Visão geral da plataforma media3d</p>
-      </div>
-
-      {/* ─── Filtro Global ─────────────────────────────────────────── */}
-      <div className="rounded-xl border border-white/8 bg-[#13131a] p-5 mb-8">
-        <div className="flex items-center justify-between mb-4">
-          {filtroAtivo && (
-            <button
-              onClick={() => selectEntidade('')}
-              className="text-xs text-white/40 hover:text-white/70 border border-white/10
-                         hover:border-white/20 px-3 py-1.5 rounded-lg transition"
-            >
-              Limpar filtros
-            </button>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-white/50 mb-1.5">Entidade</label>
-            <select
-              className={inputCls}
-              value={entidadeId}
-              onChange={e => selectEntidade(e.target.value)}
-            >
-              <option value="">Todas as entidades</option>
-              {entidades.map(ent => (
-                <option key={ent.id_entidade} value={ent.id_entidade}>{ent.nome}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-white/50 mb-1.5">Programa</label>
-            <select
-              className={inputCls}
-              value={programaId}
-              onChange={e => setProgramaId(e.target.value)}
-              disabled={!entidadeId}
-            >
-              <option value="">
-                {entidadeId
-                  ? programas.length === 0 ? 'Sem programas' : 'Todos os programas'
-                  : 'Seleciona primeiro a entidade'}
-              </option>
-              {programas.map(p => (
-                <option key={p.id_programa} value={p.id_programa}>
-                  {p.codigo} — {p.nome}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {filtroAtivo && (
-          <div className="mt-3 flex items-center gap-2">
-            <span className="text-xs text-white/30">A mostrar:</span>
-            <span className="text-xs font-medium text-[#4f9eff] bg-[#4f9eff]/10 border border-[#4f9eff]/20 px-2 py-0.5 rounded-full">
-              {programaId ? `${programaNome}` : `Tudo de ${entidadeNome}`}
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Cards de estatísticas */}

@@ -33,7 +33,7 @@ async function getPrograma(idEntidade, codigoParam) {
 async function getLogo3D(idPrograma) {
   const { data } = await supabase
     .from('media_items')
-    .select('url, escala, animacao_tipo')
+    .select('url, escala, animacao_tipo, rotacao_x, rotacao_y, rotacao_z, posicao_x, offset_y')
     .eq('tipo', 'logo3d')
     .eq('id_programa', idPrograma)
     .maybeSingle();
@@ -45,7 +45,7 @@ async function getModulos(idPrograma) {
     .from('modulo')
     .select(`
       id_modulo, id_programa, nome, codigo, descricao, ano, semestre,
-      modulo_media ( media_items ( tipo, url, escala, offset_y, animacao_tipo, loop ) )
+      modulo_media ( media_items ( tipo, url, escala, offset_y, animacao_tipo, loop, rotacao_x, rotacao_y, rotacao_z, posicao_x ) )
     `)
     .eq('id_programa', idPrograma)
     .order('ano',      { ascending: true })
@@ -167,7 +167,18 @@ export default async function ProgramaPage({ params }) {
           {/* Título: logo 3D ou código do curso em texto */}
           {logo3d ? (
             <div className="mx-auto" style={{ width: 560, height: 560, marginTop: '-200px', marginBottom: '-200px' }}>
-              <LogoHero url={logo3d.url} escala={logo3d.escala ?? 1.0} animacao={logo3d.animacao_tipo ?? 'rotation'} width={560} height={560} />
+              <LogoHero
+                url={logo3d.url}
+                escala={logo3d.escala ?? 1.0}
+                animacao={logo3d.animacao_tipo ?? 'rotation'}
+                width={560}
+                height={560}
+                rotacaoX={logo3d.rotacao_x ?? 0}
+                rotacaoY={logo3d.rotacao_y ?? 0}
+                rotacaoZ={logo3d.rotacao_z ?? 0}
+                posicaoX={logo3d.posicao_x ?? 0}
+                posicaoY={logo3d.offset_y  ?? 0}
+              />
             </div>
           ) : (
             <h1 className="mt-4 text-6xl font-bold leading-none tracking-tight text-white">

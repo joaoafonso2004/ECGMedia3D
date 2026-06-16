@@ -28,6 +28,10 @@ export default function DisciplinaCard({ disciplina, basePath = '' }) {
   const ESCALA    = glbItem?.escala       ?? 10;
   const OFFSET_Y  = glbItem?.offset_y     ?? 0;
   const ANIM_TIPO = glbItem?.animacao_tipo ?? null;
+  const ROT_X     = glbItem?.rotacao_x    ?? 0;
+  const ROT_Y     = glbItem?.rotacao_y    ?? 0;
+  const ROT_Z     = glbItem?.rotacao_z    ?? 0;
+  const POS_X     = glbItem?.posicao_x    ?? 0;
 
   const hasBreakout = Boolean(glbUrl && videoUrl);
 
@@ -49,6 +53,10 @@ export default function DisciplinaCard({ disciplina, basePath = '' }) {
         escala:        ESCALA,
         offset_y:      OFFSET_Y,
         animacao_tipo: ANIM_TIPO,
+        rotacao_x:     ROT_X,
+        rotacao_y:     ROT_Y,
+        rotacao_z:     ROT_Z,
+        posicao_x:     POS_X,
         rect: {
           centerX:    r.left + r.width  / 2,
           centerY:    r.top  + r.height / 2 - r.height * 0.2,
@@ -61,6 +69,10 @@ export default function DisciplinaCard({ disciplina, basePath = '' }) {
         escala:        ESCALA,
         offset_y:      OFFSET_Y,
         animacao_tipo: ANIM_TIPO,
+        rotacao_x:     ROT_X,
+        rotacao_y:     ROT_Y,
+        rotacao_z:     ROT_Z,
+        posicao_x:     POS_X,
         rect: {
           centerX:    r.left + r.width  / 2,
           centerY:    r.top  + r.height / 2,
