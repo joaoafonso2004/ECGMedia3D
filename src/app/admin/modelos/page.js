@@ -3,9 +3,8 @@
 import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import { useAdminFilter } from '../AdminFilterContext';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useGLTF, useAnimations } from '@react-three/drei';
-import * as THREE from 'three';
+import { Canvas } from '@react-three/fiber';
+import { AnimatedModel, Z_END } from '@/components/ModelScene';
 
 const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white
   placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1
@@ -158,17 +157,6 @@ function NovoModeloForm({ onSave, onCancel, saving, disciplinas }) {
   );
 }
 
-/* ─── Constantes de animação do preview ──────────────────────────── */
-const PV_Z_START   = -40;
-const PV_Z_END     = -8;
-const PV_S_START   = 0.3;
-const PV_CYCLE_SEC = 4.0;
-const PV_T_IN      = 0.33;
-const PV_T_ROT     = 0.67;
-
-function pvEio(t) {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-}
 
 const ANIM_OPTS = [
   { value: 'none',     label: 'Sem Animação', desc: 'Modelo estático no centro'          },
@@ -179,105 +167,101 @@ const ANIM_OPTS = [
   { value: 'custom',   label: 'Custom',       desc: 'Animação nativa do ficheiro GLB'    },
 ];
 
-/* ─── Modelo 3D com animação para o preview ──────────────────────── */
-function PreviewModel({ url, escala, animacaoTipo }) {
-  const { scene, animations } = useGLTF(url);
-  const groupRef    = useRef(null);
-  const clockRef    = useRef(0);
-  const autoScaleRef = useRef(1);
-  const { camera } = useThree();
-  const { actions } = useAnimations(animations, groupRef);
 
-  useEffect(() => {
-    if (!scene) return;
-    const box = new THREE.Box3().setFromObject(scene);
-    const size = new THREE.Vector3();
-    box.getSize(size);
-    const maiorDimensao = Math.max(size.x, size.y, size.z);
-    if (maiorDimensao > 0) autoScaleRef.current = 2.0 / maiorDimensao;
-  }, [scene]);
-
-  useEffect(() => {
-    const all = Object.values(actions);
-    if (animacaoTipo === 'custom') {
-      all.forEach(a => a?.reset().play());
-    } else {
-      all.forEach(a => a?.stop());
-    }
-  }, [animacaoTipo, actions]);
-
-  useEffect(() => {
-    clockRef.current = 0;
-    if (groupRef.current) groupRef.current.rotation.y = 0;
-  }, [animacaoTipo]);
-
-  useFrame((_, delta) => {
-    if (!groupRef.current) return;
-    clockRef.current += delta;
-    const t = clockRef.current;
-
-    switch (animacaoTipo) {
-      case 'zoom': {
-        const c = (t % PV_CYCLE_SEC) / PV_CYCLE_SEC;
-        const effScale = escala * autoScaleRef.current;
-        let posZ, sc, rotY;
-        if (c < PV_T_IN) {
-          const p = pvEio(c / PV_T_IN);
-          posZ = THREE.MathUtils.lerp(PV_Z_START, PV_Z_END, p);
-          sc   = THREE.MathUtils.lerp(PV_S_START, effScale, p);
-          rotY = 0;
-        } else if (c < PV_T_ROT) {
-          const p = (c - PV_T_IN) / (PV_T_ROT - PV_T_IN);
-          posZ = PV_Z_END; sc = effScale; rotY = p * Math.PI * 2;
-        } else {
-          const p = pvEio((c - PV_T_ROT) / (1 - PV_T_ROT));
-          posZ = THREE.MathUtils.lerp(PV_Z_END, PV_Z_START, p);
-          sc   = THREE.MathUtils.lerp(effScale, PV_S_START, p);
-          rotY = Math.PI * 2;
-        }
-        groupRef.current.position.set(0, 0, posZ);
-        groupRef.current.scale.setScalar(sc);
-        groupRef.current.rotation.y = rotY;
-        camera.lookAt(0, 0, posZ);
-        break;
-      }
-      case 'rotation':
-        groupRef.current.position.set(0, 0, PV_Z_END);
-        groupRef.current.scale.setScalar(escala * autoScaleRef.current);
-        groupRef.current.rotation.y += delta * 1.5;
-        camera.lookAt(0, 0, PV_Z_END);
-        break;
-      case 'float':
-        groupRef.current.position.set(0, Math.sin(t * 1.5) * 0.5, PV_Z_END);
-        groupRef.current.scale.setScalar(escala * autoScaleRef.current);
-        camera.lookAt(0, 0, PV_Z_END);
-        break;
-      case 'pulse':
-        groupRef.current.position.set(0, 0, PV_Z_END);
-        groupRef.current.scale.setScalar((escala + Math.sin(t * 2) * 0.1) * autoScaleRef.current);
-        camera.lookAt(0, 0, PV_Z_END);
-        break;
-      default:
-        groupRef.current.position.set(0, 0, PV_Z_END);
-        groupRef.current.scale.setScalar(escala * autoScaleRef.current);
-        groupRef.current.rotation.y = 0;
-        camera.lookAt(0, 0, PV_Z_END);
-        break;
-    }
-  });
-
+/* ─── Slider auxiliar reutilizável ───────────────────────────────── */
+function SliderRow({ label, value, onChange, min, max, step, format }) {
+  const display = format ? format(value) : value;
   return (
-    <group ref={groupRef} position={[0, 0, PV_Z_START]} scale={[PV_S_START, PV_S_START, PV_S_START]}>
-      <primitive object={scene.clone()} />
-    </group>
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs text-white/40">{label}</span>
+        <span className="text-xs font-mono text-[#4f9eff]">{display}</span>
+      </div>
+      <input
+        type="range" min={min} max={max} step={step}
+        value={value} onChange={e => onChange(Number(e.target.value))}
+        className="w-full accent-[#4f9eff] cursor-pointer"
+      />
+    </div>
+  );
+}
+
+/* ─── Card de exemplo para o toggle de contexto no preview ──────── */
+// Réplica exata do layout "sem vídeo" do DisciplinaCard com dados fictícios.
+// Dimensões: 357 × 280 px — tamanho real do card em ecrã lg (grid-cols-3, max-w-6xl, gap-4).
+const CARD_W = 357;
+const CARD_H = 280;
+
+function SimplifiedCardPreview() {
+  return (
+    <div
+      className="relative overflow-hidden rounded-2xl border border-white/8 bg-[#13131a]"
+      style={{ width: CARD_W, height: CARD_H }}
+    >
+      <div className="relative z-10 flex flex-col justify-between h-full p-6">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="rounded-full border border-[#4f9eff]/25 bg-[#4f9eff]/10
+                           px-3 py-0.5 text-xs font-semibold text-[#4f9eff] tracking-wide">
+            2º Ano
+          </span>
+          <span className="rounded-full border border-white/8 bg-white/5
+                           px-3 py-0.5 text-xs font-medium text-white/40 tracking-wide">
+            1º Sem
+          </span>
+          <span className="ml-auto rounded-full border border-white/8 bg-white/5
+                           px-2.5 py-0.5 text-xs text-white/25 tracking-wide">
+            3D
+          </span>
+        </div>
+        <div className="mt-auto pt-6">
+          <span className="text-xs font-mono text-white/25 tracking-widest uppercase mb-1 block">
+            EX001
+          </span>
+          <h2 className="text-base font-semibold text-white leading-snug mb-2 line-clamp-2">
+            Exemplo de Disciplina
+          </h2>
+          <p className="text-sm text-white/45 leading-relaxed line-clamp-2">
+            Descrição de exemplo para ver como o modelo fica sobre o card real.
+          </p>
+          <div className="mt-4 flex items-center gap-1.5 text-xs font-medium text-[#4f9eff]/50">
+            <span>Ver projetos</span>
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
 /* ─── Modal de edição com preview 3D ────────────────────────────── */
-function EditModelModal({ modelo, onClose, onSave, saving }) {
-  const [titulo,       setTitulo]       = useState(modelo.titulo ?? '');
-  const [escala,       setEscala]       = useState(modelo.escala ?? 1.5);
-  const [animacaoTipo, setAnimacaoTipo] = useState(modelo.animacao_tipo ?? 'zoom');
+function EditModelModal({ modelo, onClose, onSave, saving, todasDisciplinas = [], onRemoverAssociacao }) {
+  const [titulo,          setTitulo]          = useState(modelo.titulo ?? '');
+  const [escala,          setEscala]          = useState(modelo.escala ?? 1.5);
+  const [animacaoTipo,    setAnimacaoTipo]    = useState(modelo.animacao_tipo ?? 'zoom');
+  const [rotacaoX,        setRotacaoX]        = useState(modelo.rotacao_x ?? 0);
+  const [rotacaoY,        setRotacaoY]        = useState(modelo.rotacao_y ?? 0);
+  const [rotacaoZ,        setRotacaoZ]        = useState(modelo.rotacao_z ?? 0);
+  const [posicaoX,        setPosicaoX]        = useState(modelo.posicao_x ?? 0);
+  const [posicaoY,        setPosicaoY]        = useState(modelo.offset_y  ?? 0);
+  const [currentModuloId, setCurrentModuloId] = useState(modelo.id_modulo_atual ?? null);
+  const [currentNome,     setCurrentNome]     = useState(modelo.nome_disciplina ?? null);
+  const [disciplinaId,    setDisciplinaId]    = useState(String(modelo.id_modulo_atual ?? ''));
+  const [removingAssoc,   setRemovingAssoc]   = useState(false);
+  const [showCard,        setShowCard]        = useState(false);
+
+  async function handleRemoverAssociacao() {
+    if (!currentModuloId || removingAssoc) return;
+    setRemovingAssoc(true);
+    const ok = await onRemoverAssociacao(modelo.id_media_items, currentModuloId);
+    if (ok) {
+      setCurrentModuloId(null);
+      setCurrentNome(null);
+      setDisciplinaId('');
+    }
+    setRemovingAssoc(false);
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -289,30 +273,79 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 bg-[#13131a] flex-shrink-0">
           <div>
             <h2 className="text-base font-semibold text-white">Editar Modelo</h2>
-            {/* O subtítulo agora mostra o estado atual dinamicamente em vez de apenas modelo.titulo */}
             <p className="text-xs text-white/35 mt-0.5">{titulo}</p>
           </div>
           <button onClick={onClose} className="text-white/30 hover:text-white/70 transition text-2xl leading-none">×</button>
         </div>
 
         <div className="flex flex-1 min-h-0">
-          <div className="flex-none bg-[#0c0c0f]" style={{ width: '60%' }}>
-            <Canvas
-              camera={{ position: [0, 1, 0], fov: 45, near: 0.1, far: 200 }}
-              gl={{ alpha: true, antialias: true }}
-              style={{ width: '100%', height: '100%', background: 'transparent' }}
+          {/* Preview 3D */}
+          <div className="flex-none relative bg-[#0c0c0f]" style={{ width: '60%' }}>
+            {showCard && (
+              <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
+                <SimplifiedCardPreview />
+              </div>
+            )}
+            <button
+              onClick={() => setShowCard(s => !s)}
+              title={showCard ? 'Ocultar card de exemplo' : 'Ver card de exemplo'}
+              className={`absolute bottom-3 left-3 z-20 flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs transition
+                ${showCard
+                  ? 'border-[#4f9eff]/40 bg-[#4f9eff]/10 text-[#4f9eff]'
+                  : 'border-white/10 bg-black/40 text-white/30 hover:text-white/60 hover:border-white/20'
+                }`}
             >
-              <ambientLight intensity={0.5} />
-              <directionalLight position={[10, 10, 5]} intensity={1.2} />
-              <pointLight position={[0, 4, PV_Z_END]} color="#4f9eff" intensity={3} distance={60} />
-              <Suspense fallback={null}>
-                <PreviewModel url={modelo.url} escala={escala} animacaoTipo={animacaoTipo} />
-              </Suspense>
-            </Canvas>
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              {showCard ? 'Ocultar card' : 'Ver card'}
+            </button>
+            {/* Canvas wrapper — quando showCard replica exatamente o ModelViewerGlobal real:
+                  canvas quadrado de (max(cardW,cardH)*2) centrado sobre o card */}
+            <div
+              style={showCard ? {
+                position : 'absolute',
+                width    : CARD_W * 2,
+                height   : CARD_W * 2,
+                left     : '50%',
+                top      : '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex   : 1,
+              } : {
+                position: 'absolute',
+                inset   : 0,
+                zIndex  : 1,
+              }}
+            >
+              <Canvas
+                camera={{ position: [0, 1, 0], fov: 45, near: 0.1, far: 200 }}
+                gl={{ alpha: true, antialias: true }}
+                style={{ width: '100%', height: '100%', background: 'transparent' }}
+              >
+                <ambientLight intensity={0.5} />
+                <directionalLight position={[10, 10, 5]} intensity={1.2} />
+                <pointLight position={[0, 4, Z_END]} color="#4f9eff" intensity={3} distance={60} />
+                <Suspense fallback={null}>
+                  <AnimatedModel
+                    key={modelo.url}
+                    url={modelo.url}
+                    escala={escala}
+                    animacaoTipo={animacaoTipo}
+                    rotacaoX={rotacaoX}
+                    rotacaoY={rotacaoY}
+                    rotacaoZ={rotacaoZ}
+                    posicaoX={posicaoX}
+                    offsetY={posicaoY}
+                  />
+                </Suspense>
+              </Canvas>
+            </div>
           </div>
 
+          {/* Painel de controlos */}
           <div className="flex-1 bg-[#13131a] overflow-y-auto p-6 flex flex-col gap-6 border-l border-white/8">
-            
+
             {/* Campo: Título do Modelo */}
             <div>
               <label className="block text-sm font-medium text-white/70 mb-3">Título do Modelo</label>
@@ -323,6 +356,35 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
                 className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition"
                 placeholder="Ex: Motor V8"
               />
+            </div>
+
+            {/* Campo: Disciplina Associada */}
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-3">Disciplina Associada</label>
+              <div className="flex items-center gap-2">
+                <select
+                  value={disciplinaId}
+                  onChange={e => setDisciplinaId(e.target.value)}
+                  className={`${inputCls} flex-1`}
+                >
+                  <option value="">Nenhuma</option>
+                  {todasDisciplinas.map(d => (
+                    <option key={d.id_modulo} value={String(d.id_modulo)}>{d.nome}</option>
+                  ))}
+                </select>
+                {currentModuloId && (
+                  <button
+                    onClick={handleRemoverAssociacao}
+                    disabled={removingAssoc}
+                    className="flex-shrink-0 text-xs text-red-400/60 hover:text-red-400 transition disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {removingAssoc ? 'A remover…' : 'Remover'}
+                  </button>
+                )}
+              </div>
+              {disciplinaId !== String(currentModuloId ?? '') && (
+                <p className="text-xs text-[#4f9eff]/60 mt-1.5">Alteração guardada ao clicar "Guardar"</p>
+              )}
             </div>
 
             {/* Campo: Escala */}
@@ -361,15 +423,35 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
               </div>
             </div>
 
+            {/* Campo: Posição e Rotação */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-sm font-medium text-white/70">Posição e Rotação</label>
+                <button
+                  type="button"
+                  onClick={() => { setRotacaoX(0); setRotacaoY(0); setRotacaoZ(0); setPosicaoX(0); setPosicaoY(0); }}
+                  className="text-xs text-white/30 hover:text-white/60 transition"
+                >
+                  Repor
+                </button>
+              </div>
+              <div className="space-y-3">
+                <SliderRow label="Rot. X" value={rotacaoX} onChange={setRotacaoX} min={-180} max={180} step={1} format={v => `${v}°`} />
+                <SliderRow label="Rot. Y" value={rotacaoY} onChange={setRotacaoY} min={-180} max={180} step={1} format={v => `${v}°`} />
+                <SliderRow label="Rot. Z" value={rotacaoZ} onChange={setRotacaoZ} min={-180} max={180} step={1} format={v => `${v}°`} />
+                <SliderRow label="Pos. X" value={posicaoX} onChange={setPosicaoX} min={-2} max={2} step={0.05} format={v => v.toFixed(2)} />
+                <SliderRow label="Pos. Y" value={posicaoY} onChange={setPosicaoY} min={-2} max={2} step={0.05} format={v => v.toFixed(2)} />
+              </div>
+            </div>
+
             <div className="flex-1" />
 
             {/* Botões do Modal */}
             <div className="flex gap-3 flex-shrink-0">
               <button
-                onClick={() => onSave({ titulo, escala, animacao_tipo: animacaoTipo })}
+                onClick={() => onSave({ titulo, escala, animacao_tipo: animacaoTipo, rotacao_x: rotacaoX, rotacao_y: rotacaoY, rotacao_z: rotacaoZ, posicao_x: posicaoX, offset_y: posicaoY, disciplinaId, originalModuloId: currentModuloId })}
                 disabled={saving || !titulo.trim()}
-                className="flex-1 rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white
-                           hover:bg-[#3d8aef] transition disabled:opacity-50"
+                className="flex-1 rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white hover:bg-[#3d8aef] transition disabled:opacity-50"
               >
                 {saving ? 'A guardar…' : 'Guardar'}
               </button>
@@ -430,15 +512,15 @@ export default function ModelosPage() {
     // 3. Procurar as ligações para mostrar a disciplina correta na tabela
     const { data: ligacoes } = await supabase
       .from('modulo_media')
-      .select('id_media_items, modulo:id_modulo(nome)');
+      .select('id_media_items, id_modulo, modulo:id_modulo(nome)');
 
     if (error) {
       showToast('Erro ao carregar modelos: ' + error.message);
       setModelos([]);
     } else {
       const modelosComDisciplina = (modelosData || []).map(modelo => {
-        const ligacaoModelo = ligacoes?.find(l => l.id_media_items === modelo.id_media_items);
-        return { ...modelo, nome_disciplina: ligacaoModelo?.modulo?.nome };
+        const ligacao = ligacoes?.find(l => l.id_media_items === modelo.id_media_items);
+        return { ...modelo, nome_disciplina: ligacao?.modulo?.nome, id_modulo_atual: ligacao?.id_modulo ?? null };
       });
       setModelos(modelosComDisciplina);
     }
@@ -494,23 +576,62 @@ export default function ModelosPage() {
   }
 
   /* ─── Editar modelo ──────────────────────────────────────────── */
-  async function handleEdit({ titulo, escala, animacao_tipo }) {
+  async function handleEdit({ titulo, escala, animacao_tipo, rotacao_x, rotacao_y, rotacao_z, posicao_x, offset_y, disciplinaId, originalModuloId }) {
     setSavingEdit(true);
     const supabase = createSupabaseBrowser();
 
     const { error } = await supabase
       .from('media_items')
-      .update({ titulo: titulo.trim(), escala, animacao_tipo })
+      .update({ titulo: titulo.trim(), escala, animacao_tipo, rotacao_x, rotacao_y, rotacao_z, posicao_x, offset_y })
       .eq('id_media_items', editModelo.id_media_items);
 
     if (error) {
       showToast('Erro ao guardar: ' + error.message);
-    } else {
-      showToast('Modelo atualizado com sucesso!');
-      setEditModelo(null);
-      fetchDados();
+      setSavingEdit(false);
+      return;
     }
+
+    // Atualizar associação de disciplina se mudou
+    const novoModuloId = disciplinaId ? Number(disciplinaId) : null;
+    if (originalModuloId !== novoModuloId) {
+      if (originalModuloId) {
+        await supabase.from('modulo_media')
+          .delete()
+          .eq('id_media_items', editModelo.id_media_items)
+          .eq('id_modulo', originalModuloId);
+      }
+      if (novoModuloId) {
+        const { error: relErr } = await supabase.from('modulo_media')
+          .insert([{ id_media_items: editModelo.id_media_items, id_modulo: novoModuloId }]);
+        if (relErr) {
+          showToast('Modelo guardado, mas falhou ao associar disciplina: ' + relErr.message);
+          setSavingEdit(false);
+          fetchDados();
+          return;
+        }
+      }
+    }
+
+    showToast('Modelo atualizado com sucesso!');
+    setEditModelo(null);
+    fetchDados();
     setSavingEdit(false);
+  }
+
+  /* ─── Remover associação de disciplina ───────────────────────── */
+  async function handleRemoverAssociacao(idMedia, idModulo) {
+    const supabase = createSupabaseBrowser();
+    const { error } = await supabase.from('modulo_media')
+      .delete()
+      .eq('id_media_items', idMedia)
+      .eq('id_modulo', idModulo);
+    if (error) {
+      showToast('Erro ao remover associação: ' + error.message);
+      return false;
+    }
+    showToast('Associação removida.');
+    fetchDados();
+    return true;
   }
 
   /* ─── Eliminar modelo ────────────────────────────────────────── */
@@ -623,7 +744,17 @@ export default function ModelosPage() {
                           <ambientLight intensity={0.6} />
                           <directionalLight position={[10, 10, 5]} intensity={1.5} />
                           <Suspense fallback={null}>
-                            <PreviewModel url={m.url} escala={m.escala ?? 1.5} animacaoTipo={m.animacao_tipo ?? 'rotation'} />
+                            <AnimatedModel
+                              key={m.url}
+                              url={m.url}
+                              escala={m.escala ?? 1.5}
+                              animacaoTipo={m.animacao_tipo ?? 'rotation'}
+                              rotacaoX={m.rotacao_x ?? 0}
+                              rotacaoY={m.rotacao_y ?? 0}
+                              rotacaoZ={m.rotacao_z ?? 0}
+                              posicaoX={m.posicao_x ?? 0}
+                              offsetY={m.offset_y  ?? 0}
+                            />
                           </Suspense>
                         </Canvas>
                       </div>
@@ -696,6 +827,8 @@ export default function ModelosPage() {
           onClose={() => setEditModelo(null)}
           onSave={handleEdit}
           saving={savingEdit}
+          todasDisciplinas={todasDisciplinas}
+          onRemoverAssociacao={handleRemoverAssociacao}
         />
       )}
 

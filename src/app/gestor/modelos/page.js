@@ -2,9 +2,8 @@
 
 import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useGLTF, useAnimations } from '@react-three/drei';
-import * as THREE from 'three';
+import { Canvas } from '@react-three/fiber';
+import { AnimatedModel, Z_END } from '@/components/ModelScene';
 
 const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white
   placeholder-white/20 focus:outline-none focus:border-[#a78bfa]/50 focus:ring-1
@@ -249,17 +248,6 @@ function NovoVideoForm({ onSave, onCancel, saving, disciplinasGestor }) {
   );
 }
 
-/* ─── Constantes de animação do preview ──────────────────────────── */
-const PV_Z_START   = -40;
-const PV_Z_END     = -8;
-const PV_S_START   = 0.3;
-const PV_CYCLE_SEC = 4.0;
-const PV_T_IN      = 0.33;
-const PV_T_ROT     = 0.67;
-
-function pvEio(t) {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-}
 
 const ANIM_OPTS = [
   { value: 'none',     label: 'Sem Animação', desc: 'Modelo estático no centro'          },
@@ -270,87 +258,22 @@ const ANIM_OPTS = [
   { value: 'custom',   label: 'Custom',       desc: 'Animação nativa do ficheiro GLB'    },
 ];
 
-/* ─── Modelo 3D com animação para o preview ──────────────────────── */
-function PreviewModel({ url, escala, animacaoTipo }) {
-  const { scene, animations } = useGLTF(url);
-  const groupRef  = useRef(null);
-  const clockRef  = useRef(0);
-  const { camera } = useThree();
-  const { actions } = useAnimations(animations, groupRef);
 
-  useEffect(() => {
-    const all = Object.values(actions);
-    if (animacaoTipo === 'custom') {
-      all.forEach(a => a?.reset().play());
-    } else {
-      all.forEach(a => a?.stop());
-    }
-  }, [animacaoTipo, actions]);
-
-  useEffect(() => {
-    clockRef.current = 0;
-    if (groupRef.current) groupRef.current.rotation.y = 0;
-  }, [animacaoTipo]);
-
-  useFrame((_, delta) => {
-    if (!groupRef.current) return;
-    clockRef.current += delta;
-    const t = clockRef.current;
-
-    switch (animacaoTipo) {
-      case 'zoom': {
-        const c = (t % PV_CYCLE_SEC) / PV_CYCLE_SEC;
-        let posZ, sc, rotY;
-        if (c < PV_T_IN) {
-          const p = pvEio(c / PV_T_IN);
-          posZ = THREE.MathUtils.lerp(PV_Z_START, PV_Z_END, p);
-          sc   = THREE.MathUtils.lerp(PV_S_START, escala, p);
-          rotY = 0;
-        } else if (c < PV_T_ROT) {
-          const p = (c - PV_T_IN) / (PV_T_ROT - PV_T_IN);
-          posZ = PV_Z_END; sc = escala; rotY = p * Math.PI * 2;
-        } else {
-          const p = pvEio((c - PV_T_ROT) / (1 - PV_T_ROT));
-          posZ = THREE.MathUtils.lerp(PV_Z_END, PV_Z_START, p);
-          sc   = THREE.MathUtils.lerp(escala, PV_S_START, p);
-          rotY = Math.PI * 2;
-        }
-        groupRef.current.position.set(0, 0, posZ);
-        groupRef.current.scale.setScalar(sc);
-        groupRef.current.rotation.y = rotY;
-        camera.lookAt(0, 0, posZ);
-        break;
-      }
-      case 'rotation':
-        groupRef.current.position.set(0, 0, PV_Z_END);
-        groupRef.current.scale.setScalar(escala);
-        groupRef.current.rotation.y += delta * 1.5;
-        camera.lookAt(0, 0, PV_Z_END);
-        break;
-      case 'float':
-        groupRef.current.position.set(0, Math.sin(t * 1.5) * 0.5, PV_Z_END);
-        groupRef.current.scale.setScalar(escala);
-        camera.lookAt(0, 0, PV_Z_END);
-        break;
-      case 'pulse':
-        groupRef.current.position.set(0, 0, PV_Z_END);
-        groupRef.current.scale.setScalar(escala + Math.sin(t * 2) * 0.1);
-        camera.lookAt(0, 0, PV_Z_END);
-        break;
-      default:
-        groupRef.current.position.set(0, 0, PV_Z_END);
-        groupRef.current.scale.setScalar(escala);
-        groupRef.current.rotation.y = 0;
-        camera.lookAt(0, 0, PV_Z_END);
-        break;
-    }
-  });
-
+/* ─── Slider auxiliar reutilizável ───────────────────────────────── */
+function SliderRow({ label, value, onChange, min, max, step, format }) {
+  const display = format ? format(value) : value;
   return (
-    <group ref={groupRef} position={[0, 0, PV_Z_START]} scale={[PV_S_START, PV_S_START, PV_S_START]}>
-      {/* clone() é vital para poder mostrar o mesmo modelo em várias linhas da tabela sem crashar o WebGL */}
-      <primitive object={scene.clone()} />
-    </group>
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs text-white/40">{label}</span>
+        <span className="text-xs font-mono text-[#a78bfa]">{display}</span>
+      </div>
+      <input
+        type="range" min={min} max={max} step={step}
+        value={value} onChange={e => onChange(Number(e.target.value))}
+        className="w-full accent-[#a78bfa] cursor-pointer"
+      />
+    </div>
   );
 }
 
@@ -359,6 +282,11 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
   const [titulo,       setTitulo]       = useState(modelo.titulo ?? '');
   const [escala,       setEscala]       = useState(modelo.escala ?? 1.5);
   const [animacaoTipo, setAnimacaoTipo] = useState(modelo.animacao_tipo ?? 'zoom');
+  const [rotacaoX,     setRotacaoX]     = useState(modelo.rotacao_x ?? 0);
+  const [rotacaoY,     setRotacaoY]     = useState(modelo.rotacao_y ?? 0);
+  const [rotacaoZ,     setRotacaoZ]     = useState(modelo.rotacao_z ?? 0);
+  const [posicaoX,     setPosicaoX]     = useState(modelo.posicao_x ?? 0);
+  const [posicaoY,     setPosicaoY]     = useState(modelo.offset_y  ?? 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -384,9 +312,19 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
             >
               <ambientLight intensity={0.5} />
               <directionalLight position={[10, 10, 5]} intensity={1.2} />
-              <pointLight position={[0, 4, PV_Z_END]} color="#a78bfa" intensity={3} distance={60} />
+              <pointLight position={[0, 4, Z_END]} color="#a78bfa" intensity={3} distance={60} />
               <Suspense fallback={null}>
-                <PreviewModel url={modelo.url} escala={escala} animacaoTipo={animacaoTipo} />
+                <AnimatedModel
+                  key={modelo.url}
+                  url={modelo.url}
+                  escala={escala}
+                  animacaoTipo={animacaoTipo}
+                  rotacaoX={rotacaoX}
+                  rotacaoY={rotacaoY}
+                  rotacaoZ={rotacaoZ}
+                  posicaoX={posicaoX}
+                  offsetY={posicaoY}
+                />
               </Suspense>
             </Canvas>
           </div>
@@ -439,11 +377,32 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
               </div>
             </div>
 
+            {/* Campo: Posição e Rotação */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-sm font-medium text-white/70">Posição e Rotação</label>
+                <button
+                  type="button"
+                  onClick={() => { setRotacaoX(0); setRotacaoY(0); setRotacaoZ(0); setPosicaoX(0); setPosicaoY(0); }}
+                  className="text-xs text-white/30 hover:text-white/60 transition"
+                >
+                  Repor
+                </button>
+              </div>
+              <div className="space-y-3">
+                <SliderRow label="Rot. X" value={rotacaoX} onChange={setRotacaoX} min={-180} max={180} step={1} format={v => `${v}°`} />
+                <SliderRow label="Rot. Y" value={rotacaoY} onChange={setRotacaoY} min={-180} max={180} step={1} format={v => `${v}°`} />
+                <SliderRow label="Rot. Z" value={rotacaoZ} onChange={setRotacaoZ} min={-180} max={180} step={1} format={v => `${v}°`} />
+                <SliderRow label="Pos. X" value={posicaoX} onChange={setPosicaoX} min={-2} max={2} step={0.05} format={v => v.toFixed(2)} />
+                <SliderRow label="Pos. Y" value={posicaoY} onChange={setPosicaoY} min={-2} max={2} step={0.05} format={v => v.toFixed(2)} />
+              </div>
+            </div>
+
             <div className="flex-1" />
 
             <div className="flex gap-3 flex-shrink-0">
               <button
-                onClick={() => onSave({ titulo, escala, animacao_tipo: animacaoTipo })}
+                onClick={() => onSave({ titulo, escala, animacao_tipo: animacaoTipo, rotacao_x: rotacaoX, rotacao_y: rotacaoY, rotacao_z: rotacaoZ, posicao_x: posicaoX, offset_y: posicaoY })}
                 disabled={saving || !titulo.trim()}
                 className="flex-1 rounded-lg bg-[#a78bfa] py-2.5 text-sm font-semibold text-white
                            hover:bg-[#8b5cf6] transition disabled:opacity-50"
@@ -635,12 +594,12 @@ export default function GestorModelosPage() {
   }
 
   /* ─── Editar modelo ─────────────────────────────────────────────── */
-  async function handleEdit({ titulo, escala, animacao_tipo }) {
+  async function handleEdit({ titulo, escala, animacao_tipo, rotacao_x, rotacao_y, rotacao_z, posicao_x, offset_y }) {
     setSavingEdit(true);
     const supabase = createSupabaseBrowser();
     const { error } = await supabase
       .from('media_items')
-      .update({ titulo: titulo.trim(), escala, animacao_tipo })
+      .update({ titulo: titulo.trim(), escala, animacao_tipo, rotacao_x, rotacao_y, rotacao_z, posicao_x, offset_y })
       .eq('id_media_items', editModelo.id_media_items);
 
     if (error) { showToast('Erro: ' + error.message); }
@@ -780,7 +739,17 @@ export default function GestorModelosPage() {
                             <ambientLight intensity={0.6} />
                             <directionalLight position={[10, 10, 5]} intensity={1.5} />
                             <Suspense fallback={null}>
-                              <PreviewModel url={m.url} escala={m.escala ?? 1.5} animacaoTipo={m.animacao_tipo ?? 'rotation'} />
+                              <AnimatedModel
+                                key={m.url}
+                                url={m.url}
+                                escala={m.escala ?? 1.5}
+                                animacaoTipo={m.animacao_tipo ?? 'rotation'}
+                                rotacaoX={m.rotacao_x ?? 0}
+                                rotacaoY={m.rotacao_y ?? 0}
+                                rotacaoZ={m.rotacao_z ?? 0}
+                                posicaoX={m.posicao_x ?? 0}
+                                offsetY={m.offset_y  ?? 0}
+                              />
                             </Suspense>
                           </Canvas>
                         </div>

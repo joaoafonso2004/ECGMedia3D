@@ -5,6 +5,23 @@ import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import LogoModelo3D from '@/components/LogoModelo3D';
 import { useAdminFilter } from '../AdminFilterContext';
 
+function SliderRow({ label, value, onChange, min, max, step, format }) {
+  const display = format ? format(value) : value;
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs text-white/40">{label}</span>
+        <span className="text-xs font-mono text-[#4f9eff]">{display}</span>
+      </div>
+      <input
+        type="range" min={min} max={max} step={step}
+        value={value} onChange={e => onChange(Number(e.target.value))}
+        className="w-full accent-[#4f9eff] cursor-pointer"
+      />
+    </div>
+  );
+}
+
 const ANIM_OPTS = [
   { value: 'none',     label: 'Sem Animação' },
   { value: 'rotation', label: 'Rotação'      },
@@ -43,6 +60,11 @@ export default function LogoPage() {
   const [animacao,      setAnimacao]      = useState('rotation');
   const [editAnimacao,  setEditAnimacao]  = useState('rotation');
   const [editEscala,    setEditEscala]    = useState(1.0);
+  const [editRotacaoX,  setEditRotacaoX]  = useState(0);
+  const [editRotacaoY,  setEditRotacaoY]  = useState(0);
+  const [editRotacaoZ,  setEditRotacaoZ]  = useState(0);
+  const [editPosicaoX,  setEditPosicaoX]  = useState(0);
+  const [editPosicaoY,  setEditPosicaoY]  = useState(0);
   const [savingAnim,    setSavingAnim]    = useState(false);
   const [saving,        setSaving]        = useState(false);
   const [deleting,      setDeleting]      = useState(false);
@@ -69,6 +91,11 @@ export default function LogoPage() {
         setLogoExistente(data ?? null);
         setEditAnimacao(data?.animacao_tipo ?? 'rotation');
         setEditEscala(data?.escala ?? 1.0);
+        setEditRotacaoX(data?.rotacao_x ?? 0);
+        setEditRotacaoY(data?.rotacao_y ?? 0);
+        setEditRotacaoZ(data?.rotacao_z ?? 0);
+        setEditPosicaoX(data?.posicao_x ?? 0);
+        setEditPosicaoY(data?.offset_y  ?? 0);
         setStatus('loaded');
       });
   }, [programaId]);
@@ -86,13 +113,21 @@ export default function LogoPage() {
     const supabase = createSupabaseBrowser();
     const { error } = await supabase
       .from('media_items')
-      .update({ animacao_tipo: editAnimacao, escala: editEscala })
+      .update({
+        animacao_tipo: editAnimacao,
+        escala:        editEscala,
+        rotacao_x:     editRotacaoX,
+        rotacao_y:     editRotacaoY,
+        rotacao_z:     editRotacaoZ,
+        posicao_x:     editPosicaoX,
+        offset_y:      editPosicaoY,
+      })
       .eq('id_media_items', logoExistente.id_media_items);
     if (error) {
       showToast('Erro ao guardar: ' + error.message);
     } else {
       showToast('Alterações guardadas!');
-      setLogoExistente({ ...logoExistente, animacao_tipo: editAnimacao, escala: editEscala });
+      setLogoExistente({ ...logoExistente, animacao_tipo: editAnimacao, escala: editEscala, rotacao_x: editRotacaoX, rotacao_y: editRotacaoY, rotacao_z: editRotacaoZ, posicao_x: editPosicaoX, offset_y: editPosicaoY });
     }
     setSavingAnim(false);
   }
@@ -145,6 +180,11 @@ export default function LogoPage() {
       setLogoExistente(data ?? null);
       setEditAnimacao(data?.animacao_tipo ?? 'rotation');
       setEditEscala(data?.escala ?? 1.0);
+      setEditRotacaoX(data?.rotacao_x ?? 0);
+      setEditRotacaoY(data?.rotacao_y ?? 0);
+      setEditRotacaoZ(data?.rotacao_z ?? 0);
+      setEditPosicaoX(data?.posicao_x ?? 0);
+      setEditPosicaoY(data?.offset_y  ?? 0);
       setStatus('loaded');
     }
     setSaving(false);
@@ -259,14 +299,19 @@ export default function LogoPage() {
                 <div className="flex items-start gap-6 p-4 rounded-lg border border-white/8 bg-white/2">
                   <div
                     className="rounded-lg border border-white/8 bg-[#0c0c0f] overflow-hidden flex-shrink-0"
-                    style={{ width: 200, height: 200 }}
+                    style={{ width: 350, height: 350 }}
                   >
                     <LogoModelo3D
                       url={logoExistente.url}
                       escala={editEscala}
                       animacao={editAnimacao}
-                      width={200}
-                      height={200}
+                      width={350}
+                      height={350}
+                      rotacaoX={editRotacaoX}
+                      rotacaoY={editRotacaoY}
+                      rotacaoZ={editRotacaoZ}
+                      posicaoX={editPosicaoX}
+                      posicaoY={editPosicaoY}
                     />
                   </div>
                   <div className="flex-1 space-y-4 pt-1">
@@ -297,10 +342,29 @@ export default function LogoPage() {
                       <p className="text-xs text-white/35 mb-2">Animação</p>
                       <AnimPicker value={editAnimacao} onChange={setEditAnimacao} />
                     </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-white/35">Posição e Rotação</p>
+                        <button
+                          type="button"
+                          onClick={() => { setEditRotacaoX(0); setEditRotacaoY(0); setEditRotacaoZ(0); setEditPosicaoX(0); setEditPosicaoY(0); }}
+                          className="text-xs text-white/25 hover:text-white/55 transition"
+                        >
+                          Repor
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        <SliderRow label="Rot. X" value={editRotacaoX} onChange={setEditRotacaoX} min={-180} max={180} step={1} format={v => `${v}°`} />
+                        <SliderRow label="Rot. Y" value={editRotacaoY} onChange={setEditRotacaoY} min={-180} max={180} step={1} format={v => `${v}°`} />
+                        <SliderRow label="Rot. Z" value={editRotacaoZ} onChange={setEditRotacaoZ} min={-180} max={180} step={1} format={v => `${v}°`} />
+                        <SliderRow label="Pos. X" value={editPosicaoX} onChange={setEditPosicaoX} min={-2} max={2} step={0.05} format={v => v.toFixed(2)} />
+                        <SliderRow label="Pos. Y" value={editPosicaoY} onChange={setEditPosicaoY} min={-2} max={2} step={0.05} format={v => v.toFixed(2)} />
+                      </div>
+                    </div>
                     <div className="flex gap-2 pt-1">
                       <button
                         onClick={handleSalvarAlteracoes}
-                        disabled={savingAnim || (editAnimacao === (logoExistente.animacao_tipo ?? 'rotation') && editEscala === (logoExistente.escala ?? 1.0))}
+                        disabled={savingAnim}
                         className="rounded-lg bg-[#4f9eff] px-4 py-2 text-xs font-semibold text-white
                                    hover:bg-[#3d8aef] transition disabled:opacity-40 disabled:cursor-not-allowed"
                       >

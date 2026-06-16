@@ -3,9 +3,9 @@
 import { useRef, useEffect, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
-import { Box3, Vector3 } from 'three';
+import { Box3, Vector3, MathUtils } from 'three';
 
-function LogoScene({ url, escala, animacao }) {
+function LogoScene({ url, escala, animacao, rotacaoX = 0, rotacaoY = 0, rotacaoZ = 0, posicaoX = 0, posicaoY = 0 }) {
   const { scene } = useGLTF(url);
   const ref          = useRef(null);
   const t            = useRef(0);
@@ -26,24 +26,45 @@ function LogoScene({ url, escala, animacao }) {
     t.current += delta;
     switch (animacao) {
       case 'rotation':
+        ref.current.position.set(posicaoX, posicaoY, 0);
         ref.current.rotation.y += delta * 1.2;
         break;
       case 'float':
-        ref.current.position.y = Math.sin(t.current * 1.5) * 0.3;
+        ref.current.position.set(posicaoX, posicaoY + Math.sin(t.current * 1.5) * 0.3, 0);
         break;
       default:
+        ref.current.position.set(posicaoX, posicaoY, 0);
         break;
     }
   });
 
   return (
-    <group ref={ref}>
-      <primitive object={scene} />
+    <group ref={ref} position={[posicaoX, posicaoY, 0]}>
+      <group
+        rotation={[
+          MathUtils.degToRad(rotacaoX),
+          MathUtils.degToRad(rotacaoY),
+          MathUtils.degToRad(rotacaoZ),
+        ]}
+      >
+        <primitive object={scene} />
+      </group>
     </group>
   );
 }
 
-export default function LogoModelo3D({ url, escala = 1.0, animacao = 'rotation', width = 300, height = 300 }) {
+export default function LogoModelo3D({
+  url,
+  escala    = 1.0,
+  animacao  = 'rotation',
+  width     = 300,
+  height    = 300,
+  rotacaoX  = 0,
+  rotacaoY  = 0,
+  rotacaoZ  = 0,
+  posicaoX  = 0,
+  posicaoY  = 0,
+}) {
   if (!url) return null;
 
   return (
@@ -56,7 +77,16 @@ export default function LogoModelo3D({ url, escala = 1.0, animacao = 'rotation',
       <directionalLight position={[5, 5, 5]} intensity={1.2} />
       <pointLight position={[0, 2, 3]} color="#4f9eff" intensity={4} distance={20} />
       <Suspense fallback={null}>
-        <LogoScene url={url} escala={escala} animacao={animacao} />
+        <LogoScene
+          url={url}
+          escala={escala}
+          animacao={animacao}
+          rotacaoX={rotacaoX}
+          rotacaoY={rotacaoY}
+          rotacaoZ={rotacaoZ}
+          posicaoX={posicaoX}
+          posicaoY={posicaoY}
+        />
       </Suspense>
     </Canvas>
   );
