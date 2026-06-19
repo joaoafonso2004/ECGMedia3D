@@ -57,7 +57,7 @@ export default function UtilizadorBiblioteca() {
           </div>
           <h3 className="text-lg font-semibold text-white">Nenhuma disciplina associada</h3>
           <p className="text-sm text-white/40 max-w-sm mt-2 leading-relaxed">
-            Quando um administrador ou gestor te associar a um módulo, as tuas disciplinas aparecerão aqui automaticamente.
+            Quando um administrador ou gestor associar-te a um módulo, as tuas disciplinas aparecerão aqui automaticamente.
           </p>
         </div>
       ) : (

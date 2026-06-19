@@ -652,7 +652,7 @@ export default function ProjetosPage() {
                   <td className="px-5 py-3.5 text-white/45 text-xs">{p.autores ?? '—'}</td>
                   <td className="px-5 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => setModal({ projeto: p })} className="rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition">Gerir</button>
+                      <button onClick={() => setModal({ projeto: p })} className="rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition">Editar</button>
                       <button onClick={() => setConfirmDelete(p)} className="rounded-md border border-red-500/20 px-3 py-1.5 text-xs font-medium text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition">Eliminar</button>
                     </div>
                   </td>
