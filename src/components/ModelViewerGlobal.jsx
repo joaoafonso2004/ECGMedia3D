@@ -22,8 +22,44 @@ import { useModelViewer } from '@/context/ModelViewerContext';
 const ModelViewer = dynamic(() => import('./ModelViewer'), { ssr: false });
 
 export default function ModelViewerGlobal() {
-  const { activeModel } = useModelViewer();
+  const { activeModel, setActiveModel } = useModelViewer();
   const isVisible = activeModel !== null;
+
+  /* Referência estável para o modelo ativo — acessível em handlers sem stale closure */
+  const activeModelRef = useRef(activeModel);
+  activeModelRef.current = activeModel;
+
+  /* Última posição conhecida do cursor — atualizada por um listener leve */
+  const lastMousePos = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    function trackMouse(e) { lastMousePos.current = { x: e.clientX, y: e.clientY }; }
+    window.addEventListener('mousemove', trackMouse, { passive: true });
+    return () => window.removeEventListener('mousemove', trackMouse);
+  }, []);
+
+  useEffect(() => {
+    function handleScroll() {
+      const model = activeModelRef.current;
+      if (model === null) return;
+
+      /* O canvas global tem z-index 9999 e cobre o card. elementFromPoint devolveria
+         o canvas, não o card. elementsFromPoint devolve a pilha completa de elementos
+         naquelas coordenadas, permitindo encontrar o card por baixo do canvas. */
+      const { x, y } = lastMousePos.current;
+      const stack = document.elementsFromPoint(x, y);
+      let cardUnderCursor = null;
+      for (const el of stack) {
+        const c = el.closest?.('[data-hover-card]');
+        if (c) { cardUnderCursor = c; break; }
+      }
+
+      const stillOnSameCard = cardUnderCursor?.dataset?.hoverCard === model.cardId;
+      if (!stillOnSameCard) setActiveModel(null);
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [setActiveModel]);
 
   const [everActivated, setEverActivated] = useState(false);
 
