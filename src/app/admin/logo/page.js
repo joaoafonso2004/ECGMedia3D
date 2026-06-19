@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import LogoModelo3D from '@/components/LogoModelo3D';
-import { useAdminFilter } from '../AdminFilterContext';
+import { useAdminFilter, FilterContextLine } from '../AdminFilterContext';
 
 function SliderRow({ label, value, onChange, min, max, step, format }) {
   const display = format ? format(value) : value;
@@ -242,6 +242,7 @@ export default function LogoPage() {
         <p className="text-sm text-white/35 mt-1">
           Associa um modelo 3D como logótipo de um programa. Substitui o texto do código no hero da página pública.
         </p>
+        <FilterContextLine />
       </div>
 
       {/* Indicador do filtro ativo */}

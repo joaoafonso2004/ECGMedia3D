@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
-import { useAdminFilter } from '../AdminFilterContext';
+import { useAdminFilter, FilterContextLine } from '../AdminFilterContext';
 
 /* ─── Modal genérico ────────────────────────────────────────────── */
 function Modal({ title, onClose, children, large = false }) {
@@ -233,13 +233,14 @@ const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 
   focus:ring-[#4f9eff]/30 transition`;
 
 /* ─── Formulário de disciplina ──────────────────────────────────── */
-function DisciplinaForm({ initial = {}, onSave, onCancel, saving }) {
+function DisciplinaForm({ initial = {}, programas = [], onSave, onCancel, saving }) {
   const [form, setForm] = useState({
-    nome:      initial.nome      ?? '',
-    codigo:    initial.codigo    ?? '',
-    descricao: initial.descricao ?? '',
-    ano:       initial.ano       ?? '',
-    semestre:  initial.semestre  ?? '',
+    nome:        initial.nome        ?? '',
+    codigo:      initial.codigo      ?? '',
+    descricao:   initial.descricao   ?? '',
+    ano:         initial.ano         ?? '',
+    semestre:    initial.semestre    ?? '',
+    id_programa: initial.id_programa ?? '',
   });
 
   function set(field, value) {
@@ -273,6 +274,31 @@ function DisciplinaForm({ initial = {}, onSave, onCancel, saving }) {
           placeholder="Breve descrição da disciplina…"
         />
       </Field>
+      {(() => {
+        const prog = form.id_programa
+          ? programas.find(p => String(p.id_programa) === String(form.id_programa))
+          : null;
+        return (
+          <Field label="Programa">
+            <div className="flex items-center gap-2 rounded-lg border border-white/8 bg-white/3 px-3 py-2 text-sm">
+              {prog ? (
+                <>
+                  {prog.codigo && (
+                    <span className="rounded-full border border-[#4f9eff]/25 bg-[#4f9eff]/10
+                                     px-2 py-0.5 text-xs font-semibold uppercase tracking-widest text-[#4f9eff]">
+                      {prog.codigo}
+                    </span>
+                  )}
+                  <span className="text-white/70">{prog.nome}</span>
+                </>
+              ) : (
+                <span className="text-white/25 italic">Sem programa — seleciona um no filtro do topo</span>
+              )}
+            </div>
+          </Field>
+        );
+      })()}
+
       <div className="grid grid-cols-2 gap-3">
         <Field label="Ano">
           <input
@@ -326,19 +352,33 @@ function DisciplinaForm({ initial = {}, onSave, onCancel, saving }) {
 export default function DisciplinasPage() {
   const { entidadeId, programaId, programas } = useAdminFilter();
 
-  const [disciplinas, setDisciplinas] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(''); // <-- Estado para a pesquisa
-  const [loading, setLoading]         = useState(true);
-  const [modal, setModal]             = useState(null); // null | 'nova' | { disciplina }
-  const [saving, setSaving]           = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(null); // id a eliminar
-  const [deleting, setDeleting]       = useState(false);
-  const [toast, setToast]             = useState('');
+  const [disciplinas,    setDisciplinas]    = useState([]);
+  const [todosProgramas, setTodosProgramas] = useState([]);
+  const [searchQuery,    setSearchQuery]    = useState('');
+  const [loading,        setLoading]        = useState(true);
+  const [modal,          setModal]          = useState(null); // null | 'nova' | { disciplina }
+  const [saving,         setSaving]         = useState(false);
+  const [confirmDelete,  setConfirmDelete]  = useState(null);
+  const [deleting,       setDeleting]       = useState(false);
+  const [toast,          setToast]          = useState(null); // { msg, isError } | null
 
-  function showToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(''), 3000);
+  function showToast(msg, isError = false) {
+    setToast({ msg, isError });
+    if (!isError) setTimeout(() => setToast(null), 3000);
   }
+
+  // Fetch de todos os programas (para o selector no formulário)
+  useEffect(() => {
+    async function fetchTodosProgramas() {
+      const supabase = createSupabaseBrowser();
+      const { data } = await supabase
+        .from('programa')
+        .select('id_programa, nome, codigo, id_entidade, entidade:id_entidade(nome)')
+        .order('codigo');
+      setTodosProgramas(data ?? []);
+    }
+    fetchTodosProgramas();
+  }, []);
 
   const fetchDisciplinas = useCallback(async () => {
     setLoading(true);
@@ -361,17 +401,18 @@ export default function DisciplinasPage() {
     setSaving(true);
     const supabase = createSupabaseBrowser();
     const payload  = {
-      nome:      form.nome.trim(),
-      codigo:    form.codigo.trim()    || null,
-      descricao: form.descricao.trim() || null,
-      ano:       form.ano      !== '' ? Number(form.ano)      : null,
-      semestre:  form.semestre !== '' ? Number(form.semestre) : null,
+      nome:        form.nome.trim(),
+      codigo:      form.codigo.trim()    || null,
+      descricao:   form.descricao.trim() || null,
+      ano:         form.ano      !== '' ? Number(form.ano)      : null,
+      semestre:    form.semestre !== '' ? Number(form.semestre) : null,
+      id_programa: form.id_programa ? Number(form.id_programa) : null,
     };
 
     const { error } = await supabase.from('modulo').insert([payload]);
 
     if (error) {
-      showToast('Erro ao criar disciplina: ' + error.message);
+      showToast('Erro ao criar disciplina: ' + error.message, true);
     } else {
       showToast('Disciplina criada com sucesso!');
       setModal(null);
@@ -385,11 +426,12 @@ export default function DisciplinasPage() {
     setSaving(true);
     const supabase = createSupabaseBrowser();
     const payload  = {
-      nome:      form.nome.trim(),
-      codigo:    form.codigo.trim()    || null,
-      descricao: form.descricao.trim() || null,
-      ano:       form.ano      !== '' ? Number(form.ano)      : null,
-      semestre:  form.semestre !== '' ? Number(form.semestre) : null,
+      nome:        form.nome.trim(),
+      codigo:      form.codigo.trim()    || null,
+      descricao:   form.descricao.trim() || null,
+      ano:         form.ano      !== '' ? Number(form.ano)      : null,
+      semestre:    form.semestre !== '' ? Number(form.semestre) : null,
+      id_programa: form.id_programa ? Number(form.id_programa) : null,
     };
 
     const { error } = await supabase
@@ -398,7 +440,7 @@ export default function DisciplinasPage() {
       .eq('id_modulo', modal.disciplina.id_modulo);
 
     if (error) {
-      showToast('Erro ao editar: ' + error.message);
+      showToast('Erro ao editar: ' + error.message, true);
     } else {
       showToast('Disciplina atualizada!');
       setModal(null);
@@ -420,7 +462,7 @@ export default function DisciplinasPage() {
       .eq('id_modulo', confirmDelete);
 
     if (error) {
-      showToast('Erro ao eliminar: ' + error.message);
+      showToast('Erro ao eliminar: ' + error.message, true);
     } else {
       showToast('Disciplina eliminada.');
       fetchDisciplinas();
@@ -447,9 +489,18 @@ export default function DisciplinasPage() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed top-5 right-5 z-50 rounded-lg border border-white/10 bg-[#13131a]
-                        px-4 py-2.5 text-sm text-white shadow-xl">
-          {toast}
+        <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 rounded-lg border
+                         px-4 py-2.5 text-sm text-white shadow-xl
+                         ${toast.isError
+                           ? 'border-red-500/30 bg-red-950/80'
+                           : 'border-white/10 bg-[#13131a]'}`}>
+          <span>{toast.msg}</span>
+          {toast.isError && (
+            <button
+              onClick={() => setToast(null)}
+              className="text-white/40 hover:text-white transition text-lg leading-none"
+            >×</button>
+          )}
         </div>
       )}
 
@@ -460,6 +511,7 @@ export default function DisciplinasPage() {
           <p className="text-sm text-white/35 mt-1">
             {loading ? '…' : `${disciplinasFiltradas.length} disciplina${disciplinasFiltradas.length !== 1 ? 's' : ''}`}
           </p>
+          <FilterContextLine />
         </div>
         <button
           onClick={() => setModal('nova')}
@@ -557,6 +609,8 @@ export default function DisciplinasPage() {
       {modal === 'nova' && (
         <Modal title="Nova Disciplina" onClose={() => setModal(null)}>
           <DisciplinaForm
+            initial={{ id_programa: programaId || '' }}
+            programas={todosProgramas}
             onSave={handleCreate}
             onCancel={() => setModal(null)}
             saving={saving}
@@ -571,6 +625,7 @@ export default function DisciplinasPage() {
             <h3 className="text-sm font-semibold text-white/80 mb-3">Informação Base</h3>
             <DisciplinaForm
               initial={modal.disciplina}
+              programas={todosProgramas}
               onSave={handleEdit}
               saving={saving}
             />

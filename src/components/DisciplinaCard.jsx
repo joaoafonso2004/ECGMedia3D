@@ -57,6 +57,7 @@ export default function DisciplinaCard({ disciplina, basePath = '' }) {
         rotacao_y:     ROT_Y,
         rotacao_z:     ROT_Z,
         posicao_x:     POS_X,
+        cardId:        String(id_modulo),
         rect: {
           centerX:    r.left + r.width  / 2,
           centerY:    r.top  + r.height / 2 - r.height * 0.2,
@@ -73,6 +74,7 @@ export default function DisciplinaCard({ disciplina, basePath = '' }) {
         rotacao_y:     ROT_Y,
         rotacao_z:     ROT_Z,
         posicao_x:     POS_X,
+        cardId:        String(id_modulo),
         rect: {
           centerX:    r.left + r.width  / 2,
           centerY:    r.top  + r.height / 2,
@@ -105,6 +107,7 @@ export default function DisciplinaCard({ disciplina, basePath = '' }) {
     <Link href={`${basePath}/${id_modulo}`} className="block group">
       <div
         ref={divRef}
+        data-hover-card={String(id_modulo)}
         className="relative overflow-hidden rounded-2xl border border-white/8 bg-[#13131a]
                    cursor-pointer transition-all duration-300
                    hover:border-[#4f9eff]/40 hover:shadow-xl hover:shadow-[#4f9eff]/10

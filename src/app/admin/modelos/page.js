@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
-import { useAdminFilter } from '../AdminFilterContext';
+import { useAdminFilter, FilterContextLine } from '../AdminFilterContext';
 import { Canvas } from '@react-three/fiber';
 import { AnimatedModel, Z_END } from '@/components/ModelScene';
 
@@ -721,6 +721,7 @@ export default function ModelosPage() {
           <p className="text-sm text-white/35 mt-1">
             {loading ? '…' : `${modelosFiltrados.length} modelo${modelosFiltrados.length !== 1 ? 's' : ''} encontrados`}
           </p>
+          <FilterContextLine />
         </div>
         <button
           onClick={() => setShowModal(true)}

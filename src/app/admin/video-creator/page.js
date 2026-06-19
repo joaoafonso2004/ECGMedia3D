@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, Suspense } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
+import { FilterContextLine } from '@/app/admin/AdminFilterContext';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
@@ -562,6 +563,7 @@ export default function VideoCreatorPage() {
         <p className="text-sm text-white/35 mt-1">
           Cria vídeos com modelos 3D animados sobre um fundo personalizado e exporta em MP4, WebM ou GIF.
         </p>
+        <FilterContextLine />
       </div>
 
       <div className="flex gap-6 items-start">

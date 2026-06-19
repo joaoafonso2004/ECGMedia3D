@@ -2,6 +2,7 @@
 
 import { createSupabaseBrowser } from "@/lib/supabase-browser";
 import { useCallback, useEffect, useState } from "react";
+import { FilterContextLine } from "../AdminFilterContext";
 
 /* ─── Modal genérico ────────────────────────────────────────────── */
 function Modal({ title, onClose, children }) {
@@ -345,6 +346,7 @@ export default function GestoresPage() {
           <p className="text-sm text-white/35 mt-1">
             {loading ? "…" : `${gestores.length} gestores`}
           </p>
+          <FilterContextLine />
         </div>
         <button
           onClick={() => setModal("novo")}

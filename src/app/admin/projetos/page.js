@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
-import { useAdminFilter } from '../AdminFilterContext';
+import { useAdminFilter, FilterContextLine } from '../AdminFilterContext';
 
 /* Helper para detetar se o URL aponta para um vídeo */
 function isVideoUrl(url) {
@@ -578,7 +578,8 @@ export default function ProjetosPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white">Projetos</h1>
-          <p className="text-sm text-white/35 mt-1">{loading ? '…' : `${projetosFiltrados.length} projeto${projetosFiltrados.length !== 1 ? 's' : ''} encontrados`}</p>
+          <p className="text-sm text-white/35 mt-1">{loading ? '…' : `${projetosFiltrados.length} projeto${projetosFiltrados.length !== 1 ? 's' : ''} registados`}</p>
+          <FilterContextLine />
         </div>
         <button
           onClick={() => setModal('novo')}

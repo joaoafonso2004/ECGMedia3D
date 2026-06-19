@@ -130,23 +130,25 @@ export default async function EntidadePage({ params }) {
                 className="block group"
               >
                 <div
-                  className="relative rounded-2xl border border-white/8 bg-[#13131a] p-6
+                  className="relative rounded-2xl border border-white/8 bg-[#13131a] p-6 flex flex-col
                              cursor-pointer transition-all duration-300
                              hover:border-[#4f9eff]/40 hover:shadow-xl hover:shadow-[#4f9eff]/10
                              hover:-translate-y-1"
-                  style={{ minHeight: '180px' }}
+                  style={{ height: '220px' }}
                 >
-                  {/* Código do programa */}
-                  {p.codigo && (
-                    <span className="inline-block rounded-full border border-[#4f9eff]/25
-                                     bg-[#4f9eff]/10 px-3 py-0.5 text-xs font-semibold
-                                     uppercase tracking-widest text-[#4f9eff] mb-4">
-                      {p.codigo}
-                    </span>
-                  )}
+                  {/* Zona de badge — altura reservada mesmo quando vazio */}
+                  <div className="h-7 mb-3 flex items-center">
+                    {p.codigo && (
+                      <span className="inline-block rounded-full border border-[#4f9eff]/25
+                                       bg-[#4f9eff]/10 px-3 py-0.5 text-xs font-semibold
+                                       uppercase tracking-widest text-[#4f9eff]">
+                        {p.codigo}
+                      </span>
+                    )}
+                  </div>
 
                   {/* Nome */}
-                  <h2 className="text-base font-semibold text-white leading-snug
+                  <h2 className="text-base font-semibold text-white leading-snug line-clamp-2
                                  group-hover:text-[#4f9eff] transition-colors duration-200">
                     {p.nome ?? p.codigo}
                   </h2>
@@ -158,8 +160,8 @@ export default async function EntidadePage({ params }) {
                     </p>
                   )}
 
-                  {/* CTA */}
-                  <div className="mt-5 flex items-center gap-1.5 text-xs font-medium
+                  {/* CTA — empurrado para o fundo */}
+                  <div className="mt-auto flex items-center gap-1.5 text-xs font-medium
                                   text-[#4f9eff]/50 group-hover:text-[#4f9eff]
                                   transition-colors duration-200">
                     <span>Ver disciplinas</span>
