@@ -24,6 +24,7 @@ function getContentType(fileName) {
     case 'png':  return 'image/png';
     case 'jpg':
     case 'jpeg': return 'image/jpeg';
+    case 'gif':  return 'image/gif'; // <-- Adicionado suporte para GIF
     case 'mp4':  return 'video/mp4';
     case 'webm': return 'video/webm';
     case 'mov':  return 'video/quicktime';
@@ -43,18 +44,20 @@ export async function POST(request) {
     const originalName = file.name ?? 'ficheiro.bin';
     const fileNameLower = originalName.toLowerCase();
 
+    // Adicionada a validação para .gif
     const isAllowed =
       fileNameLower.endsWith('.glb')  ||
       fileNameLower.endsWith('.png')  ||
       fileNameLower.endsWith('.jpg')  ||
       fileNameLower.endsWith('.jpeg') ||
+      fileNameLower.endsWith('.gif')  || 
       fileNameLower.endsWith('.mp4')  ||
       fileNameLower.endsWith('.webm') ||
       fileNameLower.endsWith('.mov');
 
     if (!isAllowed) {
       return NextResponse.json(
-        { error: 'Formato não suportado. Apenas GLB, PNG, JPG, MP4, WEBM ou MOV.' },
+        { error: 'Formato não suportado. Apenas GLB, PNG, JPG, GIF, MP4, WEBM ou MOV.' },
         { status: 400 }
       );
     }

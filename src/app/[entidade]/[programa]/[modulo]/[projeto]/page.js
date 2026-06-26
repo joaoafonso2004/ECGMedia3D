@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import GaleriaProjeto from './galeriaProjeto';
 
+export const dynamic = 'force-dynamic';
+
 /* ─── Fetches ───────────────────────────────────────────────────── */
 
 async function getEntidade(slug) {
@@ -70,7 +72,7 @@ export default async function ProjetoPage({ params }) {
   const projeto = await getProjeto(projetoId);
   if (!projeto || projeto.id_modulo !== modulo.id_modulo) notFound();
 
-  /* Carrega a galeria (Modelos 3D, Imagens e Vídeos extra) */
+  /* Carrega a galeria (Modelos 3D, Imagens e Vídeos extra anexados ao projeto) */
   const galeria = await getGaleriaProjeto(projeto.id_projetos);
 
   const codigoCurso = programa.codigo ?? progSlug.toUpperCase();
@@ -78,7 +80,7 @@ export default async function ProjetoPage({ params }) {
   const nomeEscola  = entidade.nome   ?? '';
 
   return (
-    <main className="min-h-screen bg-[#0c0c0f] text-white">
+    <main className="min-h-screen bg-[#0c0c0f] text-white flex flex-col">
 
       {/* ── Navbar ─────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0c0c0f]/80 backdrop-blur-md">
@@ -103,12 +105,12 @@ export default async function ProjetoPage({ params }) {
       </header>
 
       {/* ── Detalhes do Projeto ─────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-6 py-12">
+      <section className="mx-auto max-w-6xl w-full px-6 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Esquerda: Recurso Principal */}
           <div className="lg:col-span-7">
-            <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/2 aspect-video flex items-center justify-center relative shadow-2xl">
+            <div className="rounded-2xl overflow-hidden border border-white/10 bg-[#13131a] aspect-video flex items-center justify-center relative shadow-2xl">
               {projeto.projeto_url ? (
                 isVideoUrl(projeto.projeto_url) ? (
                   <video src={projeto.projeto_url} className="w-full h-full object-cover" controls autoPlay muted loop playsInline />
@@ -128,7 +130,7 @@ export default async function ProjetoPage({ params }) {
             </h1>
             
             {projeto.autores && (
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-[#4f9eff]/10 px-4 py-2 border border-[#4f9eff]/20">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-[#4f9eff]/10 px-4 py-2 border border-[#4f9eff]/20 w-fit">
                 <span className="text-xs uppercase font-bold tracking-wider text-[#4f9eff]">Autores</span>
                 <span className="text-sm font-medium text-white/80">{projeto.autores}</span>
               </div>
@@ -145,8 +147,16 @@ export default async function ProjetoPage({ params }) {
         </div>
       </section>
 
-      {/* ── Galeria (Renderizada no Client Side) ────────────────── */}
+      {/* ── Galeria Simples (Apenas anexos do projeto) ────────────────── */}
       <GaleriaProjeto galeria={galeria} />
+
+      {/* ── Footer ── */}
+      <footer className="border-t border-white/5 px-6 py-6 mt-auto">
+        <div className="mx-auto max-w-6xl flex items-center justify-between">
+          <span className="text-xs text-white/20">© {new Date().getFullYear()} {nomeEscola || 'media3d'} — {codigoMod}</span>
+          <span className="text-xs text-white/15">Next.js · Supabase · Three.js</span>
+        </div>
+      </footer>
 
     </main>
   );

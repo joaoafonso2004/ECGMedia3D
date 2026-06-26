@@ -20,6 +20,14 @@ function IconBook() {
     </svg>
   );
 }
+function IconVideo() {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round"
+        d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 9.75v9A2.25 2.25 0 004.5 18.75z" />
+    </svg>
+  );
+}
 function IconPerson() {
   return (
     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -38,9 +46,10 @@ function IconLogout() {
 
 /* ─── Nav items ─────────────────────────────────────────────────── */
 const NAV_ITEMS = [
-  { label: 'Dashboard',  href: '/utilizador/dashboard',  Icon: IconGrid },
-  { label: 'Biblioteca', href: '/utilizador/biblioteca', Icon: IconBook },
-  { label: 'Perfil',     href: '/utilizador/perfil',     Icon: IconPerson },
+  { label: 'Dashboard',     href: '/utilizador/dashboard',     Icon: IconGrid },
+  { label: 'Biblioteca',    href: '/utilizador/biblioteca',    Icon: IconBook },
+  { label: 'Criador Video', href: '/utilizador/video-creator', Icon: IconVideo },
+  { label: 'Perfil',        href: '/utilizador/perfil',        Icon: IconPerson },
 ];
 
 /* ─── Sidebar ───────────────────────────────────────────────────── */

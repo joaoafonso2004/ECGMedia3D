@@ -115,7 +115,7 @@ const NAV_ITEMS = [
   { label: 'Modelos 3D',    href: '/admin/modelos',       Icon: IconCube     },
   { label: 'Logo',          href: '/admin/logo',          Icon: IconLogo     },
   { label: 'Gestores',      href: '/admin/gestores',      Icon: IconPerson   },
-  { label: 'Alunos',        href: '/admin/utilizadores',  Icon: IconUsers  }, // <-- Ícone atualizado aqui
+  { label: 'Alunos',        href: '/admin/utilizadores',  Icon: IconUsers    },
   { label: 'Criador Video', href: '/admin/video-creator', Icon: IconVideo    },
   { divider: true },
   { label: 'Entidades',     href: '/admin/entidades',     Icon: IconBuilding },
