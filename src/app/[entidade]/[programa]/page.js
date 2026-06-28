@@ -110,7 +110,7 @@ export default async function ProgramaPage({ params }) {
 
       {/* ── Navbar ─────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0c0c0f]/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="flex items-center justify-between px-6 py-4">
 
           {/* Breadcrumb */}
           <div className="flex items-center gap-2">

@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense, useMemo } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import { FilterContextLine } from '@/app/admin/AdminFilterContext';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
+import { SkeletonUtils } from 'three-stdlib';
 import CropOverlay from '@/components/CropOverlay';
 
 /* ─── Constants ────────────────────────────────────────────────────── */
@@ -135,6 +136,7 @@ function SceneBackground({ url, type, onVideoReady }) {
 /* ─── Modelo 3D animado ───────────────────────────────────────────── */
 function VideoModel({ url, escala, animacaoTipo, tempoManual, rotacaoX = 0, rotacaoY = 0, rotacaoZ = 0, posicaoX = 0, posicaoY = 0 }) {
   const { scene, animations } = useGLTF(url);
+  const clonedScene = useMemo(() => SkeletonUtils.clone(scene), [scene]);
   const groupRef    = useRef(null);
   const clockRef    = useRef(0);
   const autoScaleRef = useRef(1);
@@ -143,13 +145,13 @@ function VideoModel({ url, escala, animacaoTipo, tempoManual, rotacaoX = 0, rota
 
   /* Normalização automática de escala ao carregar o modelo */
   useEffect(() => {
-    if (!scene) return;
-    const box = new THREE.Box3().setFromObject(scene);
+    if (!clonedScene) return;
+    const box = new THREE.Box3().setFromObject(clonedScene);
     const size = new THREE.Vector3();
     box.getSize(size);
     const maiorDimensao = Math.max(size.x, size.y, size.z);
     if (maiorDimensao > 0) autoScaleRef.current = 2.0 / maiorDimensao;
-  }, [scene]);
+  }, [clonedScene]);
 
   /* Setup das animações internas (custom) */
   useEffect(() => {
@@ -209,7 +211,7 @@ function VideoModel({ url, escala, animacaoTipo, tempoManual, rotacaoX = 0, rota
           THREE.MathUtils.degToRad(rotacaoZ),
         ]}
       >
-        <primitive object={scene} />
+        <primitive object={clonedScene} />
       </group>
     </group>
   );
@@ -800,6 +802,9 @@ export default function VideoCreatorPage() {
                     }}
                   >
                     <SceneBackground url={bgUrl} type={bgType} onVideoReady={v => { bgVideoRef.current = v; }} />
+                    <ambientLight intensity={0.5} />
+                    <directionalLight position={[10, 10, 5]} intensity={1.2} />
+                    <pointLight position={[0, 4, -8]} color="#4f9eff" intensity={3} distance={60} />
                     {activeModelUrl && (
                       <Suspense fallback={null}>
                         <VideoModel
