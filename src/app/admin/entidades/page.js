@@ -323,6 +323,13 @@ export default function EntidadesPage() {
         )}
       </div>
 
+      {totalPages > 1 && (
+        <p className="text-xs text-white/40 text-center mt-4">
+          A mostrar <span className="font-semibold text-white/80">{(safePage - 1) * PER_PAGE + 1}</span> a{' '}
+          <span className="font-semibold text-white/80">{Math.min(safePage * PER_PAGE, filtered.length)}</span>{' '}
+          de <span className="font-semibold text-white/80">{filtered.length}</span> entidades
+        </p>
+      )}
       <Pagination page={safePage} totalPages={totalPages} onChange={setPage} />
 
       {/* Modal — Nova / Editar */}
