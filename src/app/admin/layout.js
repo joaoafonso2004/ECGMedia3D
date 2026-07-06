@@ -109,17 +109,18 @@ function IconChevronDown() {
 
 /* ─── Nav items ─────────────────────────────────────────────────── */
 const NAV_ITEMS = [
-  { label: 'Dashboard',     href: '/admin/dashboard',     Icon: IconGrid     },
-  { label: 'Disciplinas',   href: '/admin/disciplinas',   Icon: IconBook     },
-  { label: 'Projetos',      href: '/admin/projetos',      Icon: IconFolder   },
-  { label: 'Modelos 3D',    href: '/admin/modelos',       Icon: IconCube     },
-  { label: 'Logo',          href: '/admin/logo',          Icon: IconLogo     },
-  { label: 'Gestores',      href: '/admin/gestores',      Icon: IconPerson   },
-  { label: 'Alunos',        href: '/admin/utilizadores',  Icon: IconUsers    },
-  { label: 'Criador Video', href: '/admin/video-creator', Icon: IconVideo    },
+  { label: 'Dashboard',       href: '/admin/dashboard',     Icon: IconGrid     },
+  { label: 'Disciplinas',     href: '/admin/disciplinas',   Icon: IconBook     },
+  { label: 'Projetos',        href: '/admin/projetos',      Icon: IconFolder   },
+  { label: 'Modelos 3D',      href: '/admin/modelos',       Icon: IconCube     },
+  { label: 'Vídeos de Fundo', href: '/admin/videos',        Icon: IconVideo    },
+  { label: 'Logo',            href: '/admin/logo',          Icon: IconLogo     },
+  { label: 'Gestores',        href: '/admin/gestores',      Icon: IconPerson   },
+  { label: 'Alunos',          href: '/admin/utilizadores',  Icon: IconUsers    },
+  { label: 'Criador Video',   href: '/admin/video-creator', Icon: IconVideo    },
   { divider: true },
-  { label: 'Entidades',     href: '/admin/entidades',     Icon: IconBuilding },
-  { label: 'Programas',     href: '/admin/programas',     Icon: IconAcademic },
+  { label: 'Entidades',       href: '/admin/entidades',     Icon: IconBuilding },
+  { label: 'Programas',       href: '/admin/programas',     Icon: IconAcademic },
 ];
 
 /* ─── TopNavBar ─────────────────────────────────────────────────── */
@@ -164,7 +165,7 @@ function TopNavBar() {
         href="/admin/dashboard"
         className="text-base font-bold tracking-tight text-white hover:text-white/80 transition-colors shrink-0"
       >
-        media3d
+        ECGMedia3d
       </Link>
 
       {/* "/admin" — collapses smoothly when a filter is active */}

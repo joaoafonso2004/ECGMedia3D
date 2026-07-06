@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: 'media3d — ECGM',
+  title: 'ECGMedia3d — ECGM',
   description: 'Plataforma de projetos do curso ECGM com visualização 3D',
 };
 

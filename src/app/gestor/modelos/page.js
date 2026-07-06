@@ -134,120 +134,6 @@ function NovoModeloForm({ onSave, onCancel, saving, disciplinasGestor }) {
   );
 }
 
-/* ─── Formulário de novo vídeo ───────────────────────────────────── */
-function NovoVideoForm({ onSave, onCancel, saving, disciplinasGestor }) {
-  const [titulo,    setTitulo]    = useState('');
-  const [moduloId,  setModuloId]  = useState(disciplinasGestor?.[0]?.id_modulo || '');
-  const [file,      setFile]      = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [error,     setError]     = useState('');
-  const fileRef = useRef();
-
-  async function handleSave() {
-    if (!file)          { setError('Seleciona um ficheiro de vídeo.'); return; }
-    if (!titulo.trim()) { setError('O título é obrigatório.'); return; }
-    if (!moduloId)      { setError('Seleciona uma disciplina.'); return; }
-
-    setUploading(true);
-    setError('');
-
-    const formData = new FormData();
-    formData.append('file', file);
-    const res  = await fetch('/api/upload', { method: 'POST', body: formData });
-    const json = await res.json();
-
-    if (!res.ok) {
-      setError(json.error ?? 'Erro no upload.');
-      setUploading(false);
-      return;
-    }
-
-    const disciplinaSelecionada = disciplinasGestor.find(d => d.id_modulo == moduloId);
-    await onSave({
-      titulo: titulo.trim(),
-      url: json.url,
-      id_modulo: Number(moduloId),
-      id_programa: disciplinaSelecionada?.id_programa,
-      id_entidade: disciplinaSelecionada?.programa?.id_entidade
-    });
-    setUploading(false);
-  }
-
-  const isBusy = saving || uploading;
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-xs font-medium text-white/50 mb-1.5">Ficheiro de Vídeo *</label>
-        <div
-          onClick={() => fileRef.current?.click()}
-          className={`flex items-center gap-3 rounded-lg border-2 border-dashed px-4 py-4 cursor-pointer transition
-            ${file ? 'border-[#4f9eff]/40 bg-[#4f9eff]/5' : 'border-white/10 hover:border-white/20'}`}
-        >
-          <span className="text-2xl">{file ? '🎬' : '📁'}</span>
-          <div className="flex-1 min-w-0">
-            {file ? (
-              <>
-                <p className="text-sm font-medium text-white/80 truncate">{file.name}</p>
-                <p className="text-xs text-white/30">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-              </>
-            ) : (
-              <p className="text-sm text-white/30">Clica para selecionar .mp4, .webm ou .mov</p>
-            )}
-          </div>
-          {file && (
-            <button
-              onClick={e => { e.stopPropagation(); setFile(null); fileRef.current.value = ''; }}
-              className="text-white/25 hover:text-red-400 transition text-lg leading-none"
-            >×</button>
-          )}
-        </div>
-        <input ref={fileRef} type="file" accept=".mp4,.webm,.mov" className="hidden"
-          onChange={e => { setFile(e.target.files[0] ?? null); setError(''); }} />
-      </div>
-
-      <div>
-        <label className="block text-xs font-medium text-white/50 mb-1.5">Título do Vídeo *</label>
-        <input className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition" value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="ex: Demonstração do produto" />
-      </div>
-
-      <div>
-        <label className="block text-xs font-medium text-white/50 mb-1.5">Associar a Disciplina *</label>
-        <select className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition" value={moduloId} onChange={e => setModuloId(e.target.value)}>
-          <option value="" disabled>Seleciona a disciplina...</option>
-          {disciplinasGestor.map(d => (
-            <option key={d.id_modulo} value={d.id_modulo}>{d.nome}</option>
-          ))}
-        </select>
-      </div>
-
-      <p className="text-xs text-white/25 leading-relaxed">
-        O vídeo aparece na zona superior do card da disciplina ao fazer hover,
-        em conjunto com o modelo 3D associado.
-      </p>
-
-      {error && (
-        <div className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-2.5">
-          <p className="text-xs text-red-400">{error}</p>
-        </div>
-      )}
-
-      <div className="flex gap-3 pt-1">
-        <button onClick={handleSave} disabled={isBusy}
-          className="flex-1 rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white
-                     hover:bg-[#3b82f6] transition disabled:opacity-50 disabled:cursor-not-allowed">
-          {uploading ? 'A fazer upload…' : saving ? 'A guardar…' : 'Adicionar Vídeo'}
-        </button>
-        <button onClick={onCancel} disabled={isBusy}
-          className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium
-                     text-white/50 hover:bg-white/5 hover:text-white/80 transition">
-          Cancelar
-        </button>
-      </div>
-    </div>
-  );
-}
-
 
 const ANIM_OPTS = [
   { value: 'none',     label: 'Sem Animação', desc: 'Modelo estático no centro'          },
@@ -424,7 +310,6 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
 /* ─── Página principal direcionada ao Gestor ─────────────────────── */
 export default function GestorModelosPage() {
   const [modelos,           setModelos]           = useState([]);
-  const [videos,            setVideos]            = useState([]);
   const [disciplinasGestor, setDisciplinasGestor] = useState([]);
   const [loading,           setLoading]           = useState(true);
 
@@ -435,12 +320,6 @@ export default function GestorModelosPage() {
   const [deleting,      setDeleting]      = useState(false);
   const [editModelo,    setEditModelo]    = useState(null);
   const [savingEdit,    setSavingEdit]    = useState(false);
-
-  /* estados vídeos */
-  const [showVideoModal,     setShowVideoModal]     = useState(false);
-  const [savingVideo,        setSavingVideo]        = useState(false);
-  const [confirmDeleteVideo, setConfirmDeleteVideo] = useState(null);
-  const [deletingVideo,      setDeletingVideo]      = useState(false);
 
   const [toast, setToast] = useState('');
 
@@ -488,7 +367,6 @@ export default function GestorModelosPage() {
     const mediaItemIds = Array.from(new Set((ligacoes || []).map(l => l.id_media_items)));
 
     if (mediaItemIds.length > 0) {
-      /* modelos 3D */
       const { data: modelosData } = await supabase
         .from('media_items')
         .select('*')
@@ -500,22 +378,8 @@ export default function GestorModelosPage() {
         ...m,
         nome_disciplina: ligacoes.find(l => l.id_media_items === m.id_media_items)?.modulo?.nome,
       })));
-
-      /* vídeos */
-      const { data: videosData } = await supabase
-        .from('media_items')
-        .select('*')
-        .eq('tipo', 'video')
-        .in('id_media_items', mediaItemIds)
-        .order('id_media_items', { ascending: false });
-
-      setVideos((videosData || []).map(v => ({
-        ...v,
-        nome_disciplina: ligacoes.find(l => l.id_media_items === v.id_media_items)?.modulo?.nome,
-      })));
     } else {
       setModelos([]);
-      setVideos([]);
     }
 
     setLoading(false);
@@ -557,40 +421,6 @@ export default function GestorModelosPage() {
       fetchDados();
     }
     setSaving(false);
-  }
-
-  /* ─── Criar vídeo ───────────────────────────────────────────────── */
-  async function handleCreateVideo({ titulo, url, id_modulo, id_programa, id_entidade }) {
-    setSavingVideo(true);
-    const supabase = createSupabaseBrowser();
-
-    const { data: novoVideo, error: mediaError } = await supabase
-      .from('media_items')
-      .insert([{
-        titulo,
-        url,
-        tipo:        'video',
-        loop:        true,
-        id_programa,
-        id_entidade: Array.isArray(id_entidade) ? id_entidade[0]?.id_entidade : id_entidade?.id_entidade,
-      }])
-      .select()
-      .single();
-
-    if (mediaError) { showToast('Erro: ' + mediaError.message); setSavingVideo(false); return; }
-
-    const { error: relError } = await supabase
-      .from('modulo_media')
-      .insert([{ id_modulo, id_media_items: novoVideo.id_media_items }]);
-
-    if (relError) {
-      showToast('Vídeo criado, mas falhou a associar à disciplina: ' + relError.message);
-    } else {
-      showToast('Vídeo adicionado com sucesso!');
-      setShowVideoModal(false);
-      fetchDados();
-    }
-    setSavingVideo(false);
   }
 
   /* ─── Editar modelo ─────────────────────────────────────────────── */
@@ -636,37 +466,6 @@ export default function GestorModelosPage() {
     else       { showToast('Modelo eliminado.'); fetchDados(); }
     setConfirmDelete(null);
     setDeleting(false);
-  }
-
-  /* ─── Eliminar vídeo ────────────────────────────────────────────── */
-  async function handleDeleteVideo() {
-    setDeletingVideo(true);
-    const video = videos.find(v => v.id_media_items === confirmDeleteVideo);
-
-    if (video?.url) {
-      const res = await fetch('/api/delete-model', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: video.url }),
-      });
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        showToast('Erro ao apagar ficheiro: ' + (json.error ?? res.statusText));
-        setDeletingVideo(false);
-        return;
-      }
-    }
-
-    const supabase = createSupabaseBrowser();
-    const { error } = await supabase
-      .from('media_items')
-      .delete()
-      .eq('id_media_items', confirmDeleteVideo);
-
-    if (error) { showToast('Erro: ' + error.message); }
-    else       { showToast('Vídeo eliminado.'); fetchDados(); }
-    setConfirmDeleteVideo(null);
-    setDeletingVideo(false);
   }
 
   return (
@@ -792,79 +591,6 @@ export default function GestorModelosPage() {
         </div>
       </section>
 
-      {/* ══ Secção Vídeos de Fundo ═══════════════════════════════════ */}
-      <section>
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-white">
-              Vídeos de Fundo <span className="text-[#4f9eff] text-base">(Breakout)</span>
-            </h2>
-            <p className="text-sm text-white/35 mt-1">
-              {loading ? '…' : `${videos.length} vídeo${videos.length !== 1 ? 's' : ''} nas suas disciplinas`}
-              <span className="ml-2 text-white/20">— aparecem no hover do card quando há modelo 3D associado</span>
-            </p>
-          </div>
-          <button
-            onClick={() => setShowVideoModal(true)}
-            className="flex items-center gap-2 rounded-lg bg-[#4f9eff] px-4 py-2.5 text-sm
-                       font-semibold text-white hover:bg-[#3b82f6] transition"
-          >
-            <span className="text-lg leading-none">+</span>
-            Novo Vídeo
-          </button>
-        </div>
-
-        <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
-          {loading ? (
-            <div className="py-12 text-center text-sm text-white/25">A carregar…</div>
-          ) : videos.length === 0 ? (
-            <div className="py-12 text-center text-sm text-white/25">
-              Nenhum vídeo associado às suas disciplinas.
-              {disciplinasGestor.length > 0 && ' Adiciona um para activar o efeito breakout!'}
-            </div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-xs text-white/30 border-b border-white/5 bg-white/2">
-                  <th className="text-left px-5 py-3 font-medium">Título</th>
-                  <th className="text-left px-5 py-3 font-medium">Disciplina</th>
-                  <th className="text-left px-5 py-3 font-medium">Ficheiro</th>
-                  <th className="px-5 py-3 font-medium text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {videos.map((v, i) => (
-                  <tr key={v.id_media_items}
-                      className={`transition hover:bg-white/2 ${i !== videos.length - 1 ? 'border-b border-white/5' : ''}`}>
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-base">🎬</span>
-                        <p className="font-medium text-white/85">{v.titulo ?? '—'}</p>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3.5 text-white/45 text-xs">{v.nome_disciplina ?? '—'}</td>
-                    <td className="px-5 py-3.5">
-                      <a href={v.url} target="_blank" rel="noopener noreferrer"
-                         className="text-xs text-[#4f9eff]/60 hover:text-[#4f9eff] transition truncate block max-w-[200px]"
-                         title={v.url}>
-                        {v.url?.split('/').pop() ?? v.url}
-                      </a>
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <button onClick={() => setConfirmDeleteVideo(v.id_media_items)}
-                        className="rounded-md border border-red-500/20 px-3 py-1.5 text-xs font-medium
-                                   text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition">
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </section>
-
       {/* ── Modal Novo Modelo ─────────────────────────────────────── */}
       {showModal && (
         <Modal title="Novo Modelo 3D" onClose={() => setShowModal(false)}>
@@ -872,18 +598,6 @@ export default function GestorModelosPage() {
             onSave={handleCreate}
             onCancel={() => setShowModal(false)}
             saving={saving}
-            disciplinasGestor={disciplinasGestor}
-          />
-        </Modal>
-      )}
-
-      {/* ── Modal Novo Vídeo ──────────────────────────────────────── */}
-      {showVideoModal && (
-        <Modal title="Novo Vídeo de Fundo" onClose={() => setShowVideoModal(false)}>
-          <NovoVideoForm
-            onSave={handleCreateVideo}
-            onCancel={() => setShowVideoModal(false)}
-            saving={savingVideo}
             disciplinasGestor={disciplinasGestor}
           />
         </Modal>
@@ -910,25 +624,6 @@ export default function GestorModelosPage() {
               {deleting ? 'A eliminar…' : 'Eliminar'}
             </button>
             <button onClick={() => setConfirmDelete(null)} disabled={deleting}
-              className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium
-                         text-white/50 hover:bg-white/5 transition">
-              Cancelar
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {/* ── Modal Confirmar eliminar vídeo ───────────────────────── */}
-      {confirmDeleteVideo !== null && (
-        <Modal title="Confirmar eliminação" onClose={() => setConfirmDeleteVideo(null)}>
-          <p className="text-sm text-white/60 mb-6">Tens a certeza que queres eliminar este vídeo?</p>
-          <div className="flex gap-3">
-            <button onClick={handleDeleteVideo} disabled={deletingVideo}
-              className="flex-1 rounded-lg bg-red-500/80 py-2.5 text-sm font-semibold text-white
-                         hover:bg-red-500 transition disabled:opacity-50">
-              {deletingVideo ? 'A eliminar…' : 'Eliminar'}
-            </button>
-            <button onClick={() => setConfirmDeleteVideo(null)} disabled={deletingVideo}
               className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium
                          text-white/50 hover:bg-white/5 transition">
               Cancelar

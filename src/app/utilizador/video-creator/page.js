@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense, useMemo } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
+import { SkeletonUtils } from 'three-stdlib';
 import CropOverlay from '@/components/CropOverlay';
 
 /* ─── Constants ────────────────────────────────────────────────────── */
@@ -18,11 +19,12 @@ const ANIM_OPTS = [
 ];
 
 const RATIOS = [
-  { label: '16:9 — Landscape',     value: '16:9', ratio: 16 / 9  },
-  { label: '9:16 — Portrait / TikTok', value: '9:16', ratio: 9  / 16 },
-  { label: '1:1 — Square / Instagram', value: '1:1',  ratio: 1        },
-  { label: '4:3 — Apresentações',      value: '4:3',  ratio: 4  / 3  },
-  { label: 'Livre',                    value: 'free', ratio: null     },
+  { label: '16:9 — Landscape',         value: '16:9',   ratio: 16 / 9  },
+  { label: '9:16 — Portrait / TikTok', value: '9:16',   ratio: 9  / 16 },
+  { label: '1:1 — Square / Instagram', value: '1:1',    ratio: 1        },
+  { label: '4:3 — Apresentações',      value: '4:3',    ratio: 4  / 3  },
+  { label: 'Livre',                    value: 'free',   ratio: null     },
+  { label: 'Personalizado',            value: 'custom', ratio: null     },
 ];
 
 const OUTPUT_RES = {
@@ -34,7 +36,7 @@ const OUTPUT_RES = {
 
 const PV_W = 640;
 const PV_H = 460;
-const FPS = 30;
+const FPS  = 30;
 
 /* ─── Animation helpers ─────────────────────────────────────────────── */
 const PV_Z_START   = -40;
@@ -85,7 +87,14 @@ const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 
   placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1
   focus:ring-[#4f9eff]/30 transition disabled:opacity-40 disabled:cursor-not-allowed`;
 
-/* ─── Componentes 3D ──────────────────────────────────────────────── */
+/* ─── Exporta câmara para cálculos de drag fora do Canvas ────────── */
+function CameraExporter({ cameraRef }) {
+  const { camera } = useThree();
+  cameraRef.current = camera;
+  return null;
+}
+
+/* ─── Fundo da cena ───────────────────────────────────────────────── */
 function SceneBackground({ url, type, onVideoReady }) {
   const { scene } = useThree();
   const videoRef  = useRef(null);
@@ -121,7 +130,7 @@ function SceneBackground({ url, type, onVideoReady }) {
       }
       scene.background = null;
     };
-  }, [url, type, scene]); 
+  }, [url, type, scene]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useFrame(() => {
     if (scene.background?.isVideoTexture) scene.background.needsUpdate = true;
@@ -130,23 +139,47 @@ function SceneBackground({ url, type, onVideoReady }) {
   return null;
 }
 
-function VideoModel({ url, escala, animacaoTipo, tempoManual, rotacaoX = 0, rotacaoY = 0, rotacaoZ = 0, posicaoX = 0, posicaoY = 0 }) {
+/* ─── Modelo 3D animado ───────────────────────────────────────────── */
+function VideoModel({
+  url, escala, animacaoTipo, tempoManual,
+  rotacaoX = 0, rotacaoY = 0, rotacaoZ = 0,
+  posicaoX = 0, posicaoY = 0,
+}) {
   const { scene, animations } = useGLTF(url);
+  const clonedScene = useMemo(() => SkeletonUtils.clone(scene), [scene]);
   const groupRef    = useRef(null);
   const clockRef    = useRef(0);
-  const autoScaleRef = useRef(1);
-  const { camera } = useThree();
+  const { camera }  = useThree();
   const { actions, mixer } = useAnimations(animations, groupRef);
 
-  useEffect(() => {
-    if (!scene) return;
-    const box = new THREE.Box3().setFromObject(scene);
-    const size = new THREE.Vector3();
-    box.getSize(size);
-    const maiorDimensao = Math.max(size.x, size.y, size.z);
-    if (maiorDimensao > 0) autoScaleRef.current = 2.0 / maiorDimensao;
-  }, [scene]);
+  /* Normalização de escala + centro do bbox — síncrono para evitar flash no primeiro frame */
+  const scaleInfo = useMemo(() => {
+    const box    = new THREE.Box3().setFromObject(clonedScene);
+    const sz     = new THREE.Vector3();
+    const center = new THREE.Vector3();
+    box.getSize(sz);
+    box.getCenter(center);
+    const maiorDim = Math.max(sz.x, sz.y, sz.z);
+    return { autoScale: maiorDim > 0 ? 2.0 / maiorDim : 1, center };
+  }, [clonedScene]);
 
+  const autoScaleRef = useRef(scaleInfo.autoScale);
+  autoScaleRef.current = scaleInfo.autoScale;
+
+  /* Corrige colorSpace das texturas embutidas no GLB após clonagem */
+  useEffect(() => {
+    clonedScene.traverse(child => {
+      if (!child.isMesh) return;
+      const mats = Array.isArray(child.material) ? child.material : [child.material];
+      mats.forEach(mat => {
+        if (mat.map)         mat.map.colorSpace         = THREE.SRGBColorSpace;
+        if (mat.emissiveMap) mat.emissiveMap.colorSpace = THREE.SRGBColorSpace;
+        mat.needsUpdate = true;
+      });
+    });
+  }, [clonedScene]);
+
+  /* Setup das animações internas (custom) */
   useEffect(() => {
     const all = Object.values(actions);
     if (animacaoTipo === 'custom') {
@@ -155,7 +188,7 @@ function VideoModel({ url, escala, animacaoTipo, tempoManual, rotacaoX = 0, rota
     } else {
       all.forEach(a => a?.stop());
     }
-  }, [animacaoTipo, actions]); 
+  }, [animacaoTipo, actions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     clockRef.current = 0;
@@ -164,7 +197,6 @@ function VideoModel({ url, escala, animacaoTipo, tempoManual, rotacaoX = 0, rota
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
-
     const t = tempoManual !== null ? tempoManual : (clockRef.current += delta);
 
     if (animacaoTipo === 'custom') {
@@ -199,12 +231,16 @@ function VideoModel({ url, escala, animacaoTipo, tempoManual, rotacaoX = 0, rota
           THREE.MathUtils.degToRad(rotacaoZ),
         ]}
       >
-        <primitive object={scene} />
+        {/* Centra o pivot no centro geométrico do modelo */}
+        <group position={[-scaleInfo.center.x, -scaleInfo.center.y, -scaleInfo.center.z]}>
+          <primitive object={clonedScene} />
+        </group>
       </group>
     </group>
   );
 }
 
+/* ─── Componentes UI ──────────────────────────────────────────────── */
 function Section({ title, children }) {
   return (
     <div className="rounded-xl border border-white/8 bg-[#13131a] p-4 space-y-3">
@@ -234,9 +270,9 @@ function TogglePair({ value, options, onChange }) {
 export default function VideoCreatorPage() {
 
   /* ── Fundo ── */
-  const [bgType,          setBgType]          = useState('imagem');
-  const [bgFile,          setBgFile]          = useState(null);
-  const [bgUrl,           setBgUrl]           = useState('');
+  const [bgType,           setBgType]          = useState('imagem');
+  const [bgFile,           setBgFile]          = useState(null);
+  const [bgUrl,            setBgUrl]           = useState('');
   const [mediaNaturalSize, setMediaNaturalSize] = useState({ w: 0, h: 0 });
   const bgFileRef = useRef();
 
@@ -248,34 +284,42 @@ export default function VideoCreatorPage() {
   const [libRotacaoX,     setLibRotacaoX]     = useState(0);
   const [libRotacaoY,     setLibRotacaoY]     = useState(0);
   const [libRotacaoZ,     setLibRotacaoZ]     = useState(0);
-  const [libPosicaoX,     setLibPosicaoX]     = useState(0);
-  const [libPosicaoY,     setLibPosicaoY]     = useState(0);
+  const [posicaoX,        setPosicaoX]        = useState(0);
+  const [posicaoY,        setPosicaoY]        = useState(0);
   const [uploadFile,      setUploadFile]      = useState(null);
   const [uploadUrl,       setUploadUrl]       = useState('');
   const [escala,          setEscala]          = useState(1.0);
   const [animacao,        setAnimacao]        = useState('zoom');
   const modelFileRef = useRef();
 
-  /* ── Formato e Gravação ── */
+  /* ── Formato e Exportação ── */
   const [ratioKey,      setRatioKey]      = useState('free');
+  const [customW,       setCustomW]       = useState(1280);
+  const [customH,       setCustomH]       = useState(720);
   const [cropBox,       setCropBox]       = useState(null);
   const [cropResetKey,  setCropResetKey]  = useState(0);
   const [duracao,       setDuracao]       = useState(5);
   const [formato,       setFormato]       = useState('mp4');
   const [tituloProjeto, setTituloProjeto] = useState('');
 
+  /* ── Drag do modelo ── */
+  const [isDraggingModel, setIsDraggingModel] = useState(false);
+  const cameraRef    = useRef(null);
+  const containerRef = useRef(null);
+  const dragStartRef = useRef(null);
+
   /* ── Status ── */
-  const [recordStatus, setRecordStatus] = useState('idle'); // idle | rendering | processing | saving
-  const [progress,     setProgress]     = useState(0);
-  const [frameInfo,    setFrameInfo]    = useState({ atual: 0, total: 0 });
-  const [toast,        setToast]        = useState('');
-  const [tempoManual,  setTempoManual]  = useState(null); 
+  const [recordStatus,  setRecordStatus]  = useState('idle'); // idle | rendering | processing | saving
+  const [progress,      setProgress]      = useState(0);
+  const [frameInfo,     setFrameInfo]     = useState({ atual: 0, total: 0 });
+  const [toast,         setToast]         = useState('');
+  const [tempoManual,   setTempoManual]   = useState(null);
   const [canvasMounted, setCanvasMounted] = useState(false);
 
-  const glRef           = useRef(null);
-  const bgVideoRef      = useRef(null);
-  const ffmpegRef       = useRef(null); 
-  const lastFramesRef   = useRef(0);    
+  const glRef         = useRef(null);
+  const bgVideoRef    = useRef(null);
+  const ffmpegRef     = useRef(null);
+  const lastFramesRef = useRef(0);
 
   useEffect(() => { setCanvasMounted(true); }, []);
 
@@ -284,13 +328,13 @@ export default function VideoCreatorPage() {
     setTimeout(() => setToast(''), 4000);
   }
 
-  const activeModelUrl  = modelSource === 'biblioteca' ? libModelUrl : uploadUrl;
-  const activeRotacaoX  = modelSource === 'biblioteca' ? libRotacaoX : 0;
-  const activeRotacaoY  = modelSource === 'biblioteca' ? libRotacaoY : 0;
-  const activeRotacaoZ  = modelSource === 'biblioteca' ? libRotacaoZ : 0;
-  const activePosicaoX  = modelSource === 'biblioteca' ? libPosicaoX : 0;
-  const activePosicaoY  = modelSource === 'biblioteca' ? libPosicaoY : 0;
+  /* ── URL ativa do modelo ── */
+  const activeModelUrl = modelSource === 'biblioteca' ? libModelUrl  : uploadUrl;
+  const activeRotacaoX = modelSource === 'biblioteca' ? libRotacaoX : 0;
+  const activeRotacaoY = modelSource === 'biblioteca' ? libRotacaoY : 0;
+  const activeRotacaoZ = modelSource === 'biblioteca' ? libRotacaoZ : 0;
 
+  /* ── Biblioteca do Supabase ── */
   useEffect(() => {
     const supabase = createSupabaseBrowser();
     supabase
@@ -301,6 +345,7 @@ export default function VideoCreatorPage() {
       .then(({ data }) => setBiblioteca(data || []));
   }, []);
 
+  /* ── Handlers ── */
   function handleBgFile(e) {
     const f = e.target.files[0];
     if (!f) return;
@@ -326,6 +371,8 @@ export default function VideoCreatorPage() {
     setUploadFile(f);
     if (uploadUrl) URL.revokeObjectURL(uploadUrl);
     setUploadUrl(URL.createObjectURL(f));
+    setPosicaoX(0);
+    setPosicaoY(0);
   }
 
   function handleLibSelect(id) {
@@ -335,13 +382,60 @@ export default function VideoCreatorPage() {
     setLibRotacaoX(m?.rotacao_x ?? 0);
     setLibRotacaoY(m?.rotacao_y ?? 0);
     setLibRotacaoZ(m?.rotacao_z ?? 0);
-    setLibPosicaoX(m?.posicao_x ?? 0);
-    setLibPosicaoY(m?.offset_y  ?? 0);
+    setPosicaoX(m?.posicao_x ?? 0);
+    setPosicaoY(m?.offset_y  ?? 0);
   }
 
+  /* ── Drag do modelo no preview ──────────────────────────────────── */
+  function handlePreviewMouseDown(e) {
+    if (!activeModelUrl || isBusy || !cameraRef.current) return;
+
+    const camera = cameraRef.current;
+    const rect   = containerRef.current.getBoundingClientRect();
+
+    function screenToWorld(clientX, clientY) {
+      const ndcX = ((clientX - rect.left) / rect.width)  * 2 - 1;
+      const ndcY = -((clientY - rect.top) / rect.height) * 2 + 1;
+      const vec  = new THREE.Vector3(ndcX, ndcY, 0.5);
+      vec.unproject(camera);
+      const dir  = vec.sub(camera.position.clone()).normalize();
+      const t    = (PV_Z_END - camera.position.z) / dir.z;
+      return { x: camera.position.x + dir.x * t, y: camera.position.y + dir.y * t };
+    }
+
+    const startWorld = screenToWorld(e.clientX, e.clientY);
+    dragStartRef.current = {
+      worldStartX: startWorld.x,
+      worldStartY: startWorld.y,
+      modelX: posicaoX,
+      modelY: posicaoY,
+    };
+    setIsDraggingModel(true);
+
+    function onMove(ev) {
+      if (!dragStartRef.current) return;
+      const cur = screenToWorld(ev.clientX, ev.clientY);
+      const dx  = cur.x - dragStartRef.current.worldStartX;
+      const dy  = cur.y - dragStartRef.current.worldStartY;
+      setPosicaoX(Math.max(-10, Math.min(10, dragStartRef.current.modelX + dx)));
+      setPosicaoY(Math.max(-10, Math.min(10, dragStartRef.current.modelY + dy)));
+    }
+
+    function onUp() {
+      dragStartRef.current = null;
+      setIsDraggingModel(false);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup',   onUp);
+    }
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup',   onUp);
+  }
+
+  /* ── Utilitários ── */
   function downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a   = document.createElement('a');
     a.href = url; a.download = filename; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
@@ -355,16 +449,16 @@ export default function VideoCreatorPage() {
   function dataUrlToUint8Array(dataUrl) {
     const base64 = dataUrl.split(',')[1];
     const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
+    const bytes  = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     return bytes;
   }
 
   async function getFFmpeg() {
     if (ffmpegRef.current) return ffmpegRef.current;
-    const { FFmpeg }        = await import('@ffmpeg/ffmpeg');
-    const { toBlobURL }     = await import('@ffmpeg/util');
-    const ffmpeg = new FFmpeg();
+    const { FFmpeg }    = await import('@ffmpeg/ffmpeg');
+    const { toBlobURL } = await import('@ffmpeg/util');
+    const ffmpeg        = new FFmpeg();
     ffmpeg.on('log', ({ message }) => console.warn('[FFmpeg]', message));
     const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
     await ffmpeg.load({
@@ -375,15 +469,23 @@ export default function VideoCreatorPage() {
     return ffmpeg;
   }
 
-  /* ── Gravar e Exportar (Render + Upload DB) ── */
+  /* ── Gravar, Exportar e Guardar na Biblioteca ── */
   async function handleGravar() {
     if (!glRef.current) { showToast('Canvas não disponível.'); return; }
     if (!activeModelUrl) { showToast('Seleciona um modelo 3D primeiro.'); return; }
+    if (ratioKey === 'custom') {
+      const wOk = Number.isInteger(customW) && customW >= 64 && customW <= 4096;
+      const hOk = Number.isInteger(customH) && customH >= 64 && customH <= 4096;
+      if (!wOk || !hOk) {
+        showToast('Dimensões personalizadas inválidas (64–4096 px inteiros).');
+        return;
+      }
+    }
 
-    const supabase = createSupabaseBrowser();
+    const supabase     = createSupabaseBrowser();
     const { data: { user } } = await supabase.auth.getUser();
 
-    const canvas = glRef.current.domElement;
+    const canvas      = glRef.current.domElement;
     const totalFrames = duracao * FPS;
 
     setRecordStatus('rendering');
@@ -427,79 +529,84 @@ export default function VideoCreatorPage() {
 
       setRecordStatus('processing');
 
-      const box = cropBox ?? { x: 0, y: 0, width: 1, height: 1 };
-      const cW = canvas.width, cH = canvas.height;
-      const cropX = Math.floor(box.x     * cW / 2) * 2;
-      const cropY = Math.floor(box.y     * cH / 2) * 2;
-      const cropW = Math.floor(box.width * cW / 2) * 2;
-      const cropH = Math.floor(box.height* cH / 2) * 2;
-      const outRes = OUTPUT_RES[ratioKey];
-      const outW = outRes ? outRes.w : cropW;
-      const outH = outRes ? outRes.h : cropH;
+      const box    = cropBox ?? { x: 0, y: 0, width: 1, height: 1 };
+      const cW     = canvas.width, cH = canvas.height;
+      const cropX  = Math.floor(box.x      * cW / 2) * 2;
+      const cropY  = Math.floor(box.y      * cH / 2) * 2;
+      const cropW  = Math.floor(box.width  * cW / 2) * 2;
+      const cropH  = Math.floor(box.height * cH / 2) * 2;
+
+      const outRes  = ratioKey === 'custom' ? { w: customW, h: customH } : OUTPUT_RES[ratioKey];
+      const outW    = outRes ? outRes.w : cropW;
+      const outH    = outRes ? outRes.h : cropH;
       const cropStr = `crop=${cropW}:${cropH}:${cropX}:${cropY}`;
 
       let outData;
 
       if (formato === 'mp4') {
-        const vf = `${cropStr},scale=${outW}:${outH},format=yuv420p`;
-        const code = await ffmpeg.exec(['-framerate', String(FPS), '-i', 'frame%04d.png', '-c:v', 'mpeg4', '-q:v', '4', '-vf', vf, '-movflags', '+faststart', 'output.mp4']);
+        const vf   = `${cropStr},scale=${outW}:${outH},format=yuv420p`;
+        const code = await ffmpeg.exec([
+          '-framerate', String(FPS), '-i', 'frame%04d.png',
+          '-c:v', 'mpeg4', '-q:v', '4', '-vf', vf,
+          '-movflags', '+faststart', 'output.mp4',
+        ]);
         if (code !== 0) throw new Error(`FFmpeg MP4 falhou com código ${code}`);
         outData = await ffmpeg.readFile('output.mp4');
 
       } else if (formato === 'webm') {
-        const vf2 = `${cropStr},scale=${outW}:${outH},format=yuv420p`;
-        const code = await ffmpeg.exec(['-framerate', String(FPS), '-i', 'frame%04d.png', '-c:v', 'libvpx', '-vf', vf2, '-b:v', '2M', '-auto-alt-ref', '0', 'output.webm']);
+        const vf2  = `${cropStr},scale=${outW}:${outH},format=yuv420p`;
+        const code = await ffmpeg.exec([
+          '-framerate', String(FPS), '-i', 'frame%04d.png',
+          '-c:v', 'libvpx', '-vf', vf2,
+          '-b:v', '2M', '-auto-alt-ref', '0', 'output.webm',
+        ]);
         if (code !== 0) throw new Error(`FFmpeg WebM falhou com código ${code}`);
         outData = await ffmpeg.readFile('output.webm');
 
       } else if (formato === 'gif') {
-        const gifScale = bgUrl ? `${cropStr},fps=15,scale=480:-1:flags=lanczos` : `${cropStr},fps=15,scale=480:-1:flags=lanczos,split[s0][s1];[s0]palettegen=reserve_transparent=on[p];[s1][p]paletteuse=alpha_threshold=128`;
-        const code = await ffmpeg.exec(['-framerate', String(FPS), '-i', 'frame%04d.png', '-vf', gifScale, 'output.gif']);
+        const gifScale = bgUrl
+          ? `${cropStr},fps=15,scale=480:-1:flags=lanczos`
+          : `${cropStr},fps=15,scale=480:-1:flags=lanczos,split[s0][s1];[s0]palettegen=reserve_transparent=on[p];[s1][p]paletteuse=alpha_threshold=128`;
+        const code = await ffmpeg.exec([
+          '-framerate', String(FPS), '-i', 'frame%04d.png',
+          '-vf', gifScale, 'output.gif',
+        ]);
         if (code !== 0) throw new Error(`FFmpeg GIF falhou com código ${code}`);
         outData = await ffmpeg.readFile('output.gif');
       }
 
-      /* ── Upload & Base de Dados ── */
+      /* ── Upload para R2 e registo na BD ── */
       setRecordStatus('saving');
-      
-      const mimeType = formato === 'gif' ? 'image/gif' : `video/${formato}`;
-      const blob = new Blob([outData], { type: mimeType });
+
+      const mimeType       = formato === 'gif' ? 'image/gif' : `video/${formato}`;
+      const blob           = new Blob([outData], { type: mimeType });
       const uniqueFileName = `projeto-${Date.now()}.${formato}`;
 
-      // 1. Upload para o Cloudflare R2 usando a rota de API existente
       const formData = new FormData();
       formData.append('file', blob, uniqueFileName);
 
-      const uploadResponse = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
+      const uploadResponse = await fetch('/api/upload', { method: 'POST', body: formData });
       if (!uploadResponse.ok) {
         const errorData = await uploadResponse.json();
         throw new Error(errorData.error || 'Erro ao fazer upload para o Cloudflare.');
       }
-
       const { url: publicUrl } = await uploadResponse.json();
 
-      // 2. Registar na tabela media_items como Rascunho (Pessoal)
       const finalTitle = tituloProjeto.trim() || 'Projeto Sem Título';
       const { error: dbError } = await supabase
         .from('media_items')
         .insert([{
-          tipo: formato === 'gif' ? 'gif_gerado' : 'video_gerado',
-          url: publicUrl, // Link do R2 devolvido pela API
-          titulo: finalTitle,
+          tipo:     formato === 'gif' ? 'gif_gerado' : 'video_gerado',
+          url:      publicUrl,
+          titulo:   finalTitle,
           id_autor: user.id,
-          status: 'pessoal' // A nova coluna garante que só o aluno o vê inicialmente
+          status:   'pessoal',
         }]);
 
       if (dbError) throw new Error('Erro ao registar projeto: ' + dbError.message);
 
-      // Download para o utilizador
       downloadBlob(blob, `${finalTitle.replace(/\s+/g, '_')}_media3d.${formato}`);
-      
-      setTituloProjeto(''); // Limpa o campo do título
+      setTituloProjeto('');
       showToast('Vídeo exportado e guardado na tua Biblioteca Pessoal com sucesso!');
 
     } catch (err) {
@@ -526,8 +633,15 @@ export default function VideoCreatorPage() {
     setCropResetKey(k => k + 1);
   }
 
-  const activeRatio = RATIOS.find(r => r.value === ratioKey)?.ratio ?? null;
+  useEffect(() => {
+    if (ratioKey === 'custom') setCropResetKey(k => k + 1);
+  }, [customW, customH, ratioKey]);
 
+  const activeRatio = ratioKey === 'custom'
+    ? customW / customH
+    : RATIOS.find(r => r.value === ratioKey)?.ratio ?? null;
+
+  /* ── Dimensões do preview ── */
   const pvW = (() => {
     if (!bgUrl || !mediaNaturalSize.w) return PV_W;
     const a = mediaNaturalSize.w / mediaNaturalSize.h;
@@ -540,6 +654,12 @@ export default function VideoCreatorPage() {
   })();
 
   const isBusy = recordStatus !== 'idle';
+
+  const resLabel = ratioKey === 'custom'
+    ? `${customW}×${customH}`
+    : OUTPUT_RES[ratioKey]
+      ? `${OUTPUT_RES[ratioKey].w}×${OUTPUT_RES[ratioKey].h}`
+      : 'Livre';
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto">
@@ -560,7 +680,7 @@ export default function VideoCreatorPage() {
 
       <div className="flex gap-6 items-start">
 
-        {/* ════ Configuração (40%) ════ */}
+        {/* ════ Configuração (esquerda) ════ */}
         <div className="w-[400px] shrink-0 space-y-4">
 
           <Section title="Fundo">
@@ -627,6 +747,8 @@ export default function VideoCreatorPage() {
                 setUploadFile(null);
                 if (uploadUrl) URL.revokeObjectURL(uploadUrl);
                 setUploadUrl('');
+                setPosicaoX(0);
+                setPosicaoY(0);
               }}
             />
 
@@ -672,6 +794,28 @@ export default function VideoCreatorPage() {
                 className="w-full accent-[#4f9eff] cursor-pointer" />
             </div>
 
+            {/* Posição X / Y — sincronizada com drag no preview */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium text-white/50">Pos. X</label>
+                  <span className="text-xs font-mono text-[#4f9eff]">{posicaoX.toFixed(2)}</span>
+                </div>
+                <input type="range" min={-10} max={10} step={0.05} value={posicaoX}
+                  onChange={e => setPosicaoX(parseFloat(e.target.value))}
+                  className="w-full accent-[#4f9eff] cursor-pointer" />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium text-white/50">Pos. Y</label>
+                  <span className="text-xs font-mono text-[#4f9eff]">{posicaoY.toFixed(2)}</span>
+                </div>
+                <input type="range" min={-10} max={10} step={0.05} value={posicaoY}
+                  onChange={e => setPosicaoY(parseFloat(e.target.value))}
+                  className="w-full accent-[#4f9eff] cursor-pointer" />
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs font-medium text-white/50 mb-2">Animação</label>
               <div className="grid grid-cols-3 gap-1.5">
@@ -694,12 +838,43 @@ export default function VideoCreatorPage() {
               <select className={inputCls} value={ratioKey} onChange={e => handleRatioChange(e.target.value)}>
                 {RATIOS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
               </select>
-              <p className="mt-1.5 text-[11px] text-white/25">
-                Arrasta e faz zoom no preview para enquadrar · duplo clique para centrar
-              </p>
+              {ratioKey !== 'custom' && (
+                <p className="mt-1.5 text-[11px] text-white/25">
+                  Arrasta e faz zoom no preview para enquadrar · duplo clique para centrar
+                </p>
+              )}
             </div>
-            
-            <div className="grid grid-cols-2 gap-3 mb-4">
+
+            {ratioKey === 'custom' && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-white/50 mb-1.5">Largura (px)</label>
+                  <input
+                    type="number" min={64} max={4096} step={1}
+                    value={customW}
+                    onChange={e => {
+                      const v = parseInt(e.target.value, 10);
+                      if (!isNaN(v)) setCustomW(Math.max(64, Math.min(4096, v)));
+                    }}
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-white/50 mb-1.5">Altura (px)</label>
+                  <input
+                    type="number" min={64} max={4096} step={1}
+                    value={customH}
+                    onChange={e => {
+                      const v = parseInt(e.target.value, 10);
+                      if (!isNaN(v)) setCustomH(Math.max(64, Math.min(4096, v)));
+                    }}
+                    className={inputCls}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-white/50 mb-1.5">Duração</label>
                 <select className={inputCls} value={duracao} onChange={e => setDuracao(Number(e.target.value))}>
@@ -718,8 +893,8 @@ export default function VideoCreatorPage() {
 
             <div className="pt-2 border-t border-white/5">
               <label className="block text-xs font-medium text-white/50 mb-1.5">Título do Projeto</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={tituloProjeto}
                 onChange={e => setTituloProjeto(e.target.value)}
                 placeholder="Ex: Animação Partícula 3D"
@@ -743,7 +918,8 @@ export default function VideoCreatorPage() {
             {isBusy && (
               <div className="h-1.5 rounded-full overflow-hidden bg-white/5 mt-2">
                 {recordStatus === 'rendering' ? (
-                  <div className="h-full bg-[#4f9eff] rounded-full transition-all duration-100" style={{ width: `${progress * 100}%` }} />
+                  <div className="h-full bg-[#4f9eff] rounded-full transition-all duration-100"
+                    style={{ width: `${progress * 100}%` }} />
                 ) : (
                   <div className="h-full bg-[#a78bfa] rounded-full w-full animate-pulse" />
                 )}
@@ -752,12 +928,12 @@ export default function VideoCreatorPage() {
           </Section>
         </div>
 
-        {/* ════ Preview em tempo real (60%) ════ */}
+        {/* ════ Preview em tempo real (direita) ════ */}
         <div className="flex-1 min-w-0 space-y-3">
           <div className="rounded-xl border border-white/8 bg-[#0c0c0f] overflow-hidden">
             <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
               <span className="text-xs font-medium text-white/40">
-                Preview — {OUTPUT_RES[ratioKey] ? `${OUTPUT_RES[ratioKey].w}×${OUTPUT_RES[ratioKey].h}` : 'Livre'}
+                Preview — {resLabel}
               </span>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-white/25">{duracao}s</span>
@@ -767,24 +943,37 @@ export default function VideoCreatorPage() {
 
             <div className="flex items-center justify-center p-6 bg-[#080808]" style={{ minHeight: 400 }}>
               <div
+                ref={containerRef}
+                onMouseDown={handlePreviewMouseDown}
                 style={{
-                  width: pvW, height: pvH, maxWidth: '100%', position: 'relative',
-                  background: bgUrl ? undefined : 'repeating-conic-gradient(#2a2a2a 0% 25%, #1a1a1a 0% 50%) 0 0 / 16px 16px',
+                  width: pvW, height: pvH, maxWidth: '100%',
+                  position: 'relative',
+                  cursor: isBusy
+                    ? 'default'
+                    : activeModelUrl
+                      ? isDraggingModel ? 'grabbing' : 'grab'
+                      : 'default',
+                  background: bgUrl
+                    ? undefined
+                    : 'repeating-conic-gradient(#2a2a2a 0% 25%, #1a1a1a 0% 50%) 0 0 / 16px 16px',
                 }}
                 className={`rounded-lg overflow-hidden${bgUrl ? ' bg-[#0c0c0f]' : ''}`}
               >
                 {canvasMounted ? (
                   <Canvas
                     camera={{ position: [0, 1, 0], fov: 45, near: 0.1, far: 200 }}
-                    gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true, toneMapping: THREE.NoToneMapping }}
+                    gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
                     style={{ width: '100%', height: '100%' }}
                     onCreated={({ gl }) => {
                       glRef.current = gl;
-                      gl.toneMapping = THREE.NoToneMapping;
                       gl.outputColorSpace = THREE.SRGBColorSpace;
                     }}
                   >
+                    <CameraExporter cameraRef={cameraRef} />
                     <SceneBackground url={bgUrl} type={bgType} onVideoReady={v => { bgVideoRef.current = v; }} />
+                    <ambientLight intensity={0.5} />
+                    <directionalLight position={[10, 10, 5]} intensity={1.2} />
+                    <pointLight position={[0, 4, -8]} color="#4f9eff" intensity={3} distance={60} />
                     {activeModelUrl && (
                       <Suspense fallback={null}>
                         <VideoModel
@@ -795,8 +984,8 @@ export default function VideoCreatorPage() {
                           rotacaoX={activeRotacaoX}
                           rotacaoY={activeRotacaoY}
                           rotacaoZ={activeRotacaoZ}
-                          posicaoX={activePosicaoX}
-                          posicaoY={activePosicaoY}
+                          posicaoX={posicaoX}
+                          posicaoY={posicaoY}
                         />
                       </Suspense>
                     )}
@@ -805,11 +994,22 @@ export default function VideoCreatorPage() {
                   <div className="w-full h-full bg-[#0c0c0f]" />
                 )}
                 <CropOverlay
-                  containerWidth={pvW} containerHeight={pvH} ratio={activeRatio}
-                  initRatio={activeRatio} resetKey={cropResetKey} onChange={setCropBox}
+                  containerWidth={pvW}
+                  containerHeight={pvH}
+                  ratio={activeRatio}
+                  initRatio={activeRatio}
+                  resetKey={cropResetKey}
+                  onChange={setCropBox}
                 />
               </div>
             </div>
+          </div>
+
+          <div className="rounded-xl border border-white/5 bg-[#13131a] px-4 py-3">
+            <p className="text-xs text-white/25 leading-relaxed">
+              Arrasta o modelo no preview para reposicionar · os sliders Pos. X / Pos. Y ficam sincronizados ·
+              o vídeo é exportado e guardado automaticamente na tua Biblioteca Pessoal após a exportação.
+            </p>
           </div>
         </div>
 
