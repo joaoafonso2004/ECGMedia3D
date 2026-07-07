@@ -3,7 +3,7 @@ import Link from 'next/link';
 import TypewriterText from '@/components/TypewriterText';
 
 export const metadata = {
-  title: 'media3d',
+  title: 'ECGMedia3d',
   description: 'Plataforma de visualização 3D de projetos académicos',
 };
 
@@ -30,9 +30,9 @@ export default async function HomePage() {
 
       {/* ── Navbar ─────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0c0c0f]/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="flex items-center justify-between px-6 py-4">
           <TypewriterText
-              texto="media3d"
+              texto="ECGMedia3d"
               velocidade={100}
               modo="once"
               className="text-lg font-bold tracking-tight text-white"
@@ -52,10 +52,10 @@ export default async function HomePage() {
         <div className="mx-auto max-w-2xl">
           <h1 className="text-6xl font-bold leading-none tracking-tight text-white">
             <TypewriterText
-              texto="media3d"
+              texto="ECGMedia3d"
               velocidade={100}
               modo="once"
-              highlight={{ from: 5, className: 'text-[#4f9eff]' }}
+              highlight={{ from: 8, className: 'text-[#4f9eff]' }}
             />
           </h1>
           <p className="mt-5 text-lg text-white/45 leading-relaxed max-w-xl mx-auto min-h-[1.75rem]">
@@ -148,7 +148,7 @@ export default async function HomePage() {
       <footer className="border-t border-white/5 px-6 py-6">
         <div className="mx-auto max-w-6xl flex items-center justify-between">
           <span className="text-xs text-white/20">
-            © {new Date().getFullYear()} media3d
+            © {new Date().getFullYear()} ECGMedia3d
           </span>
           <span className="text-xs text-white/15">Next.js · Supabase · Three.js</span>
         </div>

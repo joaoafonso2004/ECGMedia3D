@@ -64,7 +64,7 @@ export async function generateMetadata({ params }) {
   const { entidade: entidadeSlug, programa: programaSlug } = await params;
 
   const entidade = await getEntidade(entidadeSlug);
-  if (!entidade) return { title: 'media3d' };
+  if (!entidade) return { title: 'ECGMedia3d' };
 
   const idEntidade = entidade.id_entidade ?? entidade.id;
   const programa   = await getPrograma(idEntidade, programaSlug);
@@ -73,7 +73,7 @@ export async function generateMetadata({ params }) {
   const descricao   = programa?.descricao ?? `Disciplinas do programa ${codigoCurso}`;
 
   return {
-    title: `media3d — ${codigoCurso}`,
+    title: `ECGMedia3d — ${codigoCurso}`,
     description: descricao,
   };
 }
@@ -110,7 +110,7 @@ export default async function ProgramaPage({ params }) {
 
       {/* ── Navbar ─────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0c0c0f]/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="flex items-center justify-between px-6 py-4">
 
           {/* Breadcrumb */}
           <div className="flex items-center gap-2">
@@ -119,8 +119,8 @@ export default async function ProgramaPage({ params }) {
               className="text-lg font-bold tracking-tight text-white/60
                          hover:text-white transition-colors"
             >
-              media3d
-            </Link>
+              ECGMedia3d
+</Link>
             <span className="text-white/15 select-none">/</span>
             <Link
               href={`/${entidadeSlug}`}
@@ -216,7 +216,7 @@ export default async function ProgramaPage({ params }) {
       <footer className="border-t border-white/5 px-6 py-6">
         <div className="mx-auto max-w-6xl flex items-center justify-between">
           <span className="text-xs text-white/20">
-            © {new Date().getFullYear()} {nomeEscola || 'media3d'} — {codigoCurso}
+            © {new Date().getFullYear()} {nomeEscola || 'ECGMedia3d'} — {codigoCurso}
           </span>
           <span className="text-xs text-white/15">Next.js · Supabase · Three.js</span>
         </div>

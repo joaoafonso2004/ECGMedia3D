@@ -51,7 +51,7 @@ export async function generateMetadata({ params }) {
   const projeto = await getProjeto(projetoId);
   
   if (!projeto) return { title: 'Projeto não encontrado' };
-  return { title: `media3d — ${projeto.titulo}`, description: projeto.descricao };
+  return { title: `ECGMedia3d — ${projeto.titulo}`, description: projeto.descricao };
 }
 
 /* ─── Página ────────────────────────────────────────────────────── */
@@ -84,9 +84,9 @@ export default async function ProjetoPage({ params }) {
 
       {/* ── Navbar ─────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0c0c0f]/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap hide-scrollbar">
-            <Link href="/" className="text-lg font-bold tracking-tight text-white/60 hover:text-white transition-colors">media3d</Link>
+            <Link href="/" className="text-lg font-bold tracking-tight text-white/60 hover:text-white transition-colors">ECGMedia3d</Link>
             <span className="text-white/15 select-none">/</span>
             <Link href={`/${entitySlug}`} className="text-sm font-medium text-white/40 hover:text-white/70 transition-colors tracking-wide">{entitySlug}</Link>
             <span className="text-white/15 select-none">/</span>
@@ -153,7 +153,7 @@ export default async function ProjetoPage({ params }) {
       {/* ── Footer ── */}
       <footer className="border-t border-white/5 px-6 py-6 mt-auto">
         <div className="mx-auto max-w-6xl flex items-center justify-between">
-          <span className="text-xs text-white/20">© {new Date().getFullYear()} {nomeEscola || 'media3d'} — {codigoMod}</span>
+          <span className="text-xs text-white/20">© {new Date().getFullYear()} {nomeEscola || 'ECGMedia3d'} — {codigoMod}</span>
           <span className="text-xs text-white/15">Next.js · Supabase · Three.js</span>
         </div>
       </footer>

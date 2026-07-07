@@ -33,9 +33,9 @@ async function getProgramas(idEntidade) {
 export async function generateMetadata({ params }) {
   const { entidade: slug } = await params;
   const entidade = await getEntidade(slug);
-  if (!entidade) return { title: 'media3d' };
+  if (!entidade) return { title: 'ECGMedia3d' };
   return {
-    title: `${entidade.nome} — media3d`,
+    title: `${entidade.nome} — ECGMedia3d`,
     description: entidade.descricao ?? `Cursos de ${entidade.nome}`,
   };
 }
@@ -56,7 +56,7 @@ export default async function EntidadePage({ params }) {
 
       {/* ── Navbar ─────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0c0c0f]/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="flex items-center justify-between px-6 py-4">
 
           {/* Breadcrumb */}
           <div className="flex items-center gap-2">
@@ -65,7 +65,7 @@ export default async function EntidadePage({ params }) {
               className="text-lg font-bold tracking-tight text-white/60
                          hover:text-white transition-colors"
             >
-              media3d
+              ECGMedia3d
             </Link>
             <span className="text-white/15 select-none">/</span>
             <span className="text-sm font-semibold text-[#4f9eff] tracking-wide">
@@ -184,7 +184,7 @@ export default async function EntidadePage({ params }) {
       <footer className="border-t border-white/5 px-6 py-6">
         <div className="mx-auto max-w-6xl flex items-center justify-between">
           <span className="text-xs text-white/20">
-            © {new Date().getFullYear()} {entidade.nome} — media3d
+            © {new Date().getFullYear()} {entidade.nome} — ECGMedia3d
           </span>
           <span className="text-xs text-white/15">Next.js · Supabase · Three.js</span>
         </div>

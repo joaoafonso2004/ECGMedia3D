@@ -374,6 +374,8 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isN
 }
 
 /* ─── Página Principal ──────────────────────────────────────────── */
+const ITEMS_PER_PAGE_PROJ = 5;
+
 export default function ProjetosPage() {
   const { entidadeId, programaId, programas } = useAdminFilter();
 
@@ -381,11 +383,12 @@ export default function ProjetosPage() {
   const [searchQuery, setSearchQuery]     = useState(''); // <-- Estado para a pesquisa
   const [modulosList, setModulosList]     = useState([]);
   const [loading, setLoading]             = useState(true);
-  const [modal, setModal]                 = useState(null); 
+  const [modal, setModal]                 = useState(null);
   const [saving, setSaving]               = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(null); 
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const [deleting, setDeleting]           = useState(false);
   const [toast, setToast]                 = useState('');
+  const [currentPage, setCurrentPage]     = useState(1);
 
   function showToast(msg) {
     setToast(msg);
@@ -566,6 +569,16 @@ export default function ProjetosPage() {
     return true;
   });
 
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, entidadeId, programaId]);
+
+  const totalPagesProj  = Math.ceil(projetosFiltrados.length / ITEMS_PER_PAGE_PROJ);
+  const startIndexProj  = (currentPage - 1) * ITEMS_PER_PAGE_PROJ;
+  const paginatedProjs  = projetosFiltrados.slice(startIndexProj, startIndexProj + ITEMS_PER_PAGE_PROJ);
+
+  const btnPageCls = (disabled) =>
+    `rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60
+     transition hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed`;
+
   return (
     <div className="p-8 max-w-5xl mx-auto">
       {toast && (
@@ -617,6 +630,7 @@ export default function ProjetosPage() {
             {projetos.length === 0 ? 'Nenhum projeto encontrado. Cria o primeiro!' : 'Nenhum projeto para a pesquisa atual.'}
           </div>
         ) : (
+          <>
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-white/30 border-b border-white/5 bg-white/2">
@@ -628,8 +642,8 @@ export default function ProjetosPage() {
               </tr>
             </thead>
             <tbody>
-              {projetosFiltrados.map((p, i) => (
-                <tr key={p.id_projetos} className={`transition hover:bg-white/2 ${i !== projetosFiltrados.length - 1 ? 'border-b border-white/5' : ''}`}>
+              {paginatedProjs.map((p, i) => (
+                <tr key={p.id_projetos} className={`transition hover:bg-white/2 ${i !== paginatedProjs.length - 1 ? 'border-b border-white/5' : ''}`}>
                   <td className="px-5 py-3.5">
                     {p.projeto_url ? (
                       <div className="h-10 w-10 overflow-hidden rounded-md border border-white/10 bg-[#0c0c0f]">
@@ -661,6 +675,21 @@ export default function ProjetosPage() {
               ))}
             </tbody>
           </table>
+          {totalPagesProj > 1 && (
+            <div className="flex items-center justify-between border-t border-white/5 bg-[#0c0c0f] px-6 py-4">
+              <p className="text-xs text-white/40">
+                A mostrar <span className="font-semibold text-white/80">{startIndexProj + 1}</span> a{' '}
+                <span className="font-semibold text-white/80">{Math.min(startIndexProj + ITEMS_PER_PAGE_PROJ, projetosFiltrados.length)}</span>{' '}
+                de <span className="font-semibold text-white/80">{projetosFiltrados.length}</span> projetos
+              </p>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className={btnPageCls(currentPage === 1)}>Anterior</button>
+                <span className="text-xs text-white/40 font-mono px-2">{currentPage} / {totalPagesProj}</span>
+                <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPagesProj))} disabled={currentPage === totalPagesProj} className={btnPageCls(currentPage === totalPagesProj)}>Próxima</button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </div>
 

@@ -167,6 +167,8 @@ function GestorForm({ entidades, disciplinas, onSave, onCancel, saving }) {
   );
 }
 
+const ITEMS_PER_PAGE_GEST = 5;
+
 export default function GestoresPage() {
   const [gestores, setGestores] = useState([]);
   const [searchQuery, setSearchQuery] = useState(""); // <-- Estado da pesquisa
@@ -176,6 +178,7 @@ export default function GestoresPage() {
   const [modal, setModal] = useState(null); // null | 'novo'
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Buscar entidades e disciplinas
   useEffect(() => {
@@ -329,6 +332,16 @@ export default function GestoresPage() {
     );
   });
 
+  useEffect(() => { setCurrentPage(1); }, [searchQuery]);
+
+  const totalPagesGest  = Math.ceil(filteredGestores.length / ITEMS_PER_PAGE_GEST);
+  const startIndexGest  = (currentPage - 1) * ITEMS_PER_PAGE_GEST;
+  const paginatedGest   = filteredGestores.slice(startIndexGest, startIndexGest + ITEMS_PER_PAGE_GEST);
+
+  const btnPageCls = (disabled) =>
+    `rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60
+     transition hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed`;
+
   return (
     <div className="p-8 max-w-5xl mx-auto">
       {/* Toast */}
@@ -390,6 +403,7 @@ export default function GestoresPage() {
             Nenhum gestor corresponde à pesquisa "{searchQuery}".
           </div>
         ) : (
+          <>
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-white/30 border-b border-white/5 bg-white/2">
@@ -401,10 +415,10 @@ export default function GestoresPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredGestores.map((g, i) => (
+              {paginatedGest.map((g, i) => (
                 <tr
                   key={g.id_utilizadores}
-                  className={`transition hover:bg-white/2 ${i !== filteredGestores.length - 1 ? "border-b border-white/5" : ""}`}
+                  className={`transition hover:bg-white/2 ${i !== paginatedGest.length - 1 ? "border-b border-white/5" : ""}`}
                 >
                   <td className="px-5 py-3.5 font-medium text-white/85">{g.nome}</td>
                   <td className="px-5 py-3.5 text-white/60">{g.email}</td>
@@ -417,6 +431,21 @@ export default function GestoresPage() {
               ))}
             </tbody>
           </table>
+          {totalPagesGest > 1 && (
+            <div className="flex items-center justify-between border-t border-white/5 bg-[#0c0c0f] px-6 py-4">
+              <p className="text-xs text-white/40">
+                A mostrar <span className="font-semibold text-white/80">{startIndexGest + 1}</span> a{' '}
+                <span className="font-semibold text-white/80">{Math.min(startIndexGest + ITEMS_PER_PAGE_GEST, filteredGestores.length)}</span>{' '}
+                de <span className="font-semibold text-white/80">{filteredGestores.length}</span> gestores
+              </p>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className={btnPageCls(currentPage === 1)}>Anterior</button>
+                <span className="text-xs text-white/40 font-mono px-2">{currentPage} / {totalPagesGest}</span>
+                <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPagesGest))} disabled={currentPage === totalPagesGest} className={btnPageCls(currentPage === totalPagesGest)}>Próxima</button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </div>
 

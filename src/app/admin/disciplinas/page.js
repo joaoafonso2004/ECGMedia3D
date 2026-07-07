@@ -349,6 +349,8 @@ function DisciplinaForm({ initial = {}, programas = [], onSave, onCancel, saving
 }
 
 /* ─── Página principal ──────────────────────────────────────────── */
+const ITEMS_PER_PAGE_DISC = 5;
+
 export default function DisciplinasPage() {
   const { entidadeId, programaId, programas } = useAdminFilter();
 
@@ -361,6 +363,7 @@ export default function DisciplinasPage() {
   const [confirmDelete,  setConfirmDelete]  = useState(null);
   const [deleting,       setDeleting]       = useState(false);
   const [toast,          setToast]          = useState(null); // { msg, isError } | null
+  const [currentPage,    setCurrentPage]    = useState(1);
 
   function showToast(msg, isError = false) {
     setToast({ msg, isError });
@@ -484,6 +487,16 @@ export default function DisciplinasPage() {
     return true;
   });
 
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, entidadeId, programaId]);
+
+  const totalPagesDis  = Math.ceil(disciplinasFiltradas.length / ITEMS_PER_PAGE_DISC);
+  const startIndexDis  = (currentPage - 1) * ITEMS_PER_PAGE_DISC;
+  const paginatedDiscs = disciplinasFiltradas.slice(startIndexDis, startIndexDis + ITEMS_PER_PAGE_DISC);
+
+  const btnPageCls = (disabled) =>
+    `rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60
+     transition hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed`;
+
   return (
     <div className="p-8 max-w-5xl mx-auto">
 
@@ -555,6 +568,7 @@ export default function DisciplinasPage() {
                 : 'Nenhuma disciplina para o filtro selecionado.'}
           </div>
         ) : (
+          <>
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-white/30 border-b border-white/5 bg-white/2">
@@ -566,10 +580,10 @@ export default function DisciplinasPage() {
               </tr>
             </thead>
             <tbody>
-              {disciplinasFiltradas.map((d, i) => (
+              {paginatedDiscs.map((d, i) => (
                 <tr
                   key={d.id_modulo}
-                  className={`transition hover:bg-white/2 ${i !== disciplinasFiltradas.length - 1 ? 'border-b border-white/5' : ''}`}
+                  className={`transition hover:bg-white/2 ${i !== paginatedDiscs.length - 1 ? 'border-b border-white/5' : ''}`}
                 >
                   <td className="px-5 py-3.5">
                     <div className="font-medium text-white/85">{d.nome}</div>
@@ -602,6 +616,21 @@ export default function DisciplinasPage() {
               ))}
             </tbody>
           </table>
+          {totalPagesDis > 1 && (
+            <div className="flex items-center justify-between border-t border-white/5 bg-[#0c0c0f] px-6 py-4">
+              <p className="text-xs text-white/40">
+                A mostrar <span className="font-semibold text-white/80">{startIndexDis + 1}</span> a{' '}
+                <span className="font-semibold text-white/80">{Math.min(startIndexDis + ITEMS_PER_PAGE_DISC, disciplinasFiltradas.length)}</span>{' '}
+                de <span className="font-semibold text-white/80">{disciplinasFiltradas.length}</span> disciplinas
+              </p>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className={btnPageCls(currentPage === 1)}>Anterior</button>
+                <span className="text-xs text-white/40 font-mono px-2">{currentPage} / {totalPagesDis}</span>
+                <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPagesDis))} disabled={currentPage === totalPagesDis} className={btnPageCls(currentPage === totalPagesDis)}>Próxima</button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </div>
 
