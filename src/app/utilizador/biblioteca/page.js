@@ -15,6 +15,9 @@ export default function UtilizadorBiblioteca() {
   const [projetoParaAprovar, setProjetoParaAprovar] = useState(null);
   const [disciplinaSelecionada, setDisciplinaSelecionada] = useState('');
 
+  // Estados para o modal de apagar projeto
+  const [projetoParaApagar, setProjetoParaApagar] = useState(null);
+
   // Estados para visualizar um projeto em tamanho real
   const [projetoEmDestaque, setProjetoEmDestaque] = useState(null);
 
@@ -82,6 +85,33 @@ export default function UtilizadorBiblioteca() {
       await fetchData(); 
     } else {
       alert("Erro ao pedir aprovação: " + error.message);
+    }
+    setActionLoading(null);
+  }
+
+  // ─── LÓGICA DE APAGAR PROJETO ────────────────────────────────────
+  function abrirModalApagar(projeto) {
+    setProjetoParaApagar(projeto);
+  }
+
+  async function confirmarApagar() {
+    if (!projetoParaApagar) return;
+
+    const id_media = projetoParaApagar.id_media_items;
+    setActionLoading(id_media);
+    const supabase = createSupabaseBrowser();
+
+    const { error } = await supabase
+      .from('media_items')
+      .delete()
+      .eq('id_media_items', id_media);
+
+    if (!error) {
+      // Remove do estado local para ser instantâneo na UI
+      setMeusProjetos(prev => prev.filter(p => p.id_media_items !== id_media));
+      setProjetoParaApagar(null);
+    } else {
+      alert("Erro ao apagar o projeto: " + error.message);
     }
     setActionLoading(null);
   }
@@ -157,7 +187,7 @@ export default function UtilizadorBiblioteca() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">Biblioteca</h1>
         <p className="text-sm text-white/35 mt-1">
-          Explora os projetos da tua turma ou gere a tua galeria pessoal.
+          Explora os projetos da comunidade ou gere a tua biblioteca pessoal.
         </p>
       </div>
 
@@ -276,7 +306,7 @@ export default function UtilizadorBiblioteca() {
             {meusProjetos.map((proj) => (
               <div key={proj.id_media_items} className="group/card rounded-xl border border-white/8 bg-[#13131a] overflow-hidden flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-xl">
                 
-                {/* Visualizador clicável */}
+                {/* Visualizador clicável (Icon de Play removido no hover) */}
                 <div 
                   className="aspect-video bg-black relative flex items-center justify-center border-b border-white/5 cursor-pointer overflow-hidden"
                   onClick={() => setProjetoEmDestaque(proj)}
@@ -291,18 +321,11 @@ export default function UtilizadorBiblioteca() {
                     <span className="text-white/20 text-xs">Sem preview</span>
                   )}
                   
-                  {/* Ícone de Play central no hover */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 bg-black/30">
-                    <div className="w-11 h-12 rounded-full bg-black/60 flex items-center justify-center text-white/90 backdrop-blur-sm shadow-md">
-                      <svg className="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                    </div>
-                  </div>
-
                   {/* Badge de Estado */}
                   <div className="absolute top-3 right-3">
                     {(!proj.status || proj.status === 'pessoal') && <span className="px-2 py-1 rounded bg-gray-500/80 backdrop-blur-sm text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">Pessoal</span>}
                     {proj.status === 'pendente' && <span className="px-2 py-1 rounded bg-yellow-500/80 backdrop-blur-sm text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">Em Avaliação</span>}
-                    {proj.status === 'aprovado' && <span className="px-2 py-1 rounded bg-green-500/80 backdrop-blur-sm text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">Público</span>}
+                    {proj.status === 'aprovado' && <span className="px-2 py-1 rounded bg-green-500/80 backdrop-blur-sm text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">Publicado</span>}
                     {proj.status === 'rejeitado' && <span className="px-2 py-1 rounded bg-red-500/80 backdrop-blur-sm text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">Rejeitado</span>}
                   </div>
                 </div>
@@ -318,21 +341,38 @@ export default function UtilizadorBiblioteca() {
                   
                   <div className="mt-auto pt-4 border-t border-white/5">
                     {(!proj.status || proj.status === 'pessoal' || proj.status === 'rejeitado') ? (
-                      <button
-                        onClick={() => abrirModalAprovacao(proj)}
-                        disabled={actionLoading === proj.id_media_items}
-                        className="group/btn w-full h-9 rounded-lg bg-[#4f9eff]/10 border border-[#4f9eff]/20 text-xs font-semibold text-[#4f9eff] hover:bg-[#4f9eff]/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-1.5"
-                      >
-                        Submeter à Galeria Pública 
-                        <span className="transform transition-transform duration-200 group-hover/btn:translate-x-0.5">➔</span>
-                      </button>
+                      
+                      /* Zona de Acões para Projetos Não Avaliados (Enviar + Apagar) */
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => abrirModalAprovacao(proj)}
+                          disabled={actionLoading === proj.id_media_items}
+                          className="group/btn flex-1 h-9 rounded-lg bg-[#4f9eff]/10 border border-[#4f9eff]/20 text-xs font-semibold text-[#4f9eff] hover:bg-[#4f9eff]/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-1.5"
+                        >
+                          Enviar para avaliação
+                          <span className="transform transition-transform duration-200 group-hover/btn:translate-x-0.5">➔</span>
+                        </button>
+
+                        {/* Botão de Apagar Projeto */}
+                        <button
+                          onClick={() => abrirModalApagar(proj)}
+                          disabled={actionLoading === proj.id_media_items}
+                          title="Apagar Projeto"
+                          className="w-9 h-9 flex shrink-0 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-95 transition-all duration-200"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+
                     ) : proj.status === 'pendente' ? (
                       <div className="w-full h-9 flex items-center justify-center text-xs font-medium text-yellow-500/80 bg-yellow-500/5 rounded-lg border border-yellow-500/10 select-none">
                         A aguardar revisão do professor...
                       </div>
                     ) : (
                       <div className="w-full h-9 flex items-center justify-center text-xs font-medium text-green-400 bg-green-500/5 rounded-lg border border-green-500/10 select-none">
-                        Visível na Comunidade
+                        Visível na Biblioteca da Comunidade
                       </div>
                     )}
                   </div>
@@ -395,6 +435,47 @@ export default function UtilizadorBiblioteca() {
                 className="flex-1 h-10 rounded-lg bg-[#4f9eff] text-sm font-semibold text-white hover:bg-[#3d8aef] shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {actionLoading !== null ? 'A enviar...' : 'Confirmar Envio'}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ════ MODAL PARA APAGAR PROJETO ════ */}
+      {projetoParaApagar && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-[#13131a] p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-400">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-white">Apagar Projeto</h3>
+            </div>
+            
+            <p className="text-sm text-white/60 mb-6 leading-relaxed">
+              Tens a certeza que queres eliminar definitivamente o projeto <span className="text-white font-semibold">"{projetoParaApagar.titulo || 'Projeto Sem Título'}"</span>? Esta ação não pode ser desfeita.
+            </p>
+            
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setProjetoParaApagar(null)}
+                disabled={actionLoading !== null}
+                className="flex-1 h-10 rounded-lg border border-white/10 text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white transition disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmarApagar}
+                disabled={actionLoading !== null}
+                className="flex-1 h-10 rounded-lg bg-red-600 text-sm font-semibold text-white hover:bg-red-500 shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {actionLoading !== null ? 'A apagar...' : 'Sim, Apagar'}
               </button>
             </div>
 

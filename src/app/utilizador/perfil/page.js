@@ -117,9 +117,9 @@ export default function UtilizadorPerfil() {
       
       {/* ── Cabeçalho ── */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">O teu Perfil</h1>
+        <h1 className="text-2xl font-bold text-white">Perfil</h1>
         <p className="text-sm text-white/35 mt-1">
-          Gere as tuas credenciais e informações pessoais.
+          Informações pessoais.
         </p>
       </div>
 
@@ -173,11 +173,11 @@ export default function UtilizadorPerfil() {
               // MODO VISUALIZAÇÃO
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <p className="text-xs font-medium text-white/30 uppercase tracking-wider mb-1.5">Nome Completo</p>
+                  <p className="text-xs font-medium text-white/30 uppercase tracking-wider mb-1.5">Nome</p>
                   <p className="text-base font-medium text-white/90">{user.nome}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-white/30 uppercase tracking-wider mb-1.5">Email de Registo</p>
+                  <p className="text-xs font-medium text-white/30 uppercase tracking-wider mb-1.5">Email</p>
                   <p className="text-base font-medium text-white/90">{user.email}</p>
                 </div>
               </div>
@@ -197,7 +197,7 @@ export default function UtilizadorPerfil() {
                   </div>
                   
                   <div>
-                    <label className="block text-xs font-medium text-white/50 mb-1.5">Email de Registo</label>
+                    <label className="block text-xs font-medium text-white/50 mb-1.5">Email</label>
                     <input 
                       type="email" 
                       required
