@@ -61,7 +61,7 @@ export default function GaleriaProjeto({
 
             <div className="flex items-center justify-between mb-8">
               <p className="text-[11px] text-white/35 uppercase tracking-wider font-semibold">
-                {activeTab === 'projetos' ? 'Projetos práticos desenvolvidos pelos grupos' : 'Recursos individuais aprovados'}
+                {activeTab === 'projetos' ? 'Projetos práticos desenvolvidos' : 'Recursos individuais aprovados'}
               </p>
               <span className="text-[11px] font-mono text-white/40 bg-white/5 px-2.5 py-1 rounded-md border border-white/5 select-none">
                 {activeTab === 'projetos' && `${projetos.length} ${projetos.length === 1 ? 'projeto' : 'projetos'}`}
