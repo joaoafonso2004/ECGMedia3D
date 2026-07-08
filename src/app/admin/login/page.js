@@ -165,7 +165,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl font-bold tracking-tight text-white hover:text-white/80 transition-colors">
-            media3d
+            ECGMedia3d
           </Link>
           <span className="text-[#4f9eff] mx-2 text-white/15">/</span>
           <span className="text-lg font-semibold text-[#4f9eff]">

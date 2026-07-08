@@ -74,7 +74,7 @@ function IconLogout() {
 /* ─── Nav items ─────────────────────────────────────────────────── */
 const NAV_ITEMS = [
   { label: 'Dashboard',       href: '/gestor/dashboard',    Icon: IconGrid           },
-  { label: 'Disciplinas',     href: '/gestor/disciplinas',  Icon: IconBook           },
+  { label: 'Módulos',     href: '/gestor/disciplinas',  Icon: IconBook           },
   { label: 'Projetos',        href: '/gestor/projetos',     Icon: IconFolder         },
   { label: 'Modelos 3D',      href: '/gestor/modelos',      Icon: IconCube           },
   { label: 'Vídeos de Fundo', href: '/gestor/videos',       Icon: IconVideo          },

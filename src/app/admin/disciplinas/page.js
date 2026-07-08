@@ -127,7 +127,7 @@ function DisciplinaMedia({ idModulo }) {
         </div>
         {modelos.length === 0 ? (
           <div className="py-6 text-center text-xs text-white/30 border border-dashed border-white/10 rounded-lg bg-white/2">
-            Nenhum modelo associado a esta disciplina.
+            Nenhum modelo associado a este módulo.
           </div>
         ) : (
           <div className="space-y-2">
@@ -151,7 +151,7 @@ function DisciplinaMedia({ idModulo }) {
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-[#4f9eff]">Vídeo / Imagem do Card</h3>
-            <p className="text-xs text-white/40 mt-0.5">Media apresentada no card público da disciplina.</p>
+            <p className="text-xs text-white/40 mt-0.5">Media apresentada no card público do módulo.</p>
           </div>
         </div>
         {cardMedia.length > 0 ? (
@@ -271,7 +271,7 @@ function DisciplinaForm({ initial = {}, programas = [], onSave, onCancel, saving
           rows={3}
           value={form.descricao}
           onChange={e => set('descricao', e.target.value)}
-          placeholder="Breve descrição da disciplina…"
+          placeholder="Breve descrição do módulo"
         />
       </Field>
       {(() => {
@@ -331,7 +331,7 @@ function DisciplinaForm({ initial = {}, programas = [], onSave, onCancel, saving
           className={`${onCancel ? 'flex-1' : 'w-full'} rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white
                      hover:bg-[#3d8aef] transition disabled:opacity-50 disabled:cursor-not-allowed`}
         >
-          {saving ? 'A guardar…' : 'Guardar Alterações da Disciplina'}
+          {saving ? 'A guardar…' : 'Guardar Alterações do Módulo'}
         </button>
         {onCancel && (
           <button
@@ -415,9 +415,9 @@ export default function DisciplinasPage() {
     const { error } = await supabase.from('modulo').insert([payload]);
 
     if (error) {
-      showToast('Erro ao criar disciplina: ' + error.message, true);
+      showToast('Erro ao criar módulo: ' + error.message, true);
     } else {
-      showToast('Disciplina criada com sucesso!');
+      showToast('Módulo criado com sucesso!');
       setModal(null);
       fetchDisciplinas();
     }
@@ -445,7 +445,7 @@ export default function DisciplinasPage() {
     if (error) {
       showToast('Erro ao editar: ' + error.message, true);
     } else {
-      showToast('Disciplina atualizada!');
+      showToast('Módulo atualizado!');
       setModal(null);
       fetchDisciplinas();
     }
@@ -467,7 +467,7 @@ export default function DisciplinasPage() {
     if (error) {
       showToast('Erro ao eliminar: ' + error.message, true);
     } else {
-      showToast('Disciplina eliminada.');
+      showToast('Módulo eliminado.');
       fetchDisciplinas();
     }
     setConfirmDelete(null);
@@ -520,7 +520,7 @@ export default function DisciplinasPage() {
       {/* Cabeçalho */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Disciplinas</h1>
+          <h1 className="text-2xl font-bold text-white">Módulos</h1>
           <p className="text-sm text-white/35 mt-1">
             {loading ? '…' : `${disciplinasFiltradas.length} disciplina${disciplinasFiltradas.length !== 1 ? 's' : ''}`}
           </p>
@@ -532,7 +532,7 @@ export default function DisciplinasPage() {
                      font-semibold text-white hover:bg-[#3d8aef] transition"
         >
           <span className="text-lg leading-none">+</span>
-          Nova Disciplina
+          Novo Módulo
         </button>
       </div>
 
@@ -562,10 +562,10 @@ export default function DisciplinasPage() {
         ) : disciplinasFiltradas.length === 0 ? (
           <div className="py-12 text-center text-sm text-white/25">
             {disciplinas.length === 0
-              ? 'Nenhuma disciplina encontrada. Cria a primeira!'
+              ? 'Nenhum módulo encontrado. Cria o primeiro!'
               : searchQuery
-                ? `Nenhuma disciplina corresponde à pesquisa "${searchQuery}".`
-                : 'Nenhuma disciplina para o filtro selecionado.'}
+                ? `Nenhum módulo corresponde à pesquisa "${searchQuery}".`
+                : 'Nenhum módulo para o filtro selecionado.'}
           </div>
         ) : (
           <>
@@ -621,7 +621,7 @@ export default function DisciplinasPage() {
               <p className="text-xs text-white/40">
                 A mostrar <span className="font-semibold text-white/80">{startIndexDis + 1}</span> a{' '}
                 <span className="font-semibold text-white/80">{Math.min(startIndexDis + ITEMS_PER_PAGE_DISC, disciplinasFiltradas.length)}</span>{' '}
-                de <span className="font-semibold text-white/80">{disciplinasFiltradas.length}</span> disciplinas
+                de <span className="font-semibold text-white/80">{disciplinasFiltradas.length}</span> módulos
               </p>
               <div className="flex items-center gap-2">
                 <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className={btnPageCls(currentPage === 1)}>Anterior</button>
@@ -636,7 +636,7 @@ export default function DisciplinasPage() {
 
       {/* Modal — Nova Disciplina */}
       {modal === 'nova' && (
-        <Modal title="Nova Disciplina" onClose={() => setModal(null)}>
+        <Modal title="Novo Módulo" onClose={() => setModal(null)}>
           <DisciplinaForm
             initial={{ id_programa: programaId || '' }}
             programas={todosProgramas}
@@ -668,7 +668,7 @@ export default function DisciplinasPage() {
       {confirmDelete !== null && (
         <Modal title="Confirmar eliminação" onClose={() => setConfirmDelete(null)}>
           <p className="text-sm text-white/60 mb-6">
-            Tens a certeza que queres eliminar esta disciplina?
+            Tens a certeza que queres eliminar este módulo?
             Esta ação não pode ser desfeita e remove todas as associações com modelos 3D.
           </p>
           <div className="flex gap-3">

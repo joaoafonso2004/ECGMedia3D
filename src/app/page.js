@@ -129,7 +129,7 @@ export default async function HomePage() {
                 {/* CTA — empurrado para o fundo */}
                 <div className="mt-auto flex items-center gap-1.5 text-xs font-medium
                                 text-[#4f9eff]/50 group-hover:text-[#4f9eff] transition-colors duration-200">
-                  <span>Ver cursos</span>
+                  <span>Ver programas</span>
                   <svg
                     className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1"
                     fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}

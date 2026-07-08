@@ -70,7 +70,7 @@ function DisciplinaForm({ initial = {}, onSave, saving }) {
           disabled={saving || !form.nome.trim()}
           className="w-full rounded-lg bg-[#a78bfa] py-2.5 text-sm font-semibold text-white hover:bg-[#8b5cf6] transition disabled:opacity-50"
         >
-          {saving ? 'A guardar…' : 'Guardar Alterações da Disciplina'}
+          {saving ? 'A guardar…' : 'Guardar Alterações do Módulo'}
         </button>
       </div>
     </div>
@@ -181,7 +181,7 @@ export default function GestorDisciplinasPage() {
     if (error) {
       showToast('Erro ao editar: ' + error.message);
     } else {
-      showToast('Disciplina atualizada com sucesso!');
+      showToast('Módulo atualizado com sucesso!');
       fetchDisciplinas();
       setModal(prev => ({ ...prev, disciplina: { ...prev.disciplina, ...payload } }));
     }
@@ -204,7 +204,7 @@ export default function GestorDisciplinasPage() {
     if (error) {
       showToast('Erro ao remover modelo: ' + error.message);
     } else {
-      showToast('Modelo removido desta disciplina!');
+      showToast('Modelo removido deste módulo!');
       // Atualiza a lista removendo o item visualmente
       setModelosDisciplina(prev => prev.filter(m => m.id_media_items !== id_media_items));
     }
@@ -235,8 +235,8 @@ export default function GestorDisciplinasPage() {
       {/* Cabeçalho */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Disciplinas</h1>
-          <p className="text-sm text-white/35 mt-1">Apenas pode visualizar e gerir as disciplinas que lhe foram atribuídas.</p>
+          <h1 className="text-2xl font-bold text-white">Módulos</h1>
+          <p className="text-sm text-white/35 mt-1">Apenas pode visualizar e gerir os módulos que lhe foram atribuídos.</p>
         </div>
       </div>
 
@@ -264,12 +264,12 @@ export default function GestorDisciplinasPage() {
         {loading ? (
           <div className="py-12 text-center text-sm text-white/25">A carregar…</div>
         ) : disciplinas.length === 0 ? (
-          <div className="py-12 text-center text-sm text-white/25">Não tem nenhuma disciplina atribuída.</div>
+          <div className="py-12 text-center text-sm text-white/25">Não tem nenhum módulo atribuída.</div>
         ) : filteredDisciplinas.length === 0 ? (
           <div className="py-12 text-center text-sm text-white/25">
             {searchQuery
-              ? `Nenhuma disciplina corresponde à pesquisa "${searchQuery}".`
-              : 'Nenhuma disciplina para o filtro selecionado.'}
+              ? `Nenhum módulo corresponde à pesquisa "${searchQuery}".`
+              : 'Nenhum módulo para o filtro selecionado.'}
           </div>
         ) : (
           <table className="w-full text-sm">
@@ -328,7 +328,7 @@ export default function GestorDisciplinasPage() {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-[#a78bfa]">Modelos 3D Associados</h3>
-                <p className="text-xs text-white/40 mt-0.5">Modelos que pertencem a esta disciplina.</p>
+                <p className="text-xs text-white/40 mt-0.5">Modelos que pertencem a este módulo.</p>
               </div>
             </div>
 
@@ -338,7 +338,7 @@ export default function GestorDisciplinasPage() {
               </div>
             ) : modelosDisciplina.length === 0 ? (
               <div className="py-6 text-center text-xs text-white/30 border border-dashed border-white/10 rounded-lg bg-white/2">
-                Nenhum modelo associado a esta disciplina.
+                Nenhum modelo associado a este módulo.
               </div>
             ) : (
               <div className="space-y-2">
@@ -361,7 +361,7 @@ export default function GestorDisciplinasPage() {
                     <button 
                       onClick={() => handleRemoverModelo(m.id_media_items)}
                       className="text-xs font-medium text-red-400/60 hover:text-red-400 px-3 py-1.5 rounded-md border border-transparent hover:border-red-500/20 hover:bg-red-500/10 transition"
-                      title="Remover desta disciplina"
+                      title="Remover deste módulo"
                     >
                       Remover
                     </button>

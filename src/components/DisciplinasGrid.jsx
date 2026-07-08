@@ -203,7 +203,7 @@ export default function DisciplinasGrid({ modulos, basePath = '' }) {
       {visiveis.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl
                         border border-white/5 bg-[#13131a] py-24 text-center">
-          <p className="text-sm text-white/30">Nenhuma disciplina encontrada.</p>
+          <p className="text-sm text-white/30">Nenhum módulo encontrado.</p>
           {filtrosActivos && (
             <button
               onClick={limparTudo}

@@ -92,7 +92,7 @@ export default function UtilizadorDashboard() {
       {/* ── Cards de Estatísticas ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
         <StatCard
-          label="Disciplinas Inscritas"
+          label="Módulos Inscritos"
           value={loading ? null : stats.disciplinas}
           icon="🎓"
           color="#4f9eff"
@@ -108,7 +108,7 @@ export default function UtilizadorDashboard() {
       {/* ── Tabela de Últimas Disciplinas (Estilo Admin) ── */}
       <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
         <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-white">As tuas disciplinas recentes</h2>
+          <h2 className="text-sm font-semibold text-white">Os teus módulos recentes</h2>
           <Link href="/utilizador/biblioteca" className="text-xs text-[#4f9eff]/70 hover:text-[#4f9eff] transition">
             Ver todas →
           </Link>

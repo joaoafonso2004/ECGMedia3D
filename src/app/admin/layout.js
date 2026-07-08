@@ -110,7 +110,7 @@ function IconChevronDown() {
 /* ─── Nav items ─────────────────────────────────────────────────── */
 const NAV_ITEMS = [
   { label: 'Dashboard',       href: '/admin/dashboard',     Icon: IconGrid     },
-  { label: 'Disciplinas',     href: '/admin/disciplinas',   Icon: IconBook     },
+  { label: 'Módulos',     href: '/admin/disciplinas',   Icon: IconBook     },
   { label: 'Projetos',        href: '/admin/projetos',      Icon: IconFolder   },
   { label: 'Modelos 3D',      href: '/admin/modelos',       Icon: IconCube     },
   { label: 'Vídeos de Fundo', href: '/admin/videos',        Icon: IconVideo    },
