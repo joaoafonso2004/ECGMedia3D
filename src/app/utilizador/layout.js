@@ -72,7 +72,7 @@ function Sidebar({ user }) {
             ECGMedia3d
           </span>
           <span className="text-white/15">/</span>
-          <span className="text-sm font-semibold text-[#4f9eff]">aluno</span>
+          <span className="text-sm font-semibold text-[#4f9eff]">Utilizador</span>
         </Link>
       </div>
 

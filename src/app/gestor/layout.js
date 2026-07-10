@@ -99,7 +99,7 @@ function Sidebar() {
       <div className="px-5 py-5 border-b border-white/5">
         <Link href="/" className="flex items-center gap-2 group">
           <span className="text-base font-bold tracking-tight text-white group-hover:text-white/80 transition">
-            media3d
+            ECGMedia3d
           </span>
           <span className="text-white/15">/</span>
           <span className="text-sm font-semibold text-[#a78bfa]">gestor</span>
