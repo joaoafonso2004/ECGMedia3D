@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
+import { useGestorFilter } from '../GestorFilterContext';
 import { Canvas } from '@react-three/fiber';
 import { AnimatedModel, Z_END } from '@/components/ModelScene';
 
@@ -309,6 +310,7 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
 
 /* ─── Página principal direcionada ao Gestor ─────────────────────── */
 export default function GestorModelosPage() {
+  const { entidadeId, programaId, programas } = useGestorFilter();
   const [modelos,           setModelos]           = useState([]);
   const [disciplinasGestor, setDisciplinasGestor] = useState([]);
   const [loading,           setLoading]           = useState(true);
@@ -346,7 +348,6 @@ export default function GestorModelosPage() {
 
     if (moduloIds.length === 0) {
       setModelos([]);
-      setVideos([]);
       setDisciplinasGestor([]);
       setLoading(false);
       return;
@@ -468,6 +469,14 @@ export default function GestorModelosPage() {
     setDeleting(false);
   }
 
+  /* ─── Filtro global (Entidade/Programa) combinado com as permissões ── */
+  const programaIdsEntidade = programas.map(p => p.id_programa);
+  const modelosFiltrados = modelos.filter(m => {
+    if (programaId && m.id_programa != programaId) return false;
+    if (entidadeId && !programaIdsEntidade.includes(m.id_programa)) return false;
+    return true;
+  });
+
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-12">
 
@@ -486,7 +495,7 @@ export default function GestorModelosPage() {
               Modelos 3D <span className="text-[#a78bfa] text-base">(Área do Gestor)</span>
             </h1>
             <p className="text-sm text-white/35 mt-1">
-              {loading ? '…' : `${modelos.length} modelo${modelos.length !== 1 ? 's' : ''} nas suas disciplinas`}
+              {loading ? '…' : `${modelosFiltrados.length} modelo${modelosFiltrados.length !== 1 ? 's' : ''} nas suas disciplinas`}
             </p>
           </div>
           <button
@@ -506,9 +515,11 @@ export default function GestorModelosPage() {
             <div className="py-12 text-center text-sm text-red-300/80">
               Ainda não lhe foi associada nenhuma disciplina. Fale com um Administrador.
             </div>
-          ) : modelos.length === 0 ? (
+          ) : modelosFiltrados.length === 0 ? (
             <div className="py-12 text-center text-sm text-white/25">
-              Nenhum modelo nas suas disciplinas. Crie o primeiro!
+              {modelos.length === 0
+                ? 'Nenhum modelo nas suas disciplinas. Crie o primeiro!'
+                : 'Nenhum modelo para o filtro selecionado.'}
             </div>
           ) : (
             <table className="w-full text-sm">
@@ -523,9 +534,9 @@ export default function GestorModelosPage() {
                 </tr>
               </thead>
               <tbody>
-                {modelos.map((m, i) => (
+                {modelosFiltrados.map((m, i) => (
                   <tr key={m.id_media_items}
-                      className={`transition hover:bg-white/2 ${i !== modelos.length - 1 ? 'border-b border-white/5' : ''}`}>
+                      className={`transition hover:bg-white/2 ${i !== modelosFiltrados.length - 1 ? 'border-b border-white/5' : ''}`}>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         {/* Mini Visualizador 3D na Tabela */}

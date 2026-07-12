@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
+import { useGestorFilter } from '../GestorFilterContext';
 
 /* Helper para detetar se o URL aponta para um vídeo */
 function isVideoUrl(url) {
@@ -364,6 +365,7 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isN
 
 /* ─── Página Principal (Filtro por Gestor) ──────────────────────── */
 export default function GestorProjetosPage() {
+  const { entidadeId, programaId, programas } = useGestorFilter();
   const [projetos, setProjetos]           = useState([]);
   const [modulosList, setModulosList]     = useState([]);
   const [loading, setLoading]             = useState(true);
@@ -405,7 +407,7 @@ export default function GestorProjetosPage() {
     // 3. Buscar Projetos pertencentes AOS MÓDULOS PERMITIDOS
     const { data: projData, error: projError } = await supabase
       .from('projetos')
-      .select('id_projetos, titulo, descricao, autores, id_modulo, projeto_url, modulo:id_modulo(nome)')
+      .select('id_projetos, titulo, descricao, autores, id_modulo, projeto_url, modulo:id_modulo(nome, id_programa)')
       .in('id_modulo', moduloIds)
       .order('id_projetos', { ascending: false });
 
@@ -511,6 +513,15 @@ export default function GestorProjetosPage() {
     setDeleting(false);
   }
 
+  /* ─── Filtro global (Entidade/Programa) combinado com as permissões ── */
+  const programaIdsEntidade = programas.map(p => p.id_programa);
+  const projetosFiltrados = projetos.filter(p => {
+    const idPrograma = Array.isArray(p.modulo) ? p.modulo[0]?.id_programa : p.modulo?.id_programa;
+    if (programaId && idPrograma != programaId) return false;
+    if (entidadeId && !programaIdsEntidade.includes(idPrograma)) return false;
+    return true;
+  });
+
   return (
     <div className="p-8 max-w-5xl mx-auto">
       {toast && (
@@ -522,7 +533,7 @@ export default function GestorProjetosPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white">Projetos <span className="text-[#a78bfa] text-base">(Área do Gestor)</span></h1>
-          <p className="text-sm text-white/35 mt-1">{loading ? '…' : `${projetos.length} projeto${projetos.length !== 1 ? 's' : ''} nas suas disciplinas`}</p>
+          <p className="text-sm text-white/35 mt-1">{loading ? '…' : `${projetosFiltrados.length} projeto${projetosFiltrados.length !== 1 ? 's' : ''} nas suas disciplinas`}</p>
         </div>
         <button
           onClick={() => setModal('novo')}
@@ -539,8 +550,12 @@ export default function GestorProjetosPage() {
           <div className="py-12 text-center text-sm text-white/25 text-red-300/80">
             Ainda não lhe foi associada nenhuma disciplina. Fale com um Administrador.
           </div>
-        ) : projetos.length === 0 ? (
-          <div className="py-12 text-center text-sm text-white/25">Nenhum projeto associado às suas disciplinas. Crie o primeiro!</div>
+        ) : projetosFiltrados.length === 0 ? (
+          <div className="py-12 text-center text-sm text-white/25">
+            {projetos.length === 0
+              ? 'Nenhum projeto associado às suas disciplinas. Crie o primeiro!'
+              : 'Nenhum projeto para o filtro selecionado.'}
+          </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
@@ -553,8 +568,8 @@ export default function GestorProjetosPage() {
               </tr>
             </thead>
             <tbody>
-              {projetos.map((p, i) => (
-                <tr key={p.id_projetos} className={`transition hover:bg-white/2 ${i !== projetos.length - 1 ? 'border-b border-white/5' : ''}`}>
+              {projetosFiltrados.map((p, i) => (
+                <tr key={p.id_projetos} className={`transition hover:bg-white/2 ${i !== projetosFiltrados.length - 1 ? 'border-b border-white/5' : ''}`}>
                   <td className="px-5 py-3.5">
                     {p.projeto_url ? (
                       <div className="h-10 w-10 overflow-hidden rounded-md border border-white/10 bg-[#0c0c0f]">

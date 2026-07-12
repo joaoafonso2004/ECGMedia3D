@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
+import { useGestorFilter } from '../GestorFilterContext';
 
 export default function GestorAprovacoesPage() {
+  const { entidadeId, programaId, programas } = useGestorFilter();
   const [activeTab, setActiveTab] = useState('pendentes'); // 'pendentes' | 'aprovados'
   const [pendentes, setPendentes] = useState([]);
   const [aprovados, setAprovados] = useState([]);
@@ -22,7 +24,26 @@ export default function GestorAprovacoesPage() {
     setLoading(true);
     const supabase = createSupabaseBrowser();
 
-    // Buscar projetos pendentes E aprovados numa só query
+    // Restringir aos módulos atribuídos a este gestor
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+
+    const { data: permissoes } = await supabase
+      .from('tipo_utilizador')
+      .select('id_modulo')
+      .eq('id_utilizador', user.id)
+      .not('id_modulo', 'is', null);
+
+    const moduloIds = Array.from(new Set((permissoes || []).map(p => p.id_modulo)));
+
+    if (moduloIds.length === 0) {
+      setPendentes([]);
+      setAprovados([]);
+      setLoading(false);
+      return;
+    }
+
+    // Buscar projetos pendentes E aprovados, apenas dos módulos permitidos
     const { data, error } = await supabase
       .from('media_items')
       .select(`
@@ -31,9 +52,12 @@ export default function GestorAprovacoesPage() {
         tipo,
         url,
         status,
+        id_modulo,
+        modulo:id_modulo (id_programa),
         autor:id_autor (nome, email)
       `)
       .in('status', ['pendente', 'aprovado'])
+      .in('id_modulo', moduloIds)
       .order('id_media_items', { ascending: false });
 
     if (!error && data) {
@@ -42,6 +66,20 @@ export default function GestorAprovacoesPage() {
     }
     setLoading(false);
   }
+
+  // ─── Filtro global (Entidade/Programa) combinado com as permissões ──
+  const programaIdsEntidade = programas.map(p => p.id_programa);
+  function aplicarFiltroGlobal(lista) {
+    return lista.filter(item => {
+      const idPrograma = Array.isArray(item.modulo) ? item.modulo[0]?.id_programa : item.modulo?.id_programa;
+      if (programaId && idPrograma != programaId) return false;
+      if (entidadeId && !programaIdsEntidade.includes(idPrograma)) return false;
+      return true;
+    });
+  }
+
+  const pendentesFiltrados = aplicarFiltroGlobal(pendentes);
+  const aprovadosFiltrados = aplicarFiltroGlobal(aprovados);
 
   // Executa a ação na base de dados após confirmação no modal
   async function confirmarAcao() {
@@ -99,7 +137,7 @@ export default function GestorAprovacoesPage() {
           className={`pb-3.5 px-1 text-sm font-medium transition-all relative whitespace-nowrap
             ${activeTab === 'pendentes' ? 'text-[#a78bfa]' : 'text-white/40 hover:text-white/70'}`}
         >
-          Para Revisão ({pendentes.length})
+          Para Revisão ({pendentesFiltrados.length})
           {activeTab === 'pendentes' && (
             <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#a78bfa] rounded-t-full shadow-[0_0_8px_rgba(167,139,250,0.6)]"></span>
           )}
@@ -109,7 +147,7 @@ export default function GestorAprovacoesPage() {
           className={`pb-3.5 px-1 text-sm font-medium transition-all relative whitespace-nowrap
             ${activeTab === 'aprovados' ? 'text-[#a78bfa]' : 'text-white/40 hover:text-white/70'}`}
         >
-          Publicados ({aprovados.length})
+          Publicados ({aprovadosFiltrados.length})
           {activeTab === 'aprovados' && (
             <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#a78bfa] rounded-t-full shadow-[0_0_8px_rgba(167,139,250,0.6)]"></span>
           )}
@@ -123,7 +161,7 @@ export default function GestorAprovacoesPage() {
         </div>
       ) : activeTab === 'pendentes' ? (
         /* ════ TAB 1: PARA REVISÃO (PENDENTES) ════ */
-        pendentes.length === 0 ? (
+        pendentesFiltrados.length === 0 ? (
           <div className="rounded-xl border border-white/8 bg-[#13131a] py-24 text-center flex flex-col items-center justify-center shadow-sm">
             <div className="flex items-center justify-center w-20 h-20 rounded-full bg-[#a78bfa]/10 text-[#a78bfa] mb-5">
               <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -137,7 +175,7 @@ export default function GestorAprovacoesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {pendentes.map((item) => (
+            {pendentesFiltrados.map((item) => (
               <div key={item.id_media_items} className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden flex flex-col shadow-lg transition-all hover:border-white/10">
                 <div className="aspect-video bg-black relative border-b border-white/5">
                   {item.url ? (
@@ -191,7 +229,7 @@ export default function GestorAprovacoesPage() {
         )
       ) : (
         /* ════ TAB 2: APROVADOS NA COMUNIDADE ════ */
-        aprovados.length === 0 ? (
+        aprovadosFiltrados.length === 0 ? (
           <div className="rounded-xl border border-white/8 bg-[#13131a] py-24 text-center flex flex-col items-center justify-center shadow-sm">
             <div className="flex items-center justify-center w-20 h-20 rounded-full bg-white/5 text-white/40 mb-5">
               <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -205,7 +243,7 @@ export default function GestorAprovacoesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {aprovados.map((item) => (
+            {aprovadosFiltrados.map((item) => (
               <div key={item.id_media_items} className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden flex flex-col shadow-lg transition-all hover:border-white/10">
                 <div className="aspect-video bg-black relative border-b border-white/5">
                   {item.url ? (

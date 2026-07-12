@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
+import { useGestorFilter } from '../GestorFilterContext';
 
 /* ─── Modal Genérico (Estilo Gestores) ──────────────────────────── */
 function Modal({ title, onClose, children }) {
@@ -26,6 +27,7 @@ const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.
   focus:ring-[#a78bfa]/30 transition`;
 
 export default function GestorUtilizadoresPage() {
+  const { entidadeId, programaId, programas } = useGestorFilter();
   const [alunos, setAlunos] = useState([]);
   const [modulos, setModulos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,25 +47,60 @@ export default function GestorUtilizadoresPage() {
 
   async function fetchData() {
     setLoading(true);
-    
-    const { data: todosUtilizadores } = await supabase.from('utilizadores').select('*');
-    const { data: papeis } = await supabase
-      .from('tipo_utilizador')
-      .select('id_tipo_utilizador, id_utilizador, role, id_modulo, modulo(nome, codigo)')
-      .eq('role', 'utilizador');
 
-    if (todosUtilizadores && papeis) {
-      const alunosFormatados = todosUtilizadores
-        .filter(u => papeis.some(p => p.id_utilizador === u.id_utilizadores))
-        .map(u => ({
-          ...u,
-          disciplinas: papeis.filter(p => p.id_utilizador === u.id_utilizadores && p.id_modulo !== null)
-        }));
-      setAlunos(alunosFormatados);
+    /* 1. Identificar o gestor e os módulos que lhe estão atribuídos */
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+
+    const { data: permissoes } = await supabase
+      .from('tipo_utilizador')
+      .select('id_modulo')
+      .eq('id_utilizador', user.id)
+      .not('id_modulo', 'is', null);
+
+    const moduloIds = Array.from(new Set((permissoes || []).map(p => p.id_modulo)));
+
+    if (moduloIds.length === 0) {
+      setAlunos([]);
+      setModulos([]);
+      setLoading(false);
+      return;
     }
 
-    const { data: todosModulos } = await supabase.from('modulo').select('id_modulo, nome, codigo');
-    if (todosModulos) setModulos(todosModulos);
+    /* 2. Módulos do gestor (para o dropdown de associação) */
+    const { data: todosModulos } = await supabase
+      .from('modulo')
+      .select('id_modulo, nome, codigo, id_programa')
+      .in('id_modulo', moduloIds);
+    setModulos(todosModulos || []);
+
+    /* 3. Alunos associados apenas aos módulos do gestor */
+    const { data: papeis } = await supabase
+      .from('tipo_utilizador')
+      .select('id_tipo_utilizador, id_utilizador, role, id_modulo, modulo(nome, codigo, id_programa)')
+      .eq('role', 'utilizador')
+      .in('id_modulo', moduloIds);
+
+    const idsComAcesso = Array.from(new Set((papeis || []).map(p => p.id_utilizador)));
+
+    if (idsComAcesso.length === 0) {
+      setAlunos([]);
+      setLoading(false);
+      return;
+    }
+
+    const { data: todosUtilizadores } = await supabase
+      .from('utilizadores')
+      .select('*')
+      .in('id_utilizadores', idsComAcesso);
+
+    if (todosUtilizadores && papeis) {
+      const alunosFormatados = todosUtilizadores.map(u => ({
+        ...u,
+        disciplinas: papeis.filter(p => p.id_utilizador === u.id_utilizadores && p.id_modulo !== null)
+      }));
+      setAlunos(alunosFormatados);
+    }
 
     setLoading(false);
   }
@@ -128,8 +165,22 @@ export default function GestorUtilizadoresPage() {
     setIsDeleting(false);
   }
 
-  // ─── Filtragem ────────────────────────────────────────────────────
-  const alunosFiltrados = alunos.filter(a => {
+  // ─── Filtro global (Entidade/Programa) combinado com as permissões ──
+  const programaIdsEntidade = programas.map(p => p.id_programa);
+  const alunosNoFiltroGlobal = alunos
+    .map(a => ({
+      ...a,
+      disciplinas: a.disciplinas.filter(d => {
+        const idPrograma = Array.isArray(d.modulo) ? d.modulo[0]?.id_programa : d.modulo?.id_programa;
+        if (programaId && idPrograma != programaId) return false;
+        if (entidadeId && !programaIdsEntidade.includes(idPrograma)) return false;
+        return true;
+      }),
+    }))
+    .filter(a => a.disciplinas.length > 0);
+
+  // ─── Filtragem por pesquisa ─────────────────────────────────────────
+  const alunosFiltrados = alunosNoFiltroGlobal.filter(a => {
     const q = search.toLowerCase();
     const nome = a.nome?.toLowerCase() || '';
     const email = a.email?.toLowerCase() || '';
@@ -144,7 +195,7 @@ export default function GestorUtilizadoresPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Gestão de Alunos</h1>
           <p className="text-sm text-white/35 mt-1">
-            {loading ? "…" : `${alunos.length} alunos registados`}
+            {loading ? "…" : `${alunosNoFiltroGlobal.length} alunos nas suas disciplinas`}
           </p>
         </div>
       </div>
@@ -172,10 +223,14 @@ export default function GestorUtilizadoresPage() {
         {loading ? (
           <div className="py-12 text-center text-sm text-white/25">A carregar alunos...</div>
         ) : alunos.length === 0 ? (
-          <div className="py-12 text-center text-sm text-white/25">Nenhum aluno registado.</div>
+          <div className="py-12 text-center text-sm text-white/25">
+            Ainda não lhe foi associada nenhuma disciplina, ou não tem alunos nas suas disciplinas.
+          </div>
         ) : alunosFiltrados.length === 0 ? (
           <div className="py-12 text-center text-sm text-white/25">
-            Nenhum aluno corresponde à pesquisa "{search}".
+            {search
+              ? `Nenhum aluno corresponde à pesquisa "${search}".`
+              : 'Nenhum aluno para o filtro selecionado.'}
           </div>
         ) : (
           <table className="w-full text-sm">

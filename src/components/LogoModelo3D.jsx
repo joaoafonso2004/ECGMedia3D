@@ -71,7 +71,7 @@ export default function LogoModelo3D({
     <Canvas
       camera={{ position: [0, 0, 5], fov: 45, near: 0.1, far: 200 }}
       gl={{ alpha: true, antialias: true }}
-      style={{ width, height, background: 'transparent' }}
+      style={{ width, height, background: 'transparent', pointerEvents: 'none' }}
     >
       <ambientLight intensity={0.6} />
       <directionalLight position={[5, 5, 5]} intensity={1.2} />

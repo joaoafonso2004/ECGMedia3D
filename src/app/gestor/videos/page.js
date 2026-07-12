@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
+import { useGestorFilter } from '../GestorFilterContext';
 
 const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white
   placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1
@@ -301,6 +302,7 @@ function EditVideoModal({ video, onClose, onSave, saving, todasDisciplinas }) {
 
 /* ─── Página principal ───────────────────────────────────────────── */
 export default function GestorVideosPage() {
+  const { entidadeId, programaId, programas } = useGestorFilter();
   const [modulosGestor,    setModulosGestor]    = useState([]);
   const [videos,           setVideos]           = useState([]);
   const [loading,          setLoading]          = useState(true);
@@ -377,15 +379,29 @@ export default function GestorVideosPage() {
   }, []);
 
   useEffect(() => { fetchDados(); }, [fetchDados]);
+  useEffect(() => { setCurrentPage(1); }, [entidadeId, programaId]);
+
+  /* ─── Filtro global (Entidade/Programa) combinado com as permissões ── */
+  const programaIdsEntidade = programas.map(p => p.id_programa);
+  const videosFiltrados = videos.filter(v => {
+    if (programaId && v.id_programa != programaId) return false;
+    if (entidadeId && !programaIdsEntidade.includes(v.id_programa)) return false;
+    return true;
+  });
 
   /* Disciplinas do gestor sem vídeo (para o modal de novo vídeo) */
   const moduloIdsComVideo = new Set(videos.map(v => v.id_modulo_atual).filter(Boolean));
-  const disciplinasSemVideo = modulosGestor.filter(d => !moduloIdsComVideo.has(d.id_modulo));
+  const disciplinasSemVideo = modulosGestor.filter(d => {
+    if (moduloIdsComVideo.has(d.id_modulo)) return false;
+    if (programaId && d.id_programa != programaId) return false;
+    if (entidadeId && !programaIdsEntidade.includes(d.id_programa)) return false;
+    return true;
+  });
 
   /* Paginação */
-  const totalPages      = Math.ceil(videos.length / ITEMS_PER_PAGE);
+  const totalPages      = Math.ceil(videosFiltrados.length / ITEMS_PER_PAGE);
   const startIndex      = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedVideos = videos.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const paginatedVideos = videosFiltrados.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   /* ─── Criar vídeo ────────────────────────────────────────────────── */
   async function handleCreate({ titulo, url, id_modulo, id_programa, id_entidade }) {
@@ -509,7 +525,7 @@ export default function GestorVideosPage() {
           <p className="text-sm text-white/35 mt-1">
             {loading
               ? '…'
-              : `${videos.length} vídeo${videos.length !== 1 ? 's' : ''} nas suas disciplinas`}
+              : `${videosFiltrados.length} vídeo${videosFiltrados.length !== 1 ? 's' : ''} nas suas disciplinas`}
           </p>
         </div>
         <button
@@ -538,9 +554,11 @@ export default function GestorVideosPage() {
         <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden flex flex-col">
           {loading ? (
             <div className="py-12 text-center text-sm text-white/25">A carregar…</div>
-          ) : videos.length === 0 ? (
+          ) : videosFiltrados.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-sm text-white/25 mb-4">Nenhum vídeo adicionado ainda.</p>
+              <p className="text-sm text-white/25 mb-4">
+                {videos.length === 0 ? 'Nenhum vídeo adicionado ainda.' : 'Nenhum vídeo para o filtro selecionado.'}
+              </p>
               <button
                 onClick={() => setShowModal(true)}
                 className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2
@@ -615,9 +633,9 @@ export default function GestorVideosPage() {
                     A mostrar{' '}
                     <span className="font-semibold text-white/80">{startIndex + 1}</span> a{' '}
                     <span className="font-semibold text-white/80">
-                      {Math.min(startIndex + ITEMS_PER_PAGE, videos.length)}
+                      {Math.min(startIndex + ITEMS_PER_PAGE, videosFiltrados.length)}
                     </span>{' '}
-                    de <span className="font-semibold text-white/80">{videos.length}</span> vídeos
+                    de <span className="font-semibold text-white/80">{videosFiltrados.length}</span> vídeos
                   </p>
                   <div className="flex items-center gap-2">
                     <button

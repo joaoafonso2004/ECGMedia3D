@@ -333,20 +333,29 @@ export default function AdminVideosPage() {
       .order('nome');
     setTodasDisciplinas(disciplinas || []);
 
-    const { data: videosData } = await supabase
-      .from('media_items')
-      .select('*')
-      .eq('tipo', 'video')
-      .order('id_media_items', { ascending: false });
-
     const { data: ligacoes } = await supabase
       .from('modulo_media')
       .select('id_media_items, id_modulo, modulo:id_modulo(nome)');
 
-    setVideos((videosData || []).map(v => {
-      const lig = ligacoes?.find(l => l.id_media_items === v.id_media_items);
-      return { ...v, nome_disciplina: lig?.modulo?.nome ?? null, id_modulo_atual: lig?.id_modulo ?? null };
-    }));
+    /* Apenas vídeos associados a um módulo via modulo_media são "Vídeos de Fundo".
+       Excluímos assim vídeos de projetos (id_projetos) ou outros contextos. */
+    const mediaItemIds = Array.from(new Set((ligacoes || []).map(l => l.id_media_items)));
+
+    if (mediaItemIds.length > 0) {
+      const { data: videosData } = await supabase
+        .from('media_items')
+        .select('*')
+        .eq('tipo', 'video')
+        .in('id_media_items', mediaItemIds)
+        .order('id_media_items', { ascending: false });
+
+      setVideos((videosData || []).map(v => {
+        const lig = ligacoes?.find(l => l.id_media_items === v.id_media_items);
+        return { ...v, nome_disciplina: lig?.modulo?.nome ?? null, id_modulo_atual: lig?.id_modulo ?? null };
+      }));
+    } else {
+      setVideos([]);
+    }
 
     setLoading(false);
   }, []);
