@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { AdminFilterProvider, useAdminFilter } from './AdminFilterContext';
+import NotificacoesSino from '@/components/NotificacoesSino';
 
 /* ─── Ícones ────────────────────────────────────────────────────── */
 function IconGrid() {
@@ -260,6 +261,10 @@ function TopNavBar() {
             ))}
           </div>
         )}
+      </div>
+
+      <div className="ml-auto">
+        <NotificacoesSino hrefTodas="/admin/notificacoes" accent="#4f9eff" />
       </div>
     </div>
   );

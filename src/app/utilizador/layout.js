@@ -4,6 +4,7 @@ import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
+import NotificacoesSino from '@/components/NotificacoesSino';
 
 /* ─── Ícones ────────────────────────────────────────────────────── */
 function IconGrid() {
@@ -193,6 +194,9 @@ export default function UtilizadorLayout({ children }) {
     <div className="flex min-h-screen bg-[#0c0c0f]">
       <Sidebar user={user} />
       <div className="flex-1 flex flex-col min-h-0">
+        <header className="flex items-center justify-end h-[57px] px-6 border-b border-white/5 bg-[#0c0c0f] shrink-0">
+          <NotificacoesSino hrefTodas="/utilizador/notificacoes" accent="#4f9eff" />
+        </header>
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>
