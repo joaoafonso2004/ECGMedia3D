@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { GestorFilterProvider, useGestorFilter } from './GestorFilterContext';
 import { useEffect, useState } from 'react';
+import NotificacoesSino from '@/components/NotificacoesSino';
 
 /* ─── Ícones ────────────────────────────────────────────────────── */
 function IconGrid() {
@@ -206,6 +207,10 @@ function FilterBar() {
           </button>
         </div>
       )}
+
+      <div className="ml-auto">
+        <NotificacoesSino hrefTodas="/gestor/notificacoes" accent="#a78bfa" />
+      </div>
     </div>
   );
 }
