@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import { useGestorFilter } from '../GestorFilterContext';
+import { EVENTO_NOTIFICACAO_NOVA } from '@/lib/notificacoes';
 
 export default function GestorAprovacoesPage() {
   const { entidadeId, programaId, programas } = useGestorFilter();
@@ -16,12 +17,26 @@ export default function GestorAprovacoesPage() {
   // status: 'aprovado' (aceitar), 'rejeitado' (rejeitar pendente), 'pessoal' (remover dos aprovados)
   const [modalAcao, setModalAcao] = useState(null); 
 
+  // Pedidos que chegaram enquanto a página está aberta (etiqueta "Novo")
+  const [novosIds, setNovosIds] = useState([]);
+
   useEffect(() => {
     fetchItems();
+
+    // Quando chega um pedido novo (notificação em tempo real), atualiza a lista sem recarregar
+    function onNotificacao(e) {
+      const n = e.detail;
+      if (n?.tipo !== 'submissao_pendente') return;
+      if (n.id_media_items) setNovosIds(prev => [...new Set([...prev, n.id_media_items])]);
+      setActiveTab('pendentes');
+      fetchItems({ silencioso: true });
+    }
+    window.addEventListener(EVENTO_NOTIFICACAO_NOVA, onNotificacao);
+    return () => window.removeEventListener(EVENTO_NOTIFICACAO_NOVA, onNotificacao);
   }, []);
 
-  async function fetchItems() {
-    setLoading(true);
+  async function fetchItems({ silencioso = false } = {}) {
+    if (!silencioso) setLoading(true);
     const supabase = createSupabaseBrowser();
 
     // Restringir aos módulos atribuídos a este gestor
@@ -30,13 +45,16 @@ export default function GestorAprovacoesPage() {
 
     const { data: permissoes } = await supabase
       .from('tipo_utilizador')
-      .select('id_modulo')
-      .eq('id_utilizador', user.id)
-      .not('id_modulo', 'is', null);
+      .select('id_modulo, role')
+      .eq('id_utilizador', user.id);
 
-    const moduloIds = Array.from(new Set((permissoes || []).map(p => p.id_modulo)));
+    // O superadmin vê os pedidos de todas as disciplinas (incluindo as que não têm gestor)
+    const isSuperAdmin = (permissoes || []).some(p => p.role === 'superadmin');
+    const moduloIds = Array.from(new Set(
+      (permissoes || []).filter(p => p.id_modulo != null).map(p => p.id_modulo)
+    ));
 
-    if (moduloIds.length === 0) {
+    if (!isSuperAdmin && moduloIds.length === 0) {
       setPendentes([]);
       setAprovados([]);
       setLoading(false);
@@ -44,7 +62,7 @@ export default function GestorAprovacoesPage() {
     }
 
     // Buscar projetos pendentes E aprovados, apenas dos módulos permitidos
-    const { data, error } = await supabase
+    let query = supabase
       .from('media_items')
       .select(`
         id_media_items,
@@ -57,8 +75,11 @@ export default function GestorAprovacoesPage() {
         autor:id_autor (nome, email)
       `)
       .in('status', ['pendente', 'aprovado'])
-      .in('id_modulo', moduloIds)
       .order('id_media_items', { ascending: false });
+
+    if (!isSuperAdmin) query = query.in('id_modulo', moduloIds);
+
+    const { data, error } = await query;
 
     if (!error && data) {
       setPendentes(data.filter(item => item.status === 'pendente'));
@@ -187,7 +208,12 @@ export default function GestorAprovacoesPage() {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-white/20 text-xs">Sem preview</div>
                   )}
-                  <div className="absolute top-3 right-3 pointer-events-none">
+                  <div className="absolute top-3 right-3 pointer-events-none flex gap-1.5">
+                    {novosIds.includes(item.id_media_items) && (
+                      <span className="px-2.5 py-1 rounded-md bg-[#a78bfa] text-[10px] font-bold text-black uppercase tracking-widest shadow-sm animate-pulse">
+                        Novo
+                      </span>
+                    )}
                     <span className="px-2.5 py-1 rounded-md bg-yellow-500/90 backdrop-blur-md text-[10px] font-bold text-black uppercase tracking-widest shadow-sm">
                       Revisão
                     </span>
