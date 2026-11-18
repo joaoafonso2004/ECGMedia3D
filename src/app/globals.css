@@ -12,6 +12,70 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Cores da área pública (redesign).
+   Base: preto do logótipo UNIPVC e verde-azulado do portal ipvc.pt.
+   O vermelho, verde e azul do curso ficam para o logótipo e para
+   distinguir projetos, módulos e autores. */
+@theme {
+  --color-papel: #f6f5f2;
+  --color-superficie: #ffffff;
+  --color-mosaico: #ebe9e3;
+  --color-mosaico-2: #e2dfd7;
+  --color-tinta: #0b0904;
+  --color-tinta-2: #4a463e;
+  --color-cinza: #858075;
+  --color-linha: rgb(11 9 4 / 0.1);
+  --color-linha-2: rgb(11 9 4 / 0.18);
+  --color-acao: #12616d;
+  --color-acao-escuro: #0d4c56;
+  --color-ecgm-r: #e2362a;
+  --color-ecgm-g: #12a463;
+  --color-ecgm-b: #2b5fe5;
+}
+
+/* Largura máxima e margens laterais das páginas públicas */
+@utility contentor {
+  max-width: 1360px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 3vw, 40px);
+}
+
+/* Botões da área pública */
+@utility botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding-inline: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--color-linha-2);
+  background: var(--color-superficie);
+  color: var(--color-tinta);
+  font-size: 14.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color .2s, border-color .2s, color .2s;
+  &:hover { border-color: var(--color-tinta); }
+}
+@utility botao-acao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding-inline: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--color-acao);
+  background: var(--color-acao);
+  color: #fff;
+  font-size: 14.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color .2s, border-color .2s;
+  &:hover { background: var(--color-acao-escuro); border-color: var(--color-acao-escuro); }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
