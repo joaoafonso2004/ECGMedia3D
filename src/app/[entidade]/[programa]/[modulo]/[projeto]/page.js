@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import GaleriaProjeto from './galeriaProjeto';
+import { getTermos } from '@/lib/terminologia';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,7 +74,10 @@ export default async function ProjetoPage({ params }) {
   if (!projeto || projeto.id_modulo !== modulo.id_modulo) notFound();
 
   /* Carrega a galeria (Modelos 3D, Imagens e Vídeos extra anexados ao projeto) */
-  const galeria = await getGaleriaProjeto(projeto.id_projetos);
+  const [galeria, termos] = await Promise.all([
+    getGaleriaProjeto(projeto.id_projetos),
+    getTermos(supabase, entidade),
+  ]);
 
   const codigoCurso = programa.codigo ?? progSlug.toUpperCase();
   const codigoMod   = modulo.codigo   ?? moduloSlug.toUpperCase();
@@ -148,7 +152,7 @@ export default async function ProjetoPage({ params }) {
       </section>
 
       {/* ── Galeria Simples (Apenas anexos do projeto) ────────────────── */}
-      <GaleriaProjeto galeria={galeria} />
+      <GaleriaProjeto galeria={galeria} termos={termos} />
 
       {/* ── Footer ── */}
       <footer className="border-t border-white/5 px-6 py-6 mt-auto">

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
+import { getTermos, contar, ver, minuscula, maiuscula, nesteTermo } from '@/lib/terminologia';
 
 /* ─── Fetches ───────────────────────────────────────────────────── */
 
@@ -36,9 +37,10 @@ export async function generateMetadata({ params }) {
   const { entidade: slug } = await params;
   const entidade = await getEntidade(slug);
   if (!entidade) return { title: 'ECGMedia3D' };
+  const termos = await getTermos(supabase, entidade);
   return {
     title: `${entidade.nome} — ECGMedia3D`,
-    description: entidade.descricao ?? `Programas de ${entidade.nome}`,
+    description: entidade.descricao ?? `${maiuscula(termos.programa.plural)} — ${entidade.nome}`,
   };
 }
 
@@ -51,7 +53,11 @@ export default async function EntidadePage({ params }) {
 
   /* Usa id_entidade ou id — aceita ambas as convenções */
   const idEntidade = entidade.id_entidade ?? entidade.id;
-  const programas  = await getProgramas(idEntidade);
+  // Nomes dos níveis definidos para este tipo de entidade (Terminologia)
+  const [programas, termos] = await Promise.all([
+    getProgramas(idEntidade),
+    getTermos(supabase, entidade),
+  ]);
 
   return (
     <div className="min-h-screen bg-papel text-tinta">
@@ -66,9 +72,7 @@ export default async function EntidadePage({ params }) {
             <span aria-current="page" className="text-tinta">{entidade.nome}</span>
           </nav>
 
-          {entidade.tipo && (
-            <p className="mt-6 text-[13px] font-medium capitalize text-cinza">{entidade.tipo}</p>
-          )}
+          <p className="mt-6 text-[13px] font-medium text-cinza">{termos.entidade.singular}</p>
           <h1 className="mt-2 text-[clamp(34px,4vw,60px)] font-semibold leading-[1.05] tracking-[-0.035em] text-balance">
             {entidade.nome}
           </h1>
@@ -76,9 +80,7 @@ export default async function EntidadePage({ params }) {
             <p className="mt-4 max-w-[60ch] text-lg text-tinta-2">{entidade.descricao}</p>
           )}
           <p className="mt-4 text-sm text-cinza">
-            {programas.length === 0
-              ? 'Nenhum programa disponível'
-              : `${programas.length} ${programas.length === 1 ? 'programa' : 'programas'}`}
+            {contar(termos.programa, programas.length)}
           </p>
         </section>
 
@@ -86,7 +88,7 @@ export default async function EntidadePage({ params }) {
         <section className="pt-8">
           {programas.length === 0 ? (
             <div className="rounded-xl border border-linha bg-superficie py-16 text-center">
-              <p className="text-sm text-cinza">Nenhum programa encontrado para esta instituição.</p>
+              <p className="text-sm text-cinza">{`Ainda não há ${minuscula(termos.programa.plural)} ${nesteTermo(termos.entidade)}.`}</p>
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -109,7 +111,7 @@ export default async function EntidadePage({ params }) {
                     <p className="mt-2 line-clamp-2 text-[15px] text-tinta-2">{p.descricao}</p>
                   )}
                   <span className="mt-auto pt-5 text-[15px] font-medium text-acao">
-                    Ver módulos{' '}
+                    {ver(termos.modulo)}{' '}
                     <span aria-hidden="true" className="inline-block transition-transform group-hover:translate-x-1">→</span>
                   </span>
                 </Link>

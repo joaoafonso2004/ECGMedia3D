@@ -3,8 +3,10 @@
 import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useModelViewer } from '@/context/ModelViewerContext';
+import { resolverTermos, ver } from '@/lib/terminologia';
 
-export default function DisciplinaCard({ disciplina, basePath = '' }) {
+export default function DisciplinaCard({ disciplina, basePath = '', termos = null }) {
+  const t = termos ?? resolverTermos();
   const { setActiveModel } = useModelViewer();
   const isHoveredRef = useRef(false);
   const divRef       = useRef(null);
@@ -173,7 +175,7 @@ export default function DisciplinaCard({ disciplina, basePath = '' }) {
               </p>
               <div className="mt-2 flex items-center gap-1.5 text-xs font-medium
                               text-[#4f9eff]/50 group-hover:text-[#4f9eff] transition-colors duration-200">
-                <span>Ver projetos</span>
+                <span>{ver(t.projeto)}</span>
                 <svg className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1"
                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -219,7 +221,7 @@ export default function DisciplinaCard({ disciplina, basePath = '' }) {
               </p>
               <div className="mt-4 flex items-center gap-1.5 text-xs font-medium
                               text-[#4f9eff]/50 group-hover:text-[#4f9eff] transition-colors duration-200">
-                <span>Ver projetos</span>
+                <span>{ver(t.projeto)}</span>
                 <svg className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1"
                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />

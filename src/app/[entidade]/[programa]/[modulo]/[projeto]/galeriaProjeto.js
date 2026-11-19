@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { resolverTermos, contar, publicados, maiuscula, minuscula, doTermo, nesteTermo } from '@/lib/terminologia';
 
 export default function GaleriaProjeto({ 
   galeria = [], 
@@ -10,11 +11,22 @@ export default function GaleriaProjeto({
   isPaginaDisciplina = false,
   entitySlug = '',
   progSlug = '',
-  moduloSlug = ''
+  moduloSlug = '',
+  abrirId = null,
+  termos = null
 }) {
+  const t = termos ?? resolverTermos();
+
+  // Trabalho a abrir logo à entrada (?ver=<id>, vindo da pesquisa)
+  const itemInicial = abrirId
+    ? comunidade.find(i => String(i.id_media_items) === String(abrirId)) ?? null
+    : null;
+
   // Predefinição para o estado das Tabs
-  const [activeTab, setActiveTab] = useState(isPaginaDisciplina ? 'projetos' : null); 
-  const [itemAtivo, setItemAtivo] = useState(null);
+  const [activeTab, setActiveTab] = useState(
+    isPaginaDisciplina ? (itemInicial ? 'comunidade' : 'projetos') : null
+  );
+  const [itemAtivo, setItemAtivo] = useState(itemInicial);
 
   useEffect(() => {
     if (itemAtivo) document.body.style.overflow = 'hidden';
@@ -42,7 +54,7 @@ export default function GaleriaProjeto({
                 className={`pb-3.5 text-[15px] font-semibold tracking-wide transition-all relative
                   ${activeTab === 'projetos' ? 'text-[#4f9eff]' : 'text-white/40 hover:text-white/70'}`}
               >
-                Projetos Publicados
+                {publicados(t.projeto)}
                 {activeTab === 'projetos' && (
                   <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#4f9eff] rounded-t-full shadow-[0_0_8px_rgba(79,158,255,0.6)]"></span>
                 )}
@@ -61,10 +73,10 @@ export default function GaleriaProjeto({
 
             <div className="flex items-center justify-between mb-8">
               <p className="text-[11px] text-white/35 uppercase tracking-wider font-semibold">
-                {activeTab === 'projetos' ? 'Projetos práticos desenvolvidos' : 'Recursos individuais aprovados'}
+                {activeTab === 'projetos' ? `${maiuscula(t.projeto.plural)} ${doTermo(t.modulo)}` : 'Recursos individuais aprovados'}
               </p>
               <span className="text-[11px] font-mono text-white/40 bg-white/5 px-2.5 py-1 rounded-md border border-white/5 select-none">
-                {activeTab === 'projetos' && `${projetos.length} ${projetos.length === 1 ? 'projeto' : 'projetos'}`}
+                {activeTab === 'projetos' && contar(t.projeto, projetos.length)}
                 {activeTab === 'comunidade' && `${comunidade.length} ${comunidade.length === 1 ? 'item' : 'itens'}`}
               </span>
             </div>
@@ -72,7 +84,7 @@ export default function GaleriaProjeto({
         ) : (
           /* Cabeçalho Simples para a página do Projeto (Sem Abas) */
           <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
-            <h2 className="text-xl font-semibold text-white/90">Ficheiros do Projeto</h2>
+            <h2 className="text-xl font-semibold text-white/90">Ficheiros {doTermo(t.projeto)}</h2>
             <span className="text-[11px] font-mono text-white/40 bg-white/5 px-2.5 py-1 rounded-md border border-white/5 select-none">
               {galeria.length} {galeria.length === 1 ? 'anexo' : 'anexos'}
             </span>
@@ -86,7 +98,7 @@ export default function GaleriaProjeto({
           projetos.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/10 bg-[#13131a]/50 py-20 text-center">
               <span className="text-4xl block mb-4 opacity-30">📁</span>
-              <p className="text-white/40 text-sm">Ainda não foram publicados projetos nesta disciplina.</p>
+              <p className="text-white/40 text-sm">{`Ainda não há ${minuscula(publicados(t.projeto))} ${nesteTermo(t.modulo)}.`}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -119,7 +131,7 @@ export default function GaleriaProjeto({
                           <p className="text-xs font-medium text-white/60 leading-tight line-clamp-2">{projeto.autores}</p>
                         </div>
                       )}
-                      <span className="mt-1 text-xs font-semibold text-[#4f9eff]/80 group-hover:text-[#4f9eff] transition-colors self-start">Ver Projeto →</span>
+                      <span className="mt-1 text-xs font-semibold text-[#4f9eff]/80 group-hover:text-[#4f9eff] transition-colors self-start">Ver {minuscula(t.projeto.singular)} →</span>
                     </div>
                   </div>
                 </Link>
@@ -154,7 +166,7 @@ export default function GaleriaProjeto({
         {/* ABA 3: BIBLIOTECA DA COMUNIDADE (APROVADOS) */}
         {activeTab === 'comunidade' && isPaginaDisciplina && (
           comunidade.length === 0 ? (
-            <div className="rounded-xl border border-white/5 bg-[#13131a]/30 py-16 text-center text-sm text-white/25 italic">Ainda não existem recursos partilhados na biblioteca comunitária deste módulo.</div>
+            <div className="rounded-xl border border-white/5 bg-[#13131a]/30 py-16 text-center text-sm text-white/25 italic">{`Ainda não existem recursos partilhados na biblioteca comunitária ${doTermo(t.modulo)}.`}</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {comunidade.map((item) => (

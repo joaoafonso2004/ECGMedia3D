@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import GaleriaProjeto from './[projeto]/galeriaProjeto';
+import { getTermos, maiuscula, doTermo } from '@/lib/terminologia';
 
 export const dynamic = 'force-dynamic'; // Força a atualização em tempo real sem cache estática
 
@@ -75,18 +76,22 @@ export async function generateMetadata({ params }) {
   const programa   = await getPrograma(idEntidade, programaSlug);
   if (!programa) return { title: `ECGMedia3d — ${entidadeSlug}` };
 
-  const modulo = await getModulo(programa.id_programa ?? programa.id, moduloSlug);
+  const [modulo, termos] = await Promise.all([
+    getModulo(programa.id_programa ?? programa.id, moduloSlug),
+    getTermos(supabase, entidade),
+  ]);
   const nomeModulo = modulo?.nome ?? moduloSlug.toUpperCase();
 
   return {
     title: `ECGMedia3d — ${nomeModulo}`,
-    description: modulo?.descricao ?? `Projetos da disciplina ${nomeModulo}`,
+    description: modulo?.descricao ?? `${maiuscula(termos.projeto.plural)} ${doTermo(termos.modulo)} ${nomeModulo}`,
   };
 }
 
 /* ─── Página ────────────────────────────────────────────────────── */
-export default async function ModuloPage({ params }) {
+export default async function ModuloPage({ params, searchParams }) {
   const { entidade: entitySlug, programa: progSlug, modulo: moduloSlug } = await params;
+  const { ver } = await searchParams; // ?ver=<id>: abre esse trabalho (links da pesquisa)
 
   const entidade = await getEntidade(entitySlug);
   if (!entidade) notFound();
@@ -101,6 +106,7 @@ export default async function ModuloPage({ params }) {
   // Chamadas concorrentes às tabelas do Supabase
   const projetos = await getProjetosDaDisciplina(modulo.id_modulo);
   const comunidade = await getBibliotecaComunidade(modulo.id_modulo);
+  const termos = await getTermos(supabase, entidade);
 
   const codigoCurso = programa.codigo ?? progSlug.toUpperCase();
   const codigoMod   = modulo.codigo   ?? moduloSlug.toUpperCase();
@@ -153,6 +159,8 @@ export default async function ModuloPage({ params }) {
         entitySlug={entitySlug}
         progSlug={progSlug}
         moduloSlug={moduloSlug}
+        abrirId={ver}
+        termos={termos}
       />
 
       {/* ── Footer ── */}
