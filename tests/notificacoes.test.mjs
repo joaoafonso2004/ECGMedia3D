@@ -14,6 +14,9 @@ import { join } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 
 const MIGRACOES = join(import.meta.dirname, '..', 'supabase', 'migrations');
+// Só as migrações das notificações e do fluxo de aprovação; as outras usam
+// tabelas que este teste não cria e têm o seu próprio teste
+const migracoes = () => readdirSync(MIGRACOES).filter(f => /notificacoes|aprovacao/.test(f)).sort();
 
 const ALUNO   = '00000000-0000-0000-0000-00000000000a';
 const ALUNO2  = '00000000-0000-0000-0000-00000000000b';
@@ -100,14 +103,14 @@ before(async () => {
   `);
 
   // Todas as migrações, por ordem
-  for (const f of readdirSync(MIGRACOES).filter(f => f.endsWith('.sql')).sort()) {
+  for (const f of migracoes()) {
     await db.exec(readFileSync(join(MIGRACOES, f), 'utf8'));
   }
 });
 
 describe('Migrações', () => {
   it('podem ser corridas mais do que uma vez', async () => {
-    for (const f of readdirSync(MIGRACOES).filter(f => f.endsWith('.sql')).sort()) {
+    for (const f of migracoes()) {
       await db.exec(readFileSync(join(MIGRACOES, f), 'utf8'));
     }
   });
