@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import DisciplinaCard from './DisciplinaCard';
+import { resolverTermos, contar, procurar, nenhumEncontrado } from '@/lib/terminologia';
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
 
@@ -56,7 +57,8 @@ function Pill({ active, onClick, children }) {
 }
 
 /* ─── Componente principal ────────────────────────────────────── */
-export default function DisciplinasGrid({ modulos, basePath = '' }) {
+export default function DisciplinasGrid({ modulos, basePath = '', termos = null }) {
+  const t = termos ?? resolverTermos();
   const [pesquisa,   setPesquisa]   = useState('');
   const [anoFilter,  setAnoFilter]  = useState(null); // null = todos
   const [semFilter,  setSemFilter]  = useState(null);
@@ -112,7 +114,7 @@ export default function DisciplinasGrid({ modulos, basePath = '' }) {
         </svg>
         <input
           type="text"
-          placeholder="Pesquisar disciplina..."
+          placeholder={`${procurar(t.modulo)}...`}
           value={pesquisa}
           onChange={e => setPesquisa(e.target.value)}
           className="w-full rounded-xl border border-white/8 bg-[#13131a]
@@ -194,8 +196,8 @@ export default function DisciplinasGrid({ modulos, basePath = '' }) {
       {/* ── Contador de resultados ─────────────────────────────── */}
       <p className="mb-5 text-xs text-white/20">
         {visiveis.length === modulos.length
-          ? `${modulos.length} ${modulos.length === 1 ? 'disciplina' : 'disciplinas'}`
-          : `${visiveis.length} de ${modulos.length} disciplinas`
+          ? contar(t.modulo, modulos.length)
+          : `${visiveis.length} de ${contar(t.modulo, modulos.length)}`
         }
       </p>
 
@@ -203,7 +205,7 @@ export default function DisciplinasGrid({ modulos, basePath = '' }) {
       {visiveis.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl
                         border border-white/5 bg-[#13131a] py-24 text-center">
-          <p className="text-sm text-white/30">Nenhum módulo encontrado.</p>
+          <p className="text-sm text-white/30">{nenhumEncontrado(t.modulo)}.</p>
           {filtrosActivos && (
             <button
               onClick={limparTudo}
@@ -216,7 +218,7 @@ export default function DisciplinasGrid({ modulos, basePath = '' }) {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visiveis.map(m => (
-            <DisciplinaCard key={m.id_modulo} disciplina={m} basePath={basePath} />
+            <DisciplinaCard key={m.id_modulo} disciplina={m} basePath={basePath} termos={t} />
           ))}
         </div>
       )}

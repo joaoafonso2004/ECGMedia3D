@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import DisciplinasGrid from '@/components/DisciplinasGrid';
 import LogoHero from '@/components/LogoHero';
+import { getTermos, maiuscula, doTermo } from '@/lib/terminologia';
 
 /* ─── Fetches ───────────────────────────────────────────────────── */
 
@@ -70,7 +71,9 @@ export async function generateMetadata({ params }) {
   const programa   = await getPrograma(idEntidade, programaSlug);
 
   const codigoCurso = programa?.codigo  ?? programaSlug.toUpperCase();
-  const descricao   = programa?.descricao ?? `Disciplinas do programa ${codigoCurso}`;
+  const termos      = await getTermos(supabase, entidade);
+  const descricao   = programa?.descricao
+    ?? `${maiuscula(termos.modulo.plural)} ${doTermo(termos.programa)} ${codigoCurso}`;
 
   return {
     title: `ECGMedia3d — ${codigoCurso}`,
@@ -93,9 +96,10 @@ export default async function ProgramaPage({ params }) {
   if (!programa) notFound();
 
   /* 3. Módulos + Logo 3D */
-  const [{ data: modulos, error }, logo3d] = await Promise.all([
+  const [{ data: modulos, error }, logo3d, termos] = await Promise.all([
     getModulos(programa.id_programa ?? programa.id),
     getLogo3D(programa.id_programa ?? programa.id),
+    getTermos(supabase, entidade),
   ]);
 
   /* basePath usado pelos DisciplinaCards para construir os links */
@@ -207,7 +211,10 @@ export default async function ProgramaPage({ params }) {
         )}
 
         {!error && (
-          <DisciplinasGrid modulos={modulos} basePath={basePath} />
+          <>
+            <h2 className="mb-5 text-xl font-semibold tracking-tight text-white">{maiuscula(termos.modulo.plural)}</h2>
+            <DisciplinasGrid modulos={modulos} basePath={basePath} termos={termos} />
+          </>
         )}
 
       </section>

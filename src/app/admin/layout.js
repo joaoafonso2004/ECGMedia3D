@@ -122,6 +122,7 @@ const NAV_ITEMS = [
   { divider: true },
   { label: 'Entidades',       href: '/admin/entidades',     Icon: IconBuilding },
   { label: 'Programas',       href: '/admin/programas',     Icon: IconAcademic },
+  { label: 'Terminologia',    href: '/admin/terminologia',  Icon: IconBook     },
 ];
 
 /* ─── TopNavBar ─────────────────────────────────────────────────── */

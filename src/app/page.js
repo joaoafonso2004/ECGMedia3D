@@ -1,7 +1,9 @@
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import Form from 'next/form';
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
+import { getLinhasTerminologia, resolverTermos, contar, minuscula, publicados } from '@/lib/terminologia';
 
 export const metadata = {
   title: 'ECGMedia3D',
@@ -29,12 +31,11 @@ async function getEntidades() {
   return { data: data ?? [], error: null };
 }
 
-async function contar(tabela) {
+async function contarLinhas(tabela) {
   const { count, error } = await supabase.from(tabela).select('*', { count: 'exact', head: true });
   return error ? null : count;
 }
 
-const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 const numProgramas = e => e.programa?.[0]?.count;
 const sigla = e => (e.slug ?? e.nome ?? '').toUpperCase().slice(0, 6);
 
@@ -55,15 +56,24 @@ const PASSOS = [
 
 /* ─── Página ────────────────────────────────────────────────────── */
 export default async function HomePage() {
-  const [{ data: entidades, error }, programas, modulos, projetos] = await Promise.all([
-    getEntidades(), contar('programa'), contar('modulo'), contar('projetos'),
+  const [{ data: entidades, error }, programas, modulos, projetos, linhasTermos] = await Promise.all([
+    getEntidades(), contarLinhas('programa'), contarLinhas('modulo'), contarLinhas('projetos'),
+    getLinhasTerminologia(supabase),
   ]);
 
+  // Totais da plataforma: termos predefinidos; cada cartão usa os termos do tipo da sua entidade
+  const geral = resolverTermos(linhasTermos, null);
+  const termosDe = e => resolverTermos(linhasTermos, e);
+
+  // Legenda no singular quando o número é 1 ("1 instituição")
+  const legenda = (n, t) => minuscula(n === 1 ? t.singular : t.plural);
   const numeros = [
-    [error ? null : entidades.length, 'instituições'],
-    [programas, 'programas'],
-    [modulos, 'módulos'],
-    [projetos, 'projetos publicados'],
+    [error ? null : entidades.length, legenda(entidades.length, geral.entidade)],
+    [programas, legenda(programas, geral.programa)],
+    [modulos, legenda(modulos, geral.modulo)],
+    [projetos, projetos === 1
+      ? `${minuscula(geral.projeto.singular)} ${geral.projeto.genero === 'f' ? 'publicada' : 'publicado'}`
+      : minuscula(publicados(geral.projeto))],
   ].filter(([n]) => typeof n === 'number');
 
   return (
@@ -80,10 +90,31 @@ export default async function HomePage() {
           <p className="mt-5 max-w-[54ch] text-[clamp(17px,1.25vw,19px)] text-tinta-2">
             Modelos 3D, animações e trabalhos multimédia, organizados por instituição, programa e módulo.
           </p>
-          <div className="mt-7 flex flex-wrap gap-2.5">
-            <a href="#instituicoes" className="botao-acao">Ver instituições</a>
-            <a href="#como-funciona" className="botao">Como funciona</a>
-          </div>
+          <Form action="/pesquisa" role="search" className="mt-7 flex max-w-xl gap-2.5">
+            <label htmlFor="inicio-pesquisa" className="sr-only">Pesquisar</label>
+            <span className="relative flex-1">
+              <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                   className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-cinza">
+                <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+              </svg>
+              <input
+                id="inicio-pesquisa"
+                name="q"
+                type="search"
+                required
+                minLength={2}
+                autoComplete="off"
+                placeholder="Projetos, disciplinas ou autores"
+                className="h-12 w-full rounded-[10px] border border-linha-2 bg-superficie pl-10 pr-3 text-base text-tinta
+                           placeholder:text-cinza focus:border-acao focus:outline-none focus:ring-3 focus:ring-acao/15"
+              />
+            </span>
+            <button type="submit" className="botao-acao h-12 px-5">Pesquisar</button>
+          </Form>
+          <p className="mt-4 text-[15px] text-tinta-2">
+            Ou veja as <a href="#instituicoes" className="font-medium text-acao hover:underline">instituições</a> e
+            {' '}<a href="#como-funciona" className="font-medium text-acao hover:underline">como funciona</a> a plataforma.
+          </p>
         </section>
 
         {/* ── Números ────────────────────────────────────────────── */}
@@ -136,9 +167,9 @@ export default async function HomePage() {
                   <span className="block font-semibold leading-snug tracking-tight group-hover:text-acao">{e.nome}</span>
                   <span className="mt-1 flex flex-wrap items-center gap-2 text-sm text-cinza">
                     {e.tipo && (
-                      <span className="rounded-full bg-acao/10 px-2 py-0.5 text-xs font-medium capitalize text-acao">{e.tipo}</span>
+                      <span className="rounded-full bg-acao/10 px-2 py-0.5 text-xs font-medium text-acao">{termosDe(e).entidade.singular}</span>
                     )}
-                    {typeof numProgramas(e) === 'number' && plural(numProgramas(e), 'programa', 'programas')}
+                    {typeof numProgramas(e) === 'number' && contar(termosDe(e).programa, numProgramas(e))}
                   </span>
                 </span>
               </Link>
