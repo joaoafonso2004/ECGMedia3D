@@ -5,6 +5,10 @@ import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
 import { getLinhasTerminologia, resolverTermos, contar, minuscula, publicados } from '@/lib/terminologia';
 
+// Gerada a cada visita: sem isto, o Next.js gerava-a uma vez no build e os
+// números, as instituições e a terminologia só mudavam no deploy seguinte
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'ECGMedia3D',
   description: 'Plataforma de visualização 3D dos projetos dos alunos de Engenharia da Computação Gráfica e Multimédia',
