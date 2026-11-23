@@ -132,6 +132,11 @@ export function ver(t) {
   return `${en(t) ? 'View' : 'Ver'} ${minuscula(t.plural)}`;
 }
 
+/** "Ver projeto" · "View project" (um só) */
+export function verUm(t) {
+  return `${en(t) ? 'View' : 'Ver'} ${minuscula(t.singular)}`;
+}
+
 /** "Procurar disciplina" · "Search courses" */
 export function procurar(t) {
   return en(t) ? `Search ${minuscula(t.plural)}` : `Procurar ${minuscula(t.singular)}`;
@@ -153,6 +158,12 @@ export function oTermo(t) {
 export function doTermo(t) {
   if (en(t)) return `of the ${minuscula(t.singular)}`;
   return `${fem(t) ? 'da' : 'do'} ${minuscula(t.singular)}`;
+}
+
+/** Contração com "a": "ao programa", "à disciplina" · "to the course" */
+export function aoTermo(t) {
+  if (en(t)) return `to the ${minuscula(t.singular)}`;
+  return `${fem(t) ? 'à' : 'ao'} ${minuscula(t.singular)}`;
 }
 
 /** Contração com "em": "neste programa", "nesta disciplina" · "in this course" */

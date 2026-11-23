@@ -14,7 +14,7 @@ import { join } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import {
   PADRAO, resolverTermos, getTermos,
-  contar, novo, nenhum, nenhumEncontrado, ver, procurar, publicados, oTermo, doTermo, nesteTermo, minuscula,
+  contar, novo, nenhum, nenhumEncontrado, ver, verUm, procurar, publicados, oTermo, doTermo, aoTermo, nesteTermo, minuscula,
 } from '../src/lib/terminologia.js';
 
 const MIGRACAO = join(import.meta.dirname, '..', 'supabase', 'migrations', '20261119_terminologia.sql');
@@ -284,6 +284,9 @@ describe('Frases com concordância', () => {
     assert.equal(oTermo(pt.modulo), 'a disciplina');
     assert.equal(doTermo(pt.programa), 'do curso');
     assert.equal(nesteTermo(pt.modulo), 'nesta disciplina');
+    assert.equal(aoTermo(pt.modulo), 'à disciplina');
+    assert.equal(aoTermo(pt.programa), 'ao curso');
+    assert.equal(aoTermo(en.modulo), 'to the course');
     assert.equal(publicados(pt.projeto), 'Projetos publicados');
     assert.equal(publicados({ singular: 'Obra', plural: 'Obras', genero: 'f' }), 'Obras publicadas');
   });
@@ -297,6 +300,8 @@ describe('Frases com concordância', () => {
   it('ver e procurar', () => {
     assert.equal(ver(empresa.modulo), 'Ver serviços');
     assert.equal(procurar(pt.modulo), 'Procurar disciplina');
+    assert.equal(verUm(pt.projeto), 'Ver projeto');
+    assert.equal(verUm(en.projeto), 'View project');
   });
 
   it('em inglês', () => {

@@ -1,167 +1,136 @@
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import GaleriaProjeto from './galeriaProjeto';
-import { getTermos } from '@/lib/terminologia';
+import SiteHeader from '@/components/SiteHeader';
+import SiteFooter from '@/components/SiteFooter';
+import Localizacao from '@/components/Localizacao';
+import PalcoProjeto from '@/components/PalcoProjeto';
+import FicheirosProjeto from '@/components/FicheirosProjeto';
+import { getEntidade, getPrograma, getModulo, getTermosDe, idDaEntidade } from '@/lib/publico';
+import { anoSemestre } from '@/lib/rotulos';
+import { tipoDoUrl, tipoMedia } from '@/lib/media';
+import { aoTermo } from '@/lib/terminologia';
 
 export const dynamic = 'force-dynamic';
 
 /* ─── Fetches ───────────────────────────────────────────────────── */
 
-async function getEntidade(slug) {
-  const { data } = await supabase.from('entidade').select('*').eq('slug', slug).single();
-  return data;
-}
-
-async function getPrograma(idEntidade, codigoParam) {
-  const { data } = await supabase.from('programa').select('*').eq('id_entidade', idEntidade).ilike('codigo', codigoParam).single();
-  return data;
-}
-
-async function getModulo(idPrograma, moduloParam) {
-  const query = supabase.from('modulo').select('*').eq('id_programa', idPrograma);
-  const { data } = Number.isFinite(Number(moduloParam))
-    ? await query.eq('id_modulo', Number(moduloParam)).single()
-    : await query.ilike('codigo', moduloParam).single();
-  return data;
-}
-
 async function getProjeto(idProjeto) {
-  const { data } = await supabase.from('projetos').select('*').eq('id_projetos', idProjeto).single();
+  const id = Number(idProjeto);
+  if (!Number.isFinite(id)) return null;
+  const { data } = await supabase.from('projetos').select('*').eq('id_projetos', id).maybeSingle();
   return data;
 }
 
+/* Modelos 3D, imagens e vídeos anexados ao projeto */
 async function getGaleriaProjeto(idProjeto) {
   const { data } = await supabase
     .from('media_items')
-    .select('*')
+    .select('id_media_items, titulo, tipo, url')
     .eq('id_projetos', idProjeto)
     .order('id_media_items', { ascending: false });
   return data || [];
-}
-
-/* ─── Helper: Detetar vídeos ────────────────────────────────────── */
-function isVideoUrl(url) {
-  if (!url) return false;
-  return url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.ogg');
 }
 
 /* ─── Metadata ──────────────────────────────────────────────────── */
 export async function generateMetadata({ params }) {
   const { projeto: projetoId } = await params;
   const projeto = await getProjeto(projetoId);
-  
-  if (!projeto) return { title: 'Projeto não encontrado' };
-  return { title: `ECGMedia3d — ${projeto.titulo}`, description: projeto.descricao };
+
+  if (!projeto) return { title: 'Projeto não encontrado — ECGMedia3D' };
+  return { title: `${projeto.titulo} — ECGMedia3D`, description: projeto.descricao };
 }
 
 /* ─── Página ────────────────────────────────────────────────────── */
 export default async function ProjetoPage({ params }) {
-  const { entidade: entitySlug, programa: progSlug, modulo: moduloSlug, projeto: projetoId } = await params;
+  const { entidade: entidadeSlug, programa: programaSlug, modulo: moduloSlug, projeto: projetoId } = await params;
 
-  /* Validações em cadeia */
-  const entidade = await getEntidade(entitySlug);
+  /* Validações em cadeia: o projeto tem de pertencer ao módulo do URL */
+  const entidade = await getEntidade(entidadeSlug);
   if (!entidade) notFound();
-  
-  const idEntidade = entidade.id_entidade ?? entidade.id;
-  const programa = await getPrograma(idEntidade, progSlug);
+
+  const programa = await getPrograma(idDaEntidade(entidade), programaSlug);
   if (!programa) notFound();
 
-  const modulo = await getModulo(programa.id_programa ?? programa.id, moduloSlug);
+  const modulo = await getModulo(programa.id_programa, moduloSlug);
   if (!modulo) notFound();
 
   const projeto = await getProjeto(projetoId);
   if (!projeto || projeto.id_modulo !== modulo.id_modulo) notFound();
 
-  /* Carrega a galeria (Modelos 3D, Imagens e Vídeos extra anexados ao projeto) */
   const [galeria, termos] = await Promise.all([
     getGaleriaProjeto(projeto.id_projetos),
-    getTermos(supabase, entidade),
+    getTermosDe(entidade),
   ]);
 
-  const codigoCurso = programa.codigo ?? progSlug.toUpperCase();
-  const codigoMod   = modulo.codigo   ?? moduloSlug.toUpperCase();
-  const nomeEscola  = entidade.nome   ?? '';
+  const itens = galeria.map(i => ({ id: i.id_media_items, url: i.url, tipo: i.tipo, titulo: i.titulo }));
+
+  /* Modelo principal: o do próprio projeto, ou o primeiro modelo 3D anexado */
+  const modelo = tipoDoUrl(projeto.projeto_url) === 'modelo'
+    ? projeto.projeto_url
+    : itens.find(i => tipoMedia(i) === 'modelo')?.url ?? null;
+
+  const caminhoModulo = `/${entidadeSlug}/${programaSlug}/${moduloSlug}`;
+  const contexto = [modulo.nome, anoSemestre(modulo.ano, modulo.semestre)].filter(Boolean).join(' · ');
+
+  const voltar = (
+    <Link href={caminhoModulo} className="botao h-11 px-5">
+      <span aria-hidden="true">←</span> Voltar {aoTermo(termos.modulo)}
+    </Link>
+  );
 
   return (
-    <main className="min-h-screen bg-[#0c0c0f] text-white flex flex-col">
+    <div className="min-h-screen bg-papel text-tinta">
+      <SiteHeader atual="instituicoes" />
 
-      {/* ── Navbar ─────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0c0c0f]/80 backdrop-blur-md">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap hide-scrollbar">
-            <Link href="/" className="text-lg font-bold tracking-tight text-white/60 hover:text-white transition-colors">ECGMedia3d</Link>
-            <span className="text-white/15 select-none">/</span>
-            <Link href={`/${entitySlug}`} className="text-sm font-medium text-white/40 hover:text-white/70 transition-colors tracking-wide">{entitySlug}</Link>
-            <span className="text-white/15 select-none">/</span>
-            <Link href={`/${entitySlug}/${progSlug}`} className="text-sm font-medium text-white/40 hover:text-white/70 transition-colors tracking-wide">{codigoCurso}</Link>
-            <span className="text-white/15 select-none">/</span>
-            <Link href={`/${entitySlug}/${progSlug}/${moduloSlug}`} className="text-sm font-medium text-white/40 hover:text-white/70 transition-colors tracking-wide">{codigoMod}</Link>
-            <span className="text-white/15 select-none">/</span>
-            <span className="text-sm font-semibold text-[#4f9eff] tracking-wide truncate max-w-[150px]">{projeto.titulo}</span>
+      <main className="contentor pt-7">
+        <Localizacao
+          voltar
+          itens={[
+            { href: '/', label: 'Início' },
+            { href: `/${entidadeSlug}`, label: entidade.nome },
+            { href: `/${entidadeSlug}/${programaSlug}`, label: programa.codigo ?? programa.nome },
+            { href: caminhoModulo, label: modulo.nome },
+            { label: projeto.titulo },
+          ]}
+        />
+
+        {/* ── Projeto ────────────────────────────────────────────── */}
+        <section className="mt-4 grid gap-8 sm:mt-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:gap-12">
+          {/* No telemóvel, o visualizador ocupa a largura toda */}
+          <div className="-mx-4 sm:mx-0">
+            <PalcoProjeto modelo={modelo} capa={projeto.projeto_url} titulo={projeto.titulo} />
           </div>
 
-          <div className="flex items-center gap-4 shrink-0">
-            {nomeEscola && <span className="text-xs text-white/25 hidden md:block">{nomeEscola}</span>}
-            <Link href="/admin/login" className="rounded-lg border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-white/50 transition hover:border-white/20 hover:text-white/80">Entrar</Link>
-          </div>
-        </div>
-      </header>
-
-      {/* ── Detalhes do Projeto ─────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl w-full px-6 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          
-          {/* Esquerda: Recurso Principal */}
-          <div className="lg:col-span-7">
-            <div className="rounded-2xl overflow-hidden border border-white/10 bg-[#13131a] aspect-video flex items-center justify-center relative shadow-2xl">
-              {projeto.projeto_url ? (
-                isVideoUrl(projeto.projeto_url) ? (
-                  <video src={projeto.projeto_url} className="w-full h-full object-cover" controls autoPlay muted loop playsInline />
-                ) : (
-                  <img src={projeto.projeto_url} alt={projeto.titulo} className="w-full h-full object-cover" />
-                )
-              ) : (
-                <span className="text-white/20 text-6xl">📁</span>
-              )}
-            </div>
-          </div>
-
-          {/* Direita: Informações */}
-          <div className="lg:col-span-5 flex flex-col justify-center">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-4">
+          <div className="lg:pt-2">
+            <p className="text-[13px] font-medium text-cinza">{contexto}</p>
+            <h1 className="mt-2 text-[clamp(32px,3.6vw,52px)] font-semibold leading-[1.05] tracking-[-0.04em] text-balance">
               {projeto.titulo}
             </h1>
-            
+
             {projeto.autores && (
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-[#4f9eff]/10 px-4 py-2 border border-[#4f9eff]/20 w-fit">
-                <span className="text-xs uppercase font-bold tracking-wider text-[#4f9eff]">Autores</span>
-                <span className="text-sm font-medium text-white/80">{projeto.autores}</span>
-              </div>
+              <p className="mt-4 inline-flex flex-wrap items-baseline gap-x-2 rounded-full border border-linha-2 bg-superficie px-3.5 py-1.5 text-sm">
+                <span className="text-[11px] font-medium uppercase tracking-wide text-cinza">Autores</span>
+                {projeto.autores}
+              </p>
             )}
 
             {projeto.descricao ? (
-              <p className="text-lg text-white/50 leading-relaxed">
-                {projeto.descricao}
-              </p>
+              <p className="mt-5 max-w-[60ch] whitespace-pre-line text-[17px] leading-relaxed text-tinta-2">{projeto.descricao}</p>
             ) : (
-              <p className="text-sm text-white/30 italic">Nenhuma descrição disponível.</p>
+              <p className="mt-5 text-sm text-cinza">Sem descrição.</p>
             )}
+
+            <div className="mt-8 hidden lg:block">{voltar}</div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Galeria Simples (Apenas anexos do projeto) ────────────────── */}
-      <GaleriaProjeto galeria={galeria} termos={termos} />
+        <FicheirosProjeto itens={itens} termos={termos} />
 
-      {/* ── Footer ── */}
-      <footer className="border-t border-white/5 px-6 py-6 mt-auto">
-        <div className="mx-auto max-w-6xl flex items-center justify-between">
-          <span className="text-xs text-white/20">© {new Date().getFullYear()} {nomeEscola || 'ECGMedia3d'} — {codigoMod}</span>
-          <span className="text-xs text-white/15">Next.js · Supabase · Three.js</span>
-        </div>
-      </footer>
+        <div className="mt-10 lg:hidden [&>a]:w-full sm:[&>a]:w-auto">{voltar}</div>
+      </main>
 
-    </main>
+      <SiteFooter />
+    </div>
   );
 }

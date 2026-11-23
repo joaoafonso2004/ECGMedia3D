@@ -1,42 +1,16 @@
 import { supabase } from '@/lib/supabase';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import GaleriaProjeto from './[projeto]/galeriaProjeto';
-import { getTermos, maiuscula, doTermo } from '@/lib/terminologia';
+import SiteHeader from '@/components/SiteHeader';
+import SiteFooter from '@/components/SiteFooter';
+import Localizacao from '@/components/Localizacao';
+import GaleriaDisciplina from '@/components/GaleriaDisciplina';
+import { getEntidade, getPrograma, getModulo, getTermosDe, idDaEntidade } from '@/lib/publico';
+import { anoSemestre } from '@/lib/rotulos';
+import { maiuscula, doTermo } from '@/lib/terminologia';
 
 export const dynamic = 'force-dynamic'; // Força a atualização em tempo real sem cache estática
 
 /* ─── Fetches ───────────────────────────────────────────────────── */
-
-async function getEntidade(slug) {
-  const { data, error } = await supabase.from('entidade').select('*').eq('slug', slug).single();
-  if (error || !data) return null;
-  return data;
-}
-
-async function getPrograma(idEntidade, codigoParam) {
-  const { data, error } = await supabase
-    .from('programa')
-    .select('id_programa, nome, codigo, descricao, id_entidade') // CORRIGIDO: de description para descricao
-    .eq('id_entidade', idEntidade)
-    .ilike('codigo', codigoParam)
-    .single();
-
-  if (error || !data) return null;
-  return data;
-}
-
-async function getModulo(idPrograma, moduloParam) {
-  const moduloId = Number(moduloParam);
-  const query = supabase.from('modulo').select('*').eq('id_programa', idPrograma);
-
-  const { data, error } = Number.isFinite(moduloId)
-    ? await query.eq('id_modulo', moduloId).single()
-    : await query.ilike('codigo', moduloParam).single();
-
-  if (error || !data) return null;
-  return data;
-}
 
 async function getProjetosDaDisciplina(idModulo) {
   const { data, error } = await supabase
@@ -49,6 +23,7 @@ async function getProjetosDaDisciplina(idModulo) {
   return data || [];
 }
 
+/* Biblioteca da comunidade: só os trabalhos aprovados pelo gestor */
 async function getBibliotecaComunidade(idModulo) {
   const { data } = await supabase
     .from('media_items')
@@ -60,7 +35,7 @@ async function getBibliotecaComunidade(idModulo) {
       autor:id_autor (nome)
     `)
     .eq('id_modulo', idModulo)
-    .eq('status', 'aprovado') 
+    .eq('status', 'aprovado')
     .order('id_media_items', { ascending: false });
   return data || [];
 }
@@ -70,107 +45,87 @@ export async function generateMetadata({ params }) {
   const { entidade: entidadeSlug, programa: programaSlug, modulo: moduloSlug } = await params;
 
   const entidade = await getEntidade(entidadeSlug);
-  if (!entidade) return { title: 'ECGMedia3d' };
+  if (!entidade) return { title: 'ECGMedia3D' };
 
-  const idEntidade = entidade.id_entidade ?? entidade.id; // CORRIGIDO: de entity.id para entidade.id
-  const programa   = await getPrograma(idEntidade, programaSlug);
-  if (!programa) return { title: `ECGMedia3d — ${entidadeSlug}` };
+  const programa = await getPrograma(idDaEntidade(entidade), programaSlug);
+  if (!programa) return { title: `${entidade.nome} — ECGMedia3D` };
 
   const [modulo, termos] = await Promise.all([
-    getModulo(programa.id_programa ?? programa.id, moduloSlug),
-    getTermos(supabase, entidade),
+    getModulo(programa.id_programa, moduloSlug),
+    getTermosDe(entidade),
   ]);
-  const nomeModulo = modulo?.nome ?? moduloSlug.toUpperCase();
+  if (!modulo) return { title: `${programa.nome ?? programa.codigo} — ECGMedia3D` };
 
   return {
-    title: `ECGMedia3d — ${nomeModulo}`,
-    description: modulo?.descricao ?? `${maiuscula(termos.projeto.plural)} ${doTermo(termos.modulo)} ${nomeModulo}`,
+    title: `${modulo.nome} — ECGMedia3D`,
+    description: modulo.descricao ?? `${maiuscula(termos.projeto.plural)} ${doTermo(termos.modulo)} ${modulo.nome}`,
   };
 }
 
 /* ─── Página ────────────────────────────────────────────────────── */
 export default async function ModuloPage({ params, searchParams }) {
-  const { entidade: entitySlug, programa: progSlug, modulo: moduloSlug } = await params;
+  const { entidade: entidadeSlug, programa: programaSlug, modulo: moduloSlug } = await params;
   const { ver } = await searchParams; // ?ver=<id>: abre esse trabalho (links da pesquisa)
 
-  const entidade = await getEntidade(entitySlug);
+  const entidade = await getEntidade(entidadeSlug);
   if (!entidade) notFound();
-  const idEntidade = entidade.id_entidade ?? entidade.id;
 
-  const programa = await getPrograma(idEntidade, progSlug);
+  const programa = await getPrograma(idDaEntidade(entidade), programaSlug);
   if (!programa) notFound();
 
-  const modulo = await getModulo(programa.id_programa ?? programa.id, moduloSlug);
+  const modulo = await getModulo(programa.id_programa, moduloSlug);
   if (!modulo) notFound();
 
-  // Chamadas concorrentes às tabelas do Supabase
-  const projetos = await getProjetosDaDisciplina(modulo.id_modulo);
-  const comunidade = await getBibliotecaComunidade(modulo.id_modulo);
-  const termos = await getTermos(supabase, entidade);
+  const [projetos, comunidade, termos] = await Promise.all([
+    getProjetosDaDisciplina(modulo.id_modulo),
+    getBibliotecaComunidade(modulo.id_modulo),
+    getTermosDe(entidade),
+  ]);
 
-  const codigoCurso = programa.codigo ?? progSlug.toUpperCase();
-  const codigoMod   = modulo.codigo   ?? moduloSlug.toUpperCase();
-  const nomeEscola  = entidade.nome   ?? '';
+  const caminhoPrograma = `/${entidadeSlug}/${programaSlug}`;
+  const periodo = anoSemestre(modulo.ano, modulo.semestre);
 
   return (
-    <main className="min-h-screen bg-[#0c0c0f] text-white flex flex-col">
+    <div className="min-h-screen bg-papel text-tinta">
+      <SiteHeader atual="instituicoes" />
 
-      {/* ── Navbar ── */}
-      <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0c0c0f]/80 backdrop-blur-md">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap hide-scrollbar">
-            <Link href="/" className="text-lg font-bold tracking-tight text-white/60 hover:text-white transition-colors">ECGMedia3d</Link>
-            <span className="text-white/15 select-none">/</span>
-            <Link href={`/${entitySlug}`} className="text-sm font-medium text-white/40 hover:text-white/70 transition-colors tracking-wide">{entitySlug}</Link>
-            <span className="text-white/15 select-none">/</span>
-            <Link href={`/${entitySlug}/${progSlug}`} className="text-sm font-medium text-white/40 hover:text-white/70 transition-colors tracking-wide">{codigoCurso}</Link>
-            <span className="text-white/15 select-none">/</span>
-            <span className="text-sm font-semibold text-[#4f9eff] tracking-wide">{codigoMod}</span>
+      <main className="contentor">
+        {/* ── Cabeçalho do módulo ────────────────────────────────── */}
+        <section className="border-b border-linha pb-8 pt-7">
+          <Localizacao
+            itens={[
+              { href: '/', label: 'Início' },
+              { href: `/${entidadeSlug}`, label: entidade.nome },
+              { href: caminhoPrograma, label: programa.codigo ?? programa.nome },
+              { label: modulo.nome },
+            ]}
+          />
+
+          <div className="mt-6 flex flex-wrap items-center gap-2 text-[13px] font-medium text-cinza">
+            {modulo.codigo && (
+              <span className="rounded-md bg-mosaico px-2 py-0.5 font-mono text-xs text-tinta-2">{modulo.codigo}</span>
+            )}
+            {periodo && <span>{periodo}</span>}
           </div>
-
-          <div className="flex items-center gap-4 shrink-0">
-            {nomeEscola && <span className="text-xs text-white/25 hidden md:block">{nomeEscola}</span>}
-            <a href="/admin/login" className="rounded-lg border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-white/50 transition hover:border-white/20 hover:text-white/80">Entrar</a>
-          </div>
-        </div>
-      </header>
-
-      {/* ── Hero ── */}
-      <section className="px-6 pb-12 pt-20 text-center">
-        <div className="mx-auto max-w-3xl">
-          {(modulo.ano != null || modulo.semestre != null) && (
-            <span className="mb-6 inline-block rounded-full border border-[#4f9eff]/25 bg-[#4f9eff]/10 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-[#4f9eff]">
-              {modulo.ano ? `${modulo.ano}º Ano` : ''} 
-              {modulo.ano && modulo.semestre ? ' • ' : ''} 
-              {modulo.semestre ? `${modulo.semestre}º Semestre` : ''}
-            </span>
+          <h1 className="mt-3 text-[clamp(34px,4.4vw,64px)] font-semibold leading-[1.04] tracking-[-0.04em] text-balance">
+            {modulo.nome}
+          </h1>
+          {modulo.descricao && (
+            <p className="mt-4 max-w-[62ch] text-[17px] text-tinta-2">{modulo.descricao}</p>
           )}
-          <h1 className="mt-2 text-5xl md:text-6xl font-bold leading-tight tracking-tight text-white">{modulo.nome}</h1>
-          {modulo.descricao && <p className="mt-6 text-lg text-white/45 leading-relaxed max-w-2xl mx-auto">{modulo.descricao}</p>}
-        </div>
-      </section>
+        </section>
 
-      {/* ── Galeria Interativa com Abas (Controla a exibição de Projetos e Comunidade) ── */}
-      <GaleriaProjeto 
-        galeria={[]} 
-        comunidade={comunidade} 
-        projetos={projetos} 
-        isPaginaDisciplina={true}
-        entitySlug={entitySlug}
-        progSlug={progSlug}
-        moduloSlug={moduloSlug}
-        abrirId={ver}
-        termos={termos}
-      />
+        {/* ── Projetos e biblioteca ──────────────────────────────── */}
+        <GaleriaDisciplina
+          projetos={projetos}
+          comunidade={comunidade}
+          base={`${caminhoPrograma}/${moduloSlug}`}
+          abrirId={ver}
+          termos={termos}
+        />
+      </main>
 
-      {/* ── Footer ── */}
-      <footer className="border-t border-white/5 px-6 py-6 mt-auto">
-        <div className="mx-auto max-w-6xl flex items-center justify-between">
-          <span className="text-xs text-white/20">© {new Date().getFullYear()} {nomeEscola || 'ECGMedia3d'} — {codigoMod}</span>
-          <span className="text-xs text-white/15">Next.js · Supabase · Three.js</span>
-        </div>
-      </footer>
-
-    </main>
+      <SiteFooter />
+    </div>
   );
 }
