@@ -2,235 +2,160 @@
 
 import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useModelViewer } from '@/context/ModelViewerContext';
+import { useModelViewer, ancoraDoPalco } from '@/context/ModelViewerContext';
 import { resolverTermos, ver } from '@/lib/terminologia';
+import { useToque } from '@/lib/useMedia';
+import { IconeCubo, IconeParar } from './Icones';
 
+/**
+ * Cartão de um módulo na página do programa.
+ *
+ * Computador: ao passar o rato, o modelo 3D do módulo anima por cima do palco
+ * (e sai do cartão). Telemóvel: não há rato, por isso o modelo só aparece
+ * quando se toca em "Ver 3D"; "Parar" (ou o cartão sair do ecrã) termina.
+ * Os dois modos usam o mesmo canvas WebGL partilhado (ModelViewerGlobal).
+ */
 export default function DisciplinaCard({ disciplina, basePath = '', termos = null }) {
   const t = termos ?? resolverTermos();
-  const { setActiveModel } = useModelViewer();
-  const isHoveredRef = useRef(false);
-  const divRef       = useRef(null);
-  const videoRef     = useRef(null);
-  const [isHovered, setIsHovered] = useState(false);
+  const { activeModel, setActiveModel } = useModelViewer();
+  const toque = useToque();
+  const palcoRef = useRef(null);
+  const videoRef = useRef(null);
+  const [rato, setRato] = useState(false);
 
-  const { id_modulo, nome, codigo, descricao, ano, semestre, modulo_media } = disciplina;
+  const { id_modulo, nome, codigo, descricao, modulo_media } = disciplina;
+  const id = String(id_modulo);
 
-  const mediaItems = modulo_media?.flatMap(mm => mm.media_items ? [mm.media_items] : []) ?? [];
-
-  const glbItem = mediaItems.find(mi =>
+  const media = modulo_media?.flatMap(mm => (mm.media_items ? [mm.media_items] : [])) ?? [];
+  const glb = media.find(mi =>
     mi?.url?.toLowerCase().endsWith('.glb') ||
-    mi?.tipo?.toLowerCase() === 'glb' ||
-    mi?.tipo?.toLowerCase() === 'modelo3d'
+    ['glb', 'modelo3d'].includes(mi?.tipo?.toLowerCase())
   ) ?? null;
+  const video = media.find(mi => mi?.tipo?.toLowerCase() === 'video') ?? null;
+  const breakout = Boolean(glb && video);
 
-  const videoItem = mediaItems.find(mi => mi?.tipo?.toLowerCase() === 'video') ?? null;
+  const ativo = activeModel?.cardId === id; // o modelo deste cartão está no ecrã
+  const animado = rato || ativo;
 
-  const glbUrl    = glbItem?.url          ?? null;
-  const videoUrl  = videoItem?.url        ?? null;
-  const ESCALA    = glbItem?.escala       ?? 10;
-  const OFFSET_Y  = glbItem?.offset_y     ?? 0;
-  const ANIM_TIPO = glbItem?.animacao_tipo ?? null;
-  const ROT_X     = glbItem?.rotacao_x    ?? 0;
-  const ROT_Y     = glbItem?.rotacao_y    ?? 0;
-  const ROT_Z     = glbItem?.rotacao_z    ?? 0;
-  const POS_X     = glbItem?.posicao_x    ?? 0;
-
-  const hasBreakout = Boolean(glbUrl && videoUrl);
-
-  function onEnter() {
-    isHoveredRef.current = true;
-    setIsHovered(true);
-
-    if (videoRef.current) {
-      videoRef.current.play().catch(() => {});
-    }
-
-    if (!glbUrl || !divRef.current) return;
-
-    const r = divRef.current.getBoundingClientRect();
-
-    if (hasBreakout) {
-      setActiveModel({
-        url:           glbUrl,
-        escala:        ESCALA,
-        offset_y:      OFFSET_Y,
-        animacao_tipo: ANIM_TIPO,
-        rotacao_x:     ROT_X,
-        rotacao_y:     ROT_Y,
-        rotacao_z:     ROT_Z,
-        posicao_x:     POS_X,
-        cardId:        String(id_modulo),
-        rect: {
-          centerX:    r.left + r.width  / 2,
-          centerY:    r.top  + r.height / 2 - r.height * 0.2,
-          canvasSize: Math.max(r.width, r.height) * 2.5,
-        },
-      });
-    } else {
-      setActiveModel({
-        url:           glbUrl,
-        escala:        ESCALA,
-        offset_y:      OFFSET_Y,
-        animacao_tipo: ANIM_TIPO,
-        rotacao_x:     ROT_X,
-        rotacao_y:     ROT_Y,
-        rotacao_z:     ROT_Z,
-        posicao_x:     POS_X,
-        cardId:        String(id_modulo),
-        rect: {
-          centerX:    r.left + r.width  / 2,
-          centerY:    r.top  + r.height / 2,
-          canvasSize: Math.max(r.width, r.height) * 2,
-        },
-      });
-    }
+  function mostrarModelo(modo) {
+    if (!glb || !palcoRef.current) return;
+    setActiveModel({
+      url:           glb.url,
+      escala:        glb.escala        ?? 10,
+      offset_y:      glb.offset_y      ?? 0,
+      animacao_tipo: glb.animacao_tipo ?? null,
+      rotacao_x:     glb.rotacao_x     ?? 0,
+      rotacao_y:     glb.rotacao_y     ?? 0,
+      rotacao_z:     glb.rotacao_z     ?? 0,
+      posicao_x:     glb.posicao_x     ?? 0,
+      cardId:        id,
+      modo,
+      breakout,
+      rect:          ancoraDoPalco(palcoRef.current, breakout, modo === 'toque'),
+    });
   }
 
-  function onLeave() {
-    isHoveredRef.current = false;
-    setIsHovered(false);
+  const esconderModelo = () => setActiveModel(m => (m?.cardId === id ? null : m));
 
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-
-    setActiveModel(null);
+  /* Só o rato: num ecrã tátil, o toque também gera pointerenter e abriria o 3D antes de navegar */
+  function entrar(e) {
+    if (e.pointerType !== 'mouse') return;
+    setRato(true);
+    mostrarModelo('rato');
+  }
+  function sair(e) {
+    if (e.pointerType !== 'mouse') return;
+    setRato(false);
+    esconderModelo();
   }
 
+  /* O vídeo do módulo toca enquanto o cartão está animado */
   useEffect(() => {
-    return () => {
-      if (isHoveredRef.current) setActiveModel(null);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const v = videoRef.current;
+    if (!v) return;
+    if (animado) {
+      v.play().catch(() => {});
+    } else {
+      v.pause();
+      v.currentTime = 0;
+    }
+  }, [animado]);
+
+  /* Ao sair da página, não deixa o modelo deste cartão no ecrã */
+  useEffect(() => () => setActiveModel(m => (m?.cardId === id ? null : m)), [id, setActiveModel]);
 
   return (
-    <Link href={`${basePath}/${id_modulo}`} className="block group">
-      <div
-        ref={divRef}
-        data-hover-card={String(id_modulo)}
-        className="relative overflow-hidden rounded-2xl border border-white/8 bg-[#13131a]
-                   cursor-pointer transition-all duration-300
-                   hover:border-[#4f9eff]/40 hover:shadow-xl hover:shadow-[#4f9eff]/10
-                   hover:-translate-y-1"
-        style={{ height: '280px' }}
-        onMouseEnter={onEnter}
-        onMouseLeave={onLeave}
-      >
-        {videoUrl ? (
-          <>
-            {/* ── Zona superior: vídeo ──────────────────────────── */}
-            <div className="absolute inset-x-0 top-0" style={{ height: '50%' }}>
-              <video
-                ref={videoRef}
-                src={videoUrl}
-                crossOrigin="anonymous"
-                loop
-                muted
-                playsInline
-                preload="metadata"
-                className="w-full h-full object-cover"
-                style={{
-                  opacity: isHovered ? 1 : 0,
-                  transition: 'opacity 0.4s ease',
-                }}
-              />
-              <div className="absolute inset-x-0 bottom-0 h-20
-                              bg-gradient-to-t from-[#13131a] to-transparent pointer-events-none" />
-            </div>
+    <article
+      data-hover-card={id}
+      onPointerEnter={entrar}
+      onPointerLeave={sair}
+      className={`group relative flex flex-col rounded-xl border bg-superficie transition-[border-color,box-shadow] duration-200
+                  has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-acao/25
+                  ${animado
+                    ? 'border-tinta shadow-[0_14px_32px_-18px_rgb(11_9_4/0.45)]'
+                    : 'border-linha hover:border-tinta'}`}
+    >
+      {/* Palco: onde o modelo 3D aparece */}
+      <div ref={palcoRef} data-palco className="relative aspect-[16/10] overflow-hidden rounded-t-[11px] bg-mosaico">
+        {video && (
+          <video
+            ref={videoRef}
+            src={video.url}
+            crossOrigin="anonymous"
+            loop
+            muted
+            playsInline
+            preload="none"
+            className={`absolute inset-0 size-full object-cover transition-opacity duration-500 ${animado ? 'opacity-100' : 'opacity-0'}`}
+          />
+        )}
 
-            {/* ── Zona inferior: conteúdo ───────────────────────── */}
-            <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col justify-end p-5"
-                 style={{ height: '58%' }}>
-              <div className="flex items-center gap-1.5 flex-wrap mb-2">
-                {ano != null && (
-                  <span className="rounded-full border border-[#4f9eff]/25 bg-[#4f9eff]/10
-                                   px-2.5 py-0.5 text-xs font-semibold text-[#4f9eff] tracking-wide">
-                    {ano}º Ano
-                  </span>
-                )}
-                {semestre != null && (
-                  <span className="rounded-full border border-white/8 bg-white/5
-                                   px-2.5 py-0.5 text-xs font-medium text-white/40 tracking-wide">
-                    {isNaN(Number(semestre)) ? semestre : `${semestre}º Sem`}
-                  </span>
-                )}
-                <span className="ml-auto rounded-full border border-white/8 bg-white/5
-                                 px-2.5 py-0.5 text-xs text-white/25 tracking-wide">
-                  3D
-                </span>
-              </div>
-              {codigo && (
-                <span className="text-xs font-mono text-white/25 tracking-widest uppercase mb-0.5 block">
-                  {codigo}
-                </span>
-              )}
-              <h2 className="text-sm font-semibold text-white leading-snug mb-1 line-clamp-1
-                             group-hover:text-[#4f9eff] transition-colors duration-200">
-                {nome}
-              </h2>
-              <p className="text-xs text-white/45 leading-relaxed line-clamp-2">
-                {descricao}
-              </p>
-              <div className="mt-2 flex items-center gap-1.5 text-xs font-medium
-                              text-[#4f9eff]/50 group-hover:text-[#4f9eff] transition-colors duration-200">
-                <span>{ver(t.projeto)}</span>
-                <svg className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1"
-                     fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </div>
-          </>
-        ) : (
-          /* ── Layout sem vídeo (comportamento atual) ──────────── */
-          <div className="relative z-10 flex flex-col justify-between h-full p-6">
-            <div className="flex items-center gap-2 flex-wrap">
-              {ano != null && (
-                <span className="rounded-full border border-[#4f9eff]/25 bg-[#4f9eff]/10
-                                 px-3 py-0.5 text-xs font-semibold text-[#4f9eff] tracking-wide">
-                  {ano}º Ano
-                </span>
-              )}
-              {semestre != null && (
-                <span className="rounded-full border border-white/8 bg-white/5
-                                 px-3 py-0.5 text-xs font-medium text-white/40 tracking-wide">
-                  {isNaN(Number(semestre)) ? semestre : `${semestre}º Sem`}
-                </span>
-              )}
-              {glbUrl && (
-                <span className="ml-auto rounded-full border border-white/8 bg-white/5
-                                 px-2.5 py-0.5 text-xs text-white/25 tracking-wide">
-                  3D
-                </span>
-              )}
-            </div>
-            <div className="mt-auto pt-6">
-              {codigo && (
-                <span className="text-xs font-mono text-white/25 tracking-widest uppercase mb-1 block">
-                  {codigo}
-                </span>
-              )}
-              <h2 className="text-base font-semibold text-white leading-snug mb-2 line-clamp-2
-                             group-hover:text-[#4f9eff] transition-colors duration-200">
-                {nome}
-              </h2>
-              <p className="text-sm text-white/45 leading-relaxed line-clamp-2">
-                {descricao}
-              </p>
-              <div className="mt-4 flex items-center gap-1.5 text-xs font-medium
-                              text-[#4f9eff]/50 group-hover:text-[#4f9eff] transition-colors duration-200">
-                <span>{ver(t.projeto)}</span>
-                <svg className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1"
-                     fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </div>
-          </div>
+        {/* Em repouso: o código do módulo; some quando o modelo entra */}
+        <span
+          aria-hidden="true"
+          className={`absolute inset-0 grid place-items-center font-mono text-[clamp(26px,2.6vw,36px)] font-medium
+                      tracking-tight text-tinta/15 transition-opacity duration-300 ${animado && glb ? 'opacity-0' : ''}`}
+        >
+          {codigo ?? ''}
+        </span>
+
+        {glb && (
+          <span className="absolute right-3 top-3 rounded-md border border-linha-2 bg-superficie/90 px-1.5 py-0.5 font-mono text-[11px] font-medium text-tinta-2">
+            3D
+          </span>
+        )}
+
+        {toque && glb && (
+          <button
+            type="button"
+            onClick={() => (ativo ? esconderModelo() : mostrarModelo('toque'))}
+            aria-pressed={ativo}
+            aria-label={ativo ? `Parar o modelo 3D de ${nome}` : `Ver o modelo 3D de ${nome}`}
+            className="absolute bottom-3 right-3 z-20 inline-flex h-10 items-center gap-1.5 rounded-full border border-linha-2
+                       bg-superficie px-4 text-sm font-medium text-tinta shadow-sm"
+          >
+            {ativo ? <><IconeParar tamanho={14} />Parar</> : <><IconeCubo tamanho={16} />Ver 3D</>}
+          </button>
         )}
       </div>
-    </Link>
+
+      <div className="flex flex-1 flex-col p-4">
+        {codigo && <span className="font-mono text-xs font-medium text-cinza">{codigo}</span>}
+        <h3 className="mt-1 font-semibold leading-snug tracking-tight">
+          {/* O link cobre o cartão todo (menos o botão "Ver 3D") */}
+          <Link
+            href={`${basePath}/${id_modulo}`}
+            className="after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none group-hover:text-acao"
+          >
+            {nome}
+          </Link>
+        </h3>
+        {descricao && <p className="mt-1.5 line-clamp-2 text-sm text-tinta-2">{descricao}</p>}
+        <span className="mt-auto pt-3 text-sm font-medium text-acao">
+          {ver(t.projeto)}{' '}
+          <span aria-hidden="true" className="inline-block transition-transform group-hover:translate-x-1">→</span>
+        </span>
+      </div>
+    </article>
   );
 }

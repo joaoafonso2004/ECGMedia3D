@@ -2,15 +2,15 @@
 
 import { useState, useMemo } from 'react';
 import DisciplinaCard from './DisciplinaCard';
+import { IconePesquisa, IconeFechar } from './Icones';
 import { resolverTermos, contar, procurar, nenhumEncontrado } from '@/lib/terminologia';
+import { rotuloAno, rotuloSemestre, rotuloSemestreCurto } from '@/lib/rotulos';
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
 
-/** Mostra "1º Sem" se numérico, ou o texto directo se for string */
-function semestreLabel(s) {
-  if (s == null) return '—';
-  return isNaN(Number(s)) ? String(s) : `${s}º Sem`;
-}
+/** Pesquisa sem acentos nem maiúsculas ("animacao" encontra "Animação") */
+const normalizar = texto =>
+  String(texto ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 /**
  * Ordena a lista:
@@ -40,19 +40,51 @@ function sortModulos(list, ordem) {
   });
 }
 
-/* ─── Pill reutilizável ───────────────────────────────────────── */
-function Pill({ active, onClick, children }) {
+/** Lista já ordenada → [{ ano, total, semestres: [{ semestre, modulos }] }] */
+function agrupar(lista) {
+  const grupos = [];
+  for (const m of lista) {
+    const ano = m.ano ?? null;
+    const semestre = m.semestre ?? null;
+    let g = grupos.at(-1);
+    if (!g || g.ano !== ano) {
+      g = { ano, total: 0, semestres: [] };
+      grupos.push(g);
+    }
+    let s = g.semestres.at(-1);
+    if (!s || s.semestre !== semestre) {
+      s = { semestre, modulos: [] };
+      g.semestres.push(s);
+    }
+    s.modulos.push(m);
+    g.total += 1;
+  }
+  return grupos;
+}
+
+/* ─── Botão de filtro (liga/desliga) ──────────────────────────── */
+function Filtro({ ativo, onClick, children }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`rounded-full px-3 py-1 text-xs font-medium border transition-all duration-150 cursor-pointer whitespace-nowrap
-        ${active
-          ? 'bg-[#4f9eff] text-white border-[#4f9eff] shadow-sm shadow-[#4f9eff]/30'
-          : 'bg-white/5 text-white/45 border-white/10 hover:border-white/20 hover:text-white/70'
-        }`}
+      aria-pressed={ativo}
+      className={`h-9 shrink-0 rounded-full border px-3.5 text-sm transition-colors
+        ${ativo
+          ? 'border-tinta bg-tinta font-medium text-papel'
+          : 'border-linha-2 bg-superficie text-tinta-2 hover:border-tinta hover:text-tinta'}`}
     >
       {children}
     </button>
+  );
+}
+
+function GrupoFiltros({ titulo, children }) {
+  return (
+    <div role="group" aria-label={titulo} className="flex shrink-0 items-center gap-2 sm:flex-wrap">
+      <span className="mr-1 text-sm font-medium text-tinta">{titulo}</span>
+      {children}
+    </div>
   );
 }
 
@@ -62,9 +94,9 @@ export default function DisciplinasGrid({ modulos, basePath = '', termos = null 
   const [pesquisa,   setPesquisa]   = useState('');
   const [anoFilter,  setAnoFilter]  = useState(null); // null = todos
   const [semFilter,  setSemFilter]  = useState(null);
-  const [ordem,      setOrdem]      = useState(null); // null = natural
+  const [ordem,      setOrdem]      = useState(null); // null = natural, agrupado por ano e semestre
 
-  /* Valores únicos para os pills de filtro */
+  /* Valores únicos para os filtros */
   const anos = useMemo(() =>
     [...new Set(modulos.map(m => m.ano).filter(v => v != null))]
       .sort((a, b) => Number(a) - Number(b)),
@@ -85,8 +117,8 @@ export default function DisciplinasGrid({ modulos, basePath = '', termos = null 
     let r = modulos;
 
     if (pesquisa.trim()) {
-      const q = pesquisa.toLowerCase();
-      r = r.filter(m => m.nome?.toLowerCase().includes(q));
+      const q = normalizar(pesquisa.trim());
+      r = r.filter(m => normalizar(m.nome).includes(q) || normalizar(m.codigo).includes(q));
     }
     if (anoFilter != null) r = r.filter(m => m.ano === anoFilter);
     if (semFilter != null) r = r.filter(m => m.semestre === semFilter);
@@ -94,135 +126,137 @@ export default function DisciplinasGrid({ modulos, basePath = '', termos = null 
     return sortModulos(r, ordem);
   }, [modulos, pesquisa, anoFilter, semFilter, ordem]);
 
+  /* Agrupa por ano e semestre só na ordem natural e se houver anos ou semestres */
+  const temPeriodos = anos.length > 0 || semestres.length > 0;
+  const grupos = ordem == null && temPeriodos ? agrupar(visiveis) : null;
+
   const filtrosActivos = pesquisa || anoFilter != null || semFilter != null || ordem != null;
 
   function limparTudo() {
     setPesquisa(''); setAnoFilter(null); setSemFilter(null); setOrdem(null);
   }
 
+  const cartoes = lista => (
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {lista.map(m => (
+        <DisciplinaCard key={m.id_modulo} disciplina={m} basePath={basePath} termos={t} />
+      ))}
+    </div>
+  );
+
   return (
     <div>
-
-      {/* ── Barra de pesquisa ──────────────────────────────────── */}
-      <div className="relative mb-4">
-        <svg
-          className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25 pointer-events-none"
-          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round"
-            d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-        </svg>
+      {/* ── Pesquisa dentro do programa ────────────────────────── */}
+      <div className="relative">
+        <label htmlFor="pesquisa-modulos" className="sr-only">{procurar(t.modulo)}</label>
+        <IconePesquisa tamanho={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-cinza" />
         <input
-          type="text"
-          placeholder={`${procurar(t.modulo)}...`}
+          id="pesquisa-modulos"
+          type="search"
+          autoComplete="off"
+          placeholder={`${procurar(t.modulo)}…`}
           value={pesquisa}
           onChange={e => setPesquisa(e.target.value)}
-          className="w-full rounded-xl border border-white/8 bg-[#13131a]
-                     py-2.5 pl-10 pr-9 text-sm text-white placeholder-white/25
-                     focus:border-[#4f9eff]/40 focus:outline-none focus:ring-1 focus:ring-[#4f9eff]/20
-                     transition-colors duration-150"
+          className="h-12 w-full rounded-[10px] border border-linha-2 bg-superficie pl-10 pr-11 text-base text-tinta
+                     placeholder:text-cinza focus:border-acao focus:outline-none focus:ring-3 focus:ring-acao/15
+                     [&::-webkit-search-cancel-button]:hidden"
         />
         {pesquisa && (
           <button
+            type="button"
             onClick={() => setPesquisa('')}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30
-                       hover:text-white/60 transition-colors text-sm leading-none"
             aria-label="Limpar pesquisa"
+            className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-cinza hover:text-tinta"
           >
-            ✕
+            <IconeFechar tamanho={16} />
           </button>
         )}
       </div>
 
-      {/* ── Linha de filtros ───────────────────────────────────── */}
-      <div className="flex flex-wrap items-start gap-x-6 gap-y-3 mb-6
-                      pb-5 border-b border-white/5">
-
-        {/* Ano */}
+      {/* ── Filtros (no telemóvel, uma só linha com scroll horizontal) ── */}
+      <div
+        className="-mx-4 mt-4 flex items-center gap-x-7 gap-y-3 overflow-x-auto border-b border-linha px-4 pb-5
+                   [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+      >
         {anos.length > 0 && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-white/25 font-medium shrink-0">Ano</span>
+          <GrupoFiltros titulo="Ano">
             {anos.map(a => (
-              <Pill
-                key={a}
-                active={anoFilter === a}
-                onClick={() => setAnoFilter(anoFilter === a ? null : a)}
-              >
-                {a}º Ano
-              </Pill>
+              <Filtro key={a} ativo={anoFilter === a} onClick={() => setAnoFilter(anoFilter === a ? null : a)}>
+                {rotuloAno(a)}
+              </Filtro>
             ))}
-          </div>
+          </GrupoFiltros>
         )}
 
-        {/* Semestre */}
         {semestres.length > 0 && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-white/25 font-medium shrink-0">Semestre</span>
+          <GrupoFiltros titulo="Semestre">
             {semestres.map(s => (
-              <Pill
-                key={s}
-                active={semFilter === s}
-                onClick={() => setSemFilter(semFilter === s ? null : s)}
-              >
-                {semestreLabel(s)}
-              </Pill>
+              <Filtro key={s} ativo={semFilter === s} onClick={() => setSemFilter(semFilter === s ? null : s)}>
+                {rotuloSemestreCurto(s)}
+              </Filtro>
             ))}
-          </div>
+          </GrupoFiltros>
         )}
 
-        {/* Ordem */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-white/25 font-medium shrink-0">Ordem</span>
-          <Pill active={ordem === 'az'} onClick={() => setOrdem(ordem === 'az' ? null : 'az')}>
-            A → Z
-          </Pill>
-          <Pill active={ordem === 'za'} onClick={() => setOrdem(ordem === 'za' ? null : 'za')}>
-            Z → A
-          </Pill>
-        </div>
+        <GrupoFiltros titulo="Ordem">
+          <Filtro ativo={ordem === 'az'} onClick={() => setOrdem(ordem === 'az' ? null : 'az')}>A → Z</Filtro>
+          <Filtro ativo={ordem === 'za'} onClick={() => setOrdem(ordem === 'za' ? null : 'za')}>Z → A</Filtro>
+        </GrupoFiltros>
 
-        {/* Limpar filtros */}
         {filtrosActivos && (
-          <button
-            onClick={limparTudo}
-            className="ml-auto text-xs text-white/30 hover:text-[#4f9eff]/70
-                       transition-colors underline underline-offset-2 self-center"
-          >
+          <button type="button" onClick={limparTudo} className="shrink-0 text-sm font-medium text-acao hover:underline sm:ml-auto">
             Limpar filtros
           </button>
         )}
       </div>
 
-      {/* ── Contador de resultados ─────────────────────────────── */}
-      <p className="mb-5 text-xs text-white/20">
+      {/* ── Contador ───────────────────────────────────────────── */}
+      <p role="status" className="mt-4 text-sm text-cinza">
         {visiveis.length === modulos.length
           ? contar(t.modulo, modulos.length)
-          : `${visiveis.length} de ${contar(t.modulo, modulos.length)}`
-        }
+          : `${visiveis.length} de ${contar(t.modulo, modulos.length)}`}
       </p>
 
-      {/* ── Grid ou estado vazio ───────────────────────────────── */}
+      {/* ── Cartões ────────────────────────────────────────────── */}
       {visiveis.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl
-                        border border-white/5 bg-[#13131a] py-24 text-center">
-          <p className="text-sm text-white/30">{nenhumEncontrado(t.modulo)}.</p>
+        <div className="mt-5 rounded-xl border border-linha bg-superficie py-16 text-center">
+          <p className="text-sm text-cinza">{nenhumEncontrado(t.modulo)}.</p>
           {filtrosActivos && (
-            <button
-              onClick={limparTudo}
-              className="mt-3 text-xs text-[#4f9eff]/60 hover:text-[#4f9eff] transition-colors"
-            >
+            <button type="button" onClick={limparTudo} className="mt-3 text-sm font-medium text-acao hover:underline">
               Limpar filtros
             </button>
           )}
         </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {visiveis.map(m => (
-            <DisciplinaCard key={m.id_modulo} disciplina={m} basePath={basePath} termos={t} />
-          ))}
-        </div>
-      )}
+      ) : grupos ? (
+        grupos.map(g => (
+          <section key={g.ano ?? 'sem-ano'} aria-label={rotuloAno(g.ano)} className="mt-8">
+            <h2 className="flex items-baseline gap-3 border-b border-linha pb-3 text-[clamp(20px,1.8vw,26px)] font-semibold tracking-[-0.02em]">
+              {rotuloAno(g.ano)}
+              <span className="text-sm font-normal tracking-normal text-cinza">{contar(t.modulo, g.total)}</span>
+            </h2>
 
+            {g.semestres.map(s => {
+              const semRotulo = s.semestre == null && g.semestres.length === 1;
+              return (
+                <div
+                  key={s.semestre ?? 'sem-semestre'}
+                  className={`pt-6 ${semRotulo ? '' : 'grid gap-4 lg:grid-cols-[170px_minmax(0,1fr)] lg:gap-6'}`}
+                >
+                  {!semRotulo && (
+                    <div className="flex items-baseline gap-2 lg:block">
+                      <h3 className="font-semibold">{rotuloSemestre(s.semestre)}</h3>
+                      <p className="text-sm text-cinza">{contar(t.modulo, s.modulos.length)}</p>
+                    </div>
+                  )}
+                  {cartoes(s.modulos)}
+                </div>
+              );
+            })}
+          </section>
+        ))
+      ) : (
+        <div className="mt-5">{cartoes(visiveis)}</div>
+      )}
     </div>
   );
 }

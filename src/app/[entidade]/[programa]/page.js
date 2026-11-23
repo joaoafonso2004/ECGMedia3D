@@ -1,35 +1,17 @@
 import { supabase } from '@/lib/supabase';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
+import SiteHeader from '@/components/SiteHeader';
+import SiteFooter from '@/components/SiteFooter';
+import Localizacao from '@/components/Localizacao';
 import DisciplinasGrid from '@/components/DisciplinasGrid';
-import LogoHero from '@/components/LogoHero';
-import { getTermos, maiuscula, doTermo } from '@/lib/terminologia';
+import LogoPrograma from '@/components/LogoPrograma';
+import { getEntidade, getPrograma, getTermosDe, idDaEntidade } from '@/lib/publico';
+import { maiuscula, minuscula, doTermo } from '@/lib/terminologia';
+
+// Gerada a cada visita: módulos e modelos novos aparecem sem nova publicação
+export const dynamic = 'force-dynamic';
 
 /* ─── Fetches ───────────────────────────────────────────────────── */
-
-async function getEntidade(slug) {
-  const { data, error } = await supabase
-    .from('entidade')
-    .select('*')
-    .eq('slug', slug)
-    .single();
-
-  if (error || !data) return null;
-  return data;
-}
-
-async function getPrograma(idEntidade, codigoParam) {
-  /* O código na URL pode ser lowercase ('ecgm'), na BD pode ser 'ECGM' → ilike */
-  const { data, error } = await supabase
-    .from('programa')
-    .select('id_programa, nome, codigo, descricao, id_entidade')
-    .eq('id_entidade', idEntidade)
-    .ilike('codigo', codigoParam)
-    .single();
-
-  if (error || !data) return null;
-  return data;
-}
 
 async function getLogo3D(idPrograma) {
   const { data } = await supabase
@@ -65,19 +47,16 @@ export async function generateMetadata({ params }) {
   const { entidade: entidadeSlug, programa: programaSlug } = await params;
 
   const entidade = await getEntidade(entidadeSlug);
-  if (!entidade) return { title: 'ECGMedia3d' };
+  if (!entidade) return { title: 'ECGMedia3D' };
 
-  const idEntidade = entidade.id_entidade ?? entidade.id;
-  const programa   = await getPrograma(idEntidade, programaSlug);
+  const programa = await getPrograma(idDaEntidade(entidade), programaSlug);
+  if (!programa) return { title: `${entidade.nome} — ECGMedia3D` };
 
-  const codigoCurso = programa?.codigo  ?? programaSlug.toUpperCase();
-  const termos      = await getTermos(supabase, entidade);
-  const descricao   = programa?.descricao
-    ?? `${maiuscula(termos.modulo.plural)} ${doTermo(termos.programa)} ${codigoCurso}`;
-
+  const termos = await getTermosDe(entidade);
   return {
-    title: `ECGMedia3d — ${codigoCurso}`,
-    description: descricao,
+    title: `${programa.nome ?? programa.codigo} — ECGMedia3D`,
+    description: programa.descricao
+      ?? `${maiuscula(termos.modulo.plural)} ${doTermo(termos.programa)} ${programa.codigo ?? programa.nome}`,
   };
 }
 
@@ -85,150 +64,74 @@ export async function generateMetadata({ params }) {
 export default async function ProgramaPage({ params }) {
   const { entidade: entidadeSlug, programa: programaSlug } = await params;
 
-  /* 1. Entidade */
   const entidade = await getEntidade(entidadeSlug);
   if (!entidade) notFound();
 
-  const idEntidade = entidade.id_entidade ?? entidade.id;
-
-  /* 2. Programa */
-  const programa = await getPrograma(idEntidade, programaSlug);
+  const programa = await getPrograma(idDaEntidade(entidade), programaSlug);
   if (!programa) notFound();
 
-  /* 3. Módulos + Logo 3D */
   const [{ data: modulos, error }, logo3d, termos] = await Promise.all([
-    getModulos(programa.id_programa ?? programa.id),
-    getLogo3D(programa.id_programa ?? programa.id),
-    getTermos(supabase, entidade),
+    getModulos(programa.id_programa),
+    getLogo3D(programa.id_programa),
+    getTermosDe(entidade),
   ]);
 
-  /* basePath usado pelos DisciplinaCards para construir os links */
+  /* basePath usado pelos cartões para construir os links */
   const basePath = `/${entidadeSlug}/${programaSlug}`;
-
-  const codigoCurso = programa.codigo   ?? programaSlug.toUpperCase();
-  const descricao   = programa.descricao ?? '';
-  const nomeEscola  = entidade.nome     ?? '';
+  const codigo = programa.codigo ?? programaSlug.toUpperCase();
 
   return (
-    <main className="min-h-screen bg-[#0c0c0f] text-white">
+    <div className="min-h-screen bg-papel text-tinta">
+      <SiteHeader atual="instituicoes" />
 
-      {/* ── Navbar ─────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0c0c0f]/80 backdrop-blur-md">
-        <div className="flex items-center justify-between px-6 py-4">
+      <main className="contentor">
+        {/* ── Cabeçalho do programa ──────────────────────────────── */}
+        <section
+          className={`grid items-center gap-8 border-b border-linha pb-8 pt-7
+                      ${logo3d ? 'lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)]' : ''}`}
+        >
+          <div>
+            <Localizacao
+              itens={[
+                { href: '/', label: 'Início' },
+                { href: `/${entidadeSlug}`, label: entidade.nome },
+                { label: codigo },
+              ]}
+            />
 
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className="text-lg font-bold tracking-tight text-white/60
-                         hover:text-white transition-colors"
-            >
-              ECGMedia3d
-</Link>
-            <span className="text-white/15 select-none">/</span>
-            <Link
-              href={`/${entidadeSlug}`}
-              className="text-sm font-medium text-white/40 hover:text-white/70
-                         transition-colors tracking-wide"
-            >
-              {entidadeSlug}
-            </Link>
-            <span className="text-white/15 select-none">/</span>
-            <span className="text-sm font-semibold text-[#4f9eff] tracking-wide">
-              {codigoCurso}
-            </span>
-          </div>
-
-          {/* Nome da escola + admin */}
-          <div className="flex items-center gap-4">
-            {nomeEscola && (
-              <span className="text-xs text-white/25 hidden md:block">{nomeEscola}</span>
+            <p className="mt-6 text-[13px] font-medium text-cinza">
+              {termos.programa.singular} · {entidade.nome}
+            </p>
+            <h1 className="mt-2 text-[clamp(44px,6vw,84px)] font-semibold leading-none tracking-[-0.045em]">
+              {codigo}
+            </h1>
+            {programa.nome && programa.nome !== codigo && (
+              <p className="mt-3 text-[clamp(18px,1.6vw,22px)] font-medium tracking-tight text-balance">{programa.nome}</p>
             )}
-            <a
-              href="/admin/login"
-              className="rounded-lg border border-white/10 bg-white/5 px-4 py-1.5 text-xs
-                         font-medium text-white/50 transition hover:border-white/20 hover:text-white/80"
-            >
-              Entrar
-            </a>
+            {programa.descricao && (
+              <p className="mt-3 max-w-[60ch] text-[17px] text-tinta-2">{programa.descricao}</p>
+            )}
           </div>
-        </div>
-      </header>
 
-      {/* ── Hero ───────────────────────────────────────────────── */}
-      <section className="px-6 pb-10 pt-20 text-center">
-        <div className="mx-auto max-w-2xl">
+          {logo3d && <LogoPrograma logo={logo3d} />}
+        </section>
 
-          {/* Pill com o nome da escola */}
-          {nomeEscola && (
-            <span className="mb-8 inline-block rounded-full border border-[#4f9eff]/25
-                             bg-[#4f9eff]/10 px-4 py-1 text-xs font-semibold uppercase
-                             tracking-widest text-[#4f9eff]">
-              {nomeEscola}
-            </span>
-          )}
-
-          {/* Título: logo 3D ou código do curso em texto */}
-          {logo3d ? (
-            <div className="mx-auto" style={{ width: 560, height: 560, marginTop: '-200px', marginBottom: '-200px' }}>
-              <LogoHero
-                url={logo3d.url}
-                escala={logo3d.escala ?? 1.0}
-                animacao={logo3d.animacao_tipo ?? 'rotation'}
-                width={560}
-                height={560}
-                rotacaoX={logo3d.rotacao_x ?? 0}
-                rotacaoY={logo3d.rotacao_y ?? 0}
-                rotacaoZ={logo3d.rotacao_z ?? 0}
-                posicaoX={logo3d.posicao_x ?? 0}
-                posicaoY={logo3d.offset_y  ?? 0}
-              />
+        {/* ── Módulos ────────────────────────────────────────────── */}
+        <section aria-label={maiuscula(termos.modulo.plural)} className="pt-8">
+          {error ? (
+            <div role="alert" className="rounded-xl border border-ecgm-r/30 bg-ecgm-r/5 p-4">
+              <p className="text-sm font-semibold text-ecgm-r">
+                Não foi possível carregar a lista de {minuscula(termos.modulo.plural)}.
+              </p>
+              <p className="mt-1 break-all font-mono text-xs text-tinta-2">{error}</p>
             </div>
           ) : (
-            <h1 className="mt-4 text-6xl font-bold leading-none tracking-tight text-white">
-              <span className="text-[#4f9eff]">{codigoCurso}</span>
-            </h1>
-          )}
-
-          {/* Descrição */}
-          {descricao && (
-            <p className="mt-5 text-lg text-white/45 leading-relaxed max-w-xl mx-auto">
-              {descricao}
-            </p>
-          )}
-
-        </div>
-      </section>
-
-      {/* ── Grelha de disciplinas ──────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-6 pb-24">
-
-        {error && (
-          <div className="mb-8 rounded-xl border border-red-500/30 bg-red-500/10 p-4">
-            <p className="text-sm font-semibold text-red-400 mb-1">⚠ Erro ao ligar ao Supabase</p>
-            <p className="text-xs font-mono text-red-300/70 break-all">{error}</p>
-          </div>
-        )}
-
-        {!error && (
-          <>
-            <h2 className="mb-5 text-xl font-semibold tracking-tight text-white">{maiuscula(termos.modulo.plural)}</h2>
             <DisciplinasGrid modulos={modulos} basePath={basePath} termos={termos} />
-          </>
-        )}
+          )}
+        </section>
+      </main>
 
-      </section>
-
-      {/* ── Footer ─────────────────────────────────────────────── */}
-      <footer className="border-t border-white/5 px-6 py-6">
-        <div className="mx-auto max-w-6xl flex items-center justify-between">
-          <span className="text-xs text-white/20">
-            © {new Date().getFullYear()} {nomeEscola || 'ECGMedia3d'} — {codigoCurso}
-          </span>
-          <span className="text-xs text-white/15">Next.js · Supabase · Three.js</span>
-        </div>
-      </footer>
-
-    </main>
+      <SiteFooter />
+    </div>
   );
 }

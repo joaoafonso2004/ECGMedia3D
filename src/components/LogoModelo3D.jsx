@@ -4,6 +4,7 @@ import { useRef, useEffect, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { Box3, Vector3, MathUtils } from 'three';
+import LuzEstudio from './LuzEstudio';
 
 function LogoScene({ url, escala, animacao, rotacaoX = 0, rotacaoY = 0, rotacaoZ = 0, posicaoX = 0, posicaoY = 0 }) {
   const { scene } = useGLTF(url);
@@ -69,13 +70,13 @@ export default function LogoModelo3D({
 
   return (
     <Canvas
+      dpr={[1, 2]}
       camera={{ position: [0, 0, 5], fov: 45, near: 0.1, far: 200 }}
       gl={{ alpha: true, antialias: true }}
       style={{ width, height, background: 'transparent', pointerEvents: 'none' }}
     >
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 5, 5]} intensity={1.2} />
-      <pointLight position={[0, 2, 3]} color="#4f9eff" intensity={4} distance={20} />
+      {/* Luz de estúdio neutra, igual à dos cartões */}
+      <LuzEstudio />
       <Suspense fallback={null}>
         <LogoScene
           url={url}

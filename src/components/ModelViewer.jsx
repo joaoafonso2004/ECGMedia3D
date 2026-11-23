@@ -2,7 +2,11 @@
 
 import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { AnimatedModel, Z_END } from '@/components/ModelScene';
+import { AnimatedModel } from '@/components/ModelScene';
+import LuzEstudio from '@/components/LuzEstudio';
+
+/* Telemóveis: menos píxeis por frame (o ecrã já tem densidade alta) */
+const DPR_MAXIMO = typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches ? 1.5 : 2;
 
 export default function ModelViewer({
   url          = null,
@@ -16,6 +20,7 @@ export default function ModelViewer({
 }) {
   return (
     <Canvas
+      dpr={[1, DPR_MAXIMO]}
       camera={{ position: [0, 1, 0], fov: 45, near: 0.1, far: 200 }}
       gl={{ alpha: true, antialias: true }}
       style={{
@@ -25,9 +30,8 @@ export default function ModelViewer({
         pointerEvents: 'none',
       }}
     >
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} intensity={1.2} />
-      <pointLight position={[0, 4, Z_END]} color="#4f9eff" intensity={3} distance={60} />
+      {/* Luz de estúdio neutra: as texturas dos modelos mantêm as cores originais */}
+      <LuzEstudio />
 
       {url && (
         <Suspense fallback={null}>
