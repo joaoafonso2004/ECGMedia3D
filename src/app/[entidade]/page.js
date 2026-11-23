@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
+import Localizacao from '@/components/Localizacao';
 import { getTermos, contar, ver, minuscula, maiuscula, nesteTermo } from '@/lib/terminologia';
 
 /* ─── Fetches ───────────────────────────────────────────────────── */
@@ -61,16 +62,12 @@ export default async function EntidadePage({ params }) {
 
   return (
     <div className="min-h-screen bg-papel text-tinta">
-      <SiteHeader />
+      <SiteHeader atual="instituicoes" />
 
       <main className="contentor">
         {/* ── Cabeçalho da entidade ──────────────────────────────── */}
         <section className="border-b border-linha pb-8 pt-7">
-          <nav aria-label="Localização" className="flex flex-wrap gap-2 text-sm text-cinza">
-            <Link href="/" className="hover:text-tinta hover:underline">Início</Link>
-            <span aria-hidden="true">/</span>
-            <span aria-current="page" className="text-tinta">{entidade.nome}</span>
-          </nav>
+          <Localizacao itens={[{ href: '/', label: 'Início' }, { label: entidade.nome }]} />
 
           <p className="mt-6 text-[13px] font-medium text-cinza">{termos.entidade.singular}</p>
           <h1 className="mt-2 text-[clamp(34px,4vw,60px)] font-semibold leading-[1.05] tracking-[-0.035em] text-balance">
