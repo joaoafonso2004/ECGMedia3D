@@ -29,6 +29,17 @@ As alterações à base de dados estão em `supabase/migrations/`, por ordem de 
 | `20261108_notificacoes_tabela.sql` | Tabela `notificacoes`, índices e políticas RLS |
 | `20261109_notificacoes_triggers.sql` | Trigger em `media_items` que cria as notificações e ativa o tempo real |
 | `20261111_aprovacao_seguranca.sql` | Só o superadmin ou um gestor da disciplina pode aprovar/rejeitar (regra também na base de dados, não só na interface) |
+| `20261119_pesquisa_unificada.sql` | Função `pesquisar` (pesquisa em toda a plataforma, sem acentos e com tolerância a erros) |
+| `20261119_terminologia.sql` | Tabela `terminologia` (termos por tipo de entidade) |
+| `20261119_utilizadores_privacidade.sql` | Os visitantes deixam de ver os emails dos utilizadores |
+| `20261125_cargos_seguranca.sql` | Só o superadmin dá cargos de gestor e de administrador; o gestor só associa alunos às disciplinas que gere |
+
+### Cargos
+
+- **Registo:** quem cria conta fica com o cargo `utilizador` (aluno), sem disciplina.
+- **Aluno numa disciplina:** o gestor dessa disciplina (página Alunos) ou o administrador associa-o.
+- **Gestor:** criado pelo administrador na página Gestores (`/api/create-gestor`, que só aceita pedidos de um superadmin).
+- **Administrador (`superadmin`):** só diretamente na base de dados, numa linha da tabela `tipo_utilizador`.
 
 ## Notificações
 
@@ -58,7 +69,8 @@ Corre as migrações de `supabase/migrations` num PostgreSQL em memória (PGlite
 
 - quem recebe cada notificação, sem duplicados;
 - que um aluno não consegue aprovar o próprio trabalho, nem um gestor de outra disciplina;
-- que cada utilizador só vê e altera as suas notificações.
+- que cada utilizador só vê e altera as suas notificações;
+- que ninguém dá a si próprio cargos de gestor ou de administrador, e que um gestor só mexe nos alunos das suas disciplinas.
 
 ## Learn More
 
