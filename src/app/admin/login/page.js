@@ -1,23 +1,34 @@
 'use client';
 
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
+import { MarcaRGB } from '@/components/SiteHeader';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+const CAMPO =
+  'h-11 w-full rounded-[10px] border border-linha-2 bg-superficie px-3.5 text-[15px] text-tinta ' +
+  'placeholder:text-cinza focus:border-acao focus:outline-none focus:ring-3 focus:ring-acao/15';
+
+const ROTULO = 'mb-1.5 block text-[13px] font-medium text-tinta-2';
+
 export default function LoginPage() {
   const router = useRouter();
-  const [isRegister, setIsRegister] = useState(false); 
-  const [nome, setNome] = useState('');                 
+  const [isRegister, setIsRegister] = useState(false);
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  // Novo estado para controlar a visibilidade da password
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  function mudarModo(registo) {
+    setIsRegister(registo);
+    setError('');
+    setSuccess('');
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -62,7 +73,7 @@ export default function LoginPage() {
           id_utilizadores: authUser.id,
           nome: nome.trim(),
           email: email.trim(),
-          id_entidade: null 
+          id_entidade: null
         }]);
 
       if (perfilError) {
@@ -76,7 +87,7 @@ export default function LoginPage() {
         .insert([{
           id_utilizador: authUser.id,
           role: 'utilizador',
-          id_modulo: null 
+          id_modulo: null
         }]);
 
       if (roleError) {
@@ -85,8 +96,8 @@ export default function LoginPage() {
         return;
       }
 
-      setSuccess('Conta criada com sucesso! Um email de confirmação foi enviado. Confirma e faz login depois.');
-      
+      setSuccess('Conta criada. Enviámos um email de confirmação: confirma-o e depois entra.');
+
       setTimeout(() => {
         router.push('/');
         router.refresh();
@@ -101,9 +112,9 @@ export default function LoginPage() {
 
       if (authError) {
         if (authError.message.includes('Email not confirmed')) {
-          setError('Email não confirmado. Verifica o teu email e clica no link de confirmação.');
+          setError('Email não confirmado. Abre o email que te enviámos e clica no link de confirmação.');
         } else {
-          setError('Credenciais inválidas. Verifica o email e a password.');
+          setError('Email ou palavra-passe incorretos.');
         }
         setLoading(false);
         return;
@@ -127,7 +138,7 @@ export default function LoginPage() {
       }
 
       if (!tiposUtilizador || tiposUtilizador.length === 0) {
-        setError('Não tens permissões configuradas na base de dados.');
+        setError('Esta conta ainda não tem permissões. Fala com o administrador.');
         setLoading(false);
         return;
       }
@@ -147,133 +158,143 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      
+
       router.refresh();
     }
   }
 
+  const titulo = isRegister ? 'Criar conta' : 'Entrar';
+
   return (
-    <div className="relative min-h-screen bg-[#0c0c0f] flex items-center justify-center px-4">
-      
-      <Link 
-        href="/" 
-        className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 text-sm font-medium text-white/40 hover:text-white transition-colors"
-      >
-        <span className="text-lg leading-none">&larr;</span> Voltar
-      </Link>
+    <div className="flex min-h-dvh flex-col bg-papel text-tinta">
+      <div className="contentor w-full pt-5 md:pt-7">
+        <Link href="/" className="inline-flex items-center gap-2 text-[15px] font-medium text-tinta-2 hover:text-tinta">
+          <span aria-hidden="true">←</span> Voltar ao site
+        </Link>
+      </div>
 
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-bold tracking-tight text-white hover:text-white/80 transition-colors">
-            ECGMedia3d
+      <main className="flex flex-1 items-start justify-center px-4 pb-16 pt-8 sm:items-center sm:pt-0">
+        <div className="w-full max-w-[400px] rounded-2xl border border-linha bg-superficie p-6 shadow-[0_1px_2px_rgb(11_9_4/0.04),0_12px_32px_-12px_rgb(11_9_4/0.12)] sm:p-8">
+          <Link href="/" className="inline-flex items-center gap-2.5 text-lg font-bold tracking-tight text-tinta">
+            <MarcaRGB />
+            ECGMedia3D
           </Link>
-          <span className="text-[#4f9eff] mx-2 text-white/15">/</span>
-          <span className="text-lg font-semibold text-[#4f9eff]">
-            {isRegister ? 'registo' : 'login'}
-          </span>
-          <p className="mt-2 text-sm text-white/35">
-            {isRegister ? 'Cria a tua conta na comunidade' : 'Acede à tua área de trabalho'}
-          </p>
-        </div>
 
-        <div className="rounded-2xl border border-white/8 bg-[#13131a] p-8 shadow-2xl">
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <h1 className="mt-5 text-[28px] font-semibold leading-tight tracking-tight">{titulo}</h1>
+          <p className="mt-1 text-[15px] text-tinta-2">
+            {isRegister
+              ? 'As contas novas são de aluno. Os gestores são criados pelo administrador.'
+              : 'Entra para submeteres trabalhos ou gerires a tua disciplina.'}
+          </p>
+
+          <div role="group" aria-label="Escolher entre entrar e criar conta"
+               className="mt-6 grid grid-cols-2 gap-1 rounded-[10px] border border-linha-2 bg-papel p-1">
+            {[[false, 'Entrar'], [true, 'Criar conta']].map(([registo, rotulo]) => (
+              <button
+                key={rotulo}
+                type="button"
+                onClick={() => mudarModo(registo)}
+                aria-pressed={isRegister === registo}
+                className="h-9 rounded-[7px] text-[14.5px] font-medium text-tinta-2 transition-colors hover:text-tinta
+                           aria-pressed:bg-tinta aria-pressed:text-white"
+              >
+                {rotulo}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {isRegister && (
               <div>
-                <label className="block text-xs font-medium text-white/50 mb-1.5">Nome Completo</label>
+                <label htmlFor="login-nome" className={ROTULO}>Nome</label>
                 <input
+                  id="login-nome"
                   type="text"
                   required
+                  autoComplete="name"
                   value={nome}
                   onChange={e => setNome(e.target.value)}
-                  placeholder="O teu nome"
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition"
+                  placeholder="O teu nome completo"
+                  className={CAMPO}
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-1.5">Email</label>
+              <label htmlFor="login-email" className={ROTULO}>Email</label>
               <input
+                id="login-email"
                 type="email"
                 required
                 autoComplete="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="exemplo@email.com"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition"
+                placeholder="nome@email.pt"
+                className={CAMPO}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-1.5">Password</label>
+              <label htmlFor="login-password" className={ROTULO}>Palavra-passe</label>
               <div className="relative">
                 <input
-                  type={showPassword ? "text" : "password"}
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
                   required
-                  autoComplete={isRegister ? "new-password" : "current-password"}
+                  minLength={isRegister ? 8 : undefined}
+                  autoComplete={isRegister ? 'new-password' : 'current-password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full rounded-lg border border-white/10 bg-white/5 pl-3.5 pr-10 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition"
+                  placeholder="Palavra-passe"
+                  aria-describedby={isRegister ? 'login-password-dica' : undefined}
+                  className={`${CAMPO} pr-20`}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-white/40 hover:text-white/80 transition-colors"
+                  onClick={() => setShowPassword(v => !v)}
+                  aria-pressed={showPassword}
+                  aria-controls="login-password"
+                  className="absolute inset-y-1 right-1 rounded-[7px] px-3 text-[13px] font-medium text-tinta-2 hover:bg-papel hover:text-tinta"
                 >
-                  {showPassword ? (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  )}
+                  {showPassword ? 'Ocultar' : 'Ver'}
                 </button>
               </div>
+              {isRegister && (
+                <p id="login-password-dica" className="mt-1.5 text-[13px] text-cinza">Mínimo de 8 caracteres.</p>
+              )}
             </div>
 
             {error && (
-              <div className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-2.5">
-                <p className="text-xs text-red-400">{error}</p>
+              <div role="alert" className="flex gap-2.5 rounded-[10px] border border-ecgm-r/35 bg-ecgm-r/5 px-3.5 py-3 text-[14px] text-tinta">
+                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+                     className="mt-px shrink-0 text-ecgm-r">
+                  <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
+                <p>{error}</p>
               </div>
             )}
 
             {success && (
-              <div className="rounded-lg border border-green-500/25 bg-green-500/10 px-4 py-2.5">
-                <p className="text-xs text-green-400">{success}</p>
+              <div role="status" className="flex gap-2.5 rounded-[10px] border border-ecgm-g/35 bg-ecgm-g/5 px-3.5 py-3 text-[14px] text-tinta">
+                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+                     className="mt-px shrink-0 text-ecgm-g">
+                  <path d="m5 12.5 4.5 4.5L19 7.5" />
+                </svg>
+                <p>{success}</p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-[#4f9eff] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#3d8aef] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-11 w-full rounded-[10px] bg-acao text-[15px] font-medium text-white transition-colors
+                         hover:bg-acao-escuro disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? 'A processar…' : isRegister ? 'Criar Conta' : 'Entrar'}
+              {loading ? (isRegister ? 'A criar conta…' : 'A entrar…') : titulo}
             </button>
-
-            <div className="pt-2 text-center border-t border-white/5">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsRegister(!isRegister);
-                  setError('');
-                  setSuccess('');
-                }}
-                className="text-xs text-[#4f9eff]/70 hover:text-[#4f9eff] transition-colors"
-              >
-                {isRegister 
-                  ? 'Já tens uma conta? Faz Login aqui' 
-                  : 'Não tens conta? Regista-te na comunidade aqui'}
-              </button>
-            </div>
           </form>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
