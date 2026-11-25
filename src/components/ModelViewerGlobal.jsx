@@ -10,8 +10,8 @@
  *  • Os outros: o canvas é recortado ao palco e o modelo é ajustado para caber.
  *
  * Modos:
- *  • 'rato'  — passar o rato: ao fazer scroll, se o cursor já não estiver
- *              sobre o mesmo cartão, o modelo desaparece.
+ *  • 'rato'  — passar o rato: durante o scroll, o canvas acompanha o cartão;
+ *              se o cursor já não estiver sobre o mesmo cartão, o modelo desaparece.
  *  • 'toque' — botão "Ver 3D" no telemóvel: o canvas acompanha o cartão
  *              durante o scroll e pára quando o cartão sai do ecrã.
  *
@@ -31,6 +31,19 @@ const ModelViewer = dynamic(() => import('./ModelViewer'), { ssr: false });
 function palcoDoCartao(cardId) {
   const cartao = document.querySelector(`[data-hover-card="${CSS.escape(String(cardId))}"]`);
   return cartao?.querySelector('[data-palco]') ?? cartao;
+}
+
+/**
+ * Id do cartão que está por baixo do cursor (ou null).
+ * O canvas fica por cima do cartão: elementFromPoint devolveria o canvas,
+ * por isso percorre-se a pilha toda com elementsFromPoint.
+ */
+function cartaoSobOCursor({ x, y }) {
+  for (const el of document.elementsFromPoint(x, y)) {
+    const c = el.closest?.('[data-hover-card]');
+    if (c) return c.dataset.hoverCard;
+  }
+  return null;
 }
 
 export default function ModelViewerGlobal() {
@@ -63,46 +76,29 @@ export default function ModelViewerGlobal() {
     return () => window.removeEventListener('mousemove', trackMouse);
   }, []);
 
-  /* Modo rato: ao fazer scroll, o modelo só fica se o cursor continuar no mesmo cartão */
-  useEffect(() => {
-    function handleScroll() {
-      const model = activeModelRef.current;
-      if (model === null || model.modo === 'toque') return;
-
-      /* O canvas global tem z-index 9999 e cobre o card. elementFromPoint devolveria
-         o canvas, não o card. elementsFromPoint devolve a pilha completa de elementos
-         naquelas coordenadas, permitindo encontrar o card por baixo do canvas. */
-      const { x, y } = lastMousePos.current;
-      const stack = document.elementsFromPoint(x, y);
-      let cardUnderCursor = null;
-      for (const el of stack) {
-        const c = el.closest?.('[data-hover-card]');
-        if (c) { cardUnderCursor = c; break; }
-      }
-
-      const stillOnSameCard = cardUnderCursor?.dataset?.hoverCard === model.cardId;
-      if (!stillOnSameCard) setActiveModel(null);
-    }
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [setActiveModel]);
-
-  /* Modo toque: o canvas segue o cartão; fora do ecrã, a animação pára */
+  /* Durante o scroll, o canvas segue o palco do cartão (nos dois modos).
+     Modo rato: se o cursor já não estiver no mesmo cartão, o modelo desaparece.
+     Modo toque: quando o cartão sai do ecrã, o modelo desaparece e a animação pára. */
   useEffect(() => {
     let frame = 0;
 
     function seguir() {
       frame = 0;
       const model = activeModelRef.current;
-      if (model === null || model.modo !== 'toque') return;
+      if (model === null) return;
 
       const palco = palcoDoCartao(model.cardId);
       if (!palco) { setActiveModel(null); return; }
 
-      const r = palco.getBoundingClientRect();
-      if (r.bottom < 0 || r.top > window.innerHeight) { setActiveModel(null); return; }
+      if (model.modo === 'toque') {
+        const r = palco.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > window.innerHeight) { setActiveModel(null); return; }
+      } else if (cartaoSobOCursor(lastMousePos.current) !== model.cardId) {
+        setActiveModel(null);
+        return;
+      }
 
-      setAncora(ancoraDoPalco(palco, model.breakout, true));
+      setAncora(ancoraDoPalco(palco, model.breakout, model.modo === 'toque'));
     }
     function agendar() { if (!frame) frame = requestAnimationFrame(seguir); }
 
