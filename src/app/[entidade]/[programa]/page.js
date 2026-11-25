@@ -24,13 +24,18 @@ async function getLogo3D(idPrograma) {
 }
 
 async function getModulos(idPrograma) {
+  /* Também conta os projetos e os trabalhos aprovados de cada módulo,
+     para o cartão dizer se há conteúdo (a capa é do módulo, não de um projeto) */
   const { data, error } = await supabase
     .from('modulo')
     .select(`
       id_modulo, id_programa, nome, codigo, descricao, ano, semestre,
-      modulo_media ( media_items ( tipo, url, escala, offset_y, animacao_tipo, loop, rotacao_x, rotacao_y, rotacao_z, posicao_x ) )
+      modulo_media ( media_items ( tipo, url, escala, offset_y, animacao_tipo, loop, rotacao_x, rotacao_y, rotacao_z, posicao_x ) ),
+      projetos ( count ),
+      trabalhos:media_items!id_modulo ( count )
     `)
     .eq('id_programa', idPrograma)
+    .eq('trabalhos.status', 'aprovado')
     .order('ano',      { ascending: true })
     .order('semestre', { ascending: true })
     .order('nome',     { ascending: true });
@@ -39,7 +44,15 @@ async function getModulos(idPrograma) {
     console.error('[Supabase] Erro ao carregar módulos:', error.message);
     return { data: [], error: error.message };
   }
-  return { data: data ?? [], error: null };
+  const contagem = lista => lista?.[0]?.count ?? 0;
+  return {
+    data: (data ?? []).map(({ projetos, trabalhos, ...m }) => ({
+      ...m,
+      n_projetos:  contagem(projetos),
+      n_trabalhos: contagem(trabalhos),
+    })),
+    error: null,
+  };
 }
 
 /* ─── Metadata dinâmico ────────────────────────────────────────── */

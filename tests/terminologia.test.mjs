@@ -14,7 +14,7 @@ import { join } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import {
   PADRAO, resolverTermos, getTermos,
-  contar, novo, nenhum, nenhumEncontrado, ver, verUm, procurar, publicados, oTermo, doTermo, aoTermo, nesteTermo, minuscula,
+  contar, novo, nenhum, nenhumEncontrado, ver, verUm, procurar, publicados, oTermo, doTermo, aoTermo, nesteTermo, minuscula, aindaSem,
 } from '../src/lib/terminologia.js';
 
 const MIGRACAO = join(import.meta.dirname, '..', 'supabase', 'migrations', '20261119_terminologia.sql');
@@ -302,6 +302,12 @@ describe('Frases com concordância', () => {
     assert.equal(procurar(pt.modulo), 'Procurar disciplina');
     assert.equal(verUm(pt.projeto), 'Ver projeto');
     assert.equal(verUm(en.projeto), 'View project');
+  });
+
+  it('cartão de um módulo sem projetos', () => {
+    assert.equal(aindaSem(pt.projeto), 'Ainda sem projetos');
+    assert.equal(aindaSem(empresa.modulo), 'Ainda sem serviços');
+    assert.equal(aindaSem(en.projeto), 'No projects yet');
   });
 
   it('em inglês', () => {

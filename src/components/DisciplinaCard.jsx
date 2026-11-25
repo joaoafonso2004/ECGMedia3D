@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useModelViewer, ancoraDoPalco } from '@/context/ModelViewerContext';
-import { resolverTermos, ver } from '@/lib/terminologia';
+import { resolverTermos, ver, contar, aindaSem } from '@/lib/terminologia';
 import { useToque } from '@/lib/useMedia';
 import { tipoMedia } from '@/lib/media';
 import { IconeCubo, IconeParar } from './Icones';
@@ -25,8 +25,17 @@ export default function DisciplinaCard({ disciplina, basePath = '', termos = nul
   const videoRef = useRef(null);
   const [rato, setRato] = useState(false);
 
-  const { id_modulo, nome, codigo, descricao, modulo_media } = disciplina;
+  const { id_modulo, nome, codigo, descricao, modulo_media, n_projetos, n_trabalhos } = disciplina;
   const id = String(id_modulo);
+
+  /* Quanto conteúdo tem o módulo: a capa é do módulo, por isso aparece mesmo sem projetos.
+     Sem contagens (n_projetos indefinido), o cartão mostra só "Ver projetos". */
+  const comContagem = n_projetos != null;
+  const vazio = comContagem && n_projetos === 0 && !n_trabalhos;
+  const resumo = [
+    n_projetos > 0 && contar(t.projeto, n_projetos),
+    n_trabalhos > 0 && `${n_trabalhos} ${n_trabalhos === 1 ? 'trabalho' : 'trabalhos'}`,
+  ].filter(Boolean).join(' · ');
 
   const media = modulo_media?.flatMap(mm => (mm.media_items ? [mm.media_items] : [])) ?? [];
   const comUrl = media.filter(mi => mi?.url);
@@ -166,10 +175,14 @@ export default function DisciplinaCard({ disciplina, basePath = '', termos = nul
           </Link>
         </h3>
         {descricao && <p className="mt-1.5 line-clamp-2 text-sm text-tinta-2">{descricao}</p>}
-        <span className="mt-auto pt-3 text-sm font-medium text-acao">
-          {ver(t.projeto)}{' '}
-          <span aria-hidden="true" className="inline-block transition-transform group-hover:translate-x-1">→</span>
-        </span>
+        {vazio ? (
+          <span className="mt-auto pt-3 text-sm text-cinza">{aindaSem(t.projeto)}</span>
+        ) : (
+          <span className="mt-auto pt-3 text-sm font-medium text-acao">
+            {comContagem ? resumo : ver(t.projeto)}{' '}
+            <span aria-hidden="true" className="inline-block transition-transform group-hover:translate-x-1">→</span>
+          </span>
+        )}
       </div>
     </article>
   );

@@ -127,6 +127,12 @@ export function nenhumEncontrado(t) {
   return `${nenhum(t)} ${fem(t) ? 'encontrada' : 'encontrado'}`;
 }
 
+/** "Ainda sem projetos" · "No projects yet" */
+export function aindaSem(t) {
+  if (en(t)) return `No ${minuscula(t.plural)} yet`;
+  return `Ainda sem ${minuscula(t.plural)}`;
+}
+
 /** "Ver disciplinas" · "View courses" */
 export function ver(t) {
   return `${en(t) ? 'View' : 'Ver'} ${minuscula(t.plural)}`;
