@@ -6,8 +6,8 @@
  * Posicionamento:
  *  • O canvas tem sempre `position: fixed`.
  *  • É centrado no palco do cartão (capturado em getBoundingClientRect).
- *  • O seu tamanho é 2× o lado maior do palco → o modelo pode transbordar
- *    para fora dos limites do cartão sem ser cortado.
+ *  • Cartões com vídeo: o canvas é maior do que o palco e o modelo sai do cartão.
+ *  • Os outros: o canvas é recortado ao palco e o modelo é ajustado para caber.
  *
  * Modos:
  *  • 'rato'  — passar o rato: ao fazer scroll, se o cursor já não estiver
@@ -119,6 +119,14 @@ export default function ModelViewerGlobal() {
   const cx   = ancora?.centerX   ?? 0;
   const cy   = ancora?.centerY   ?? 0;
 
+  /* Sem vídeo: só se vê a zona do palco (cantos de cima arredondados, como o cartão)
+     e o modelo é ajustado para caber nela */
+  const recortar = Boolean(ancora?.recorte && ancora.w && ancora.h);
+  const recorte = recortar
+    ? `inset(${(size - ancora.h) / 2}px ${(size - ancora.w) / 2}px round 11px 11px 0 0)`
+    : undefined;
+  const enquadrar = recortar ? { fw: ancora.w / size, fh: ancora.h / size } : null;
+
   return (
     <div
       aria-hidden="true"
@@ -132,7 +140,8 @@ export default function ModelViewerGlobal() {
 
         zIndex        : 40,
         pointerEvents : 'none',
-        /* Sem overflow:hidden → modelo pode transbordar o card */
+        /* Com vídeo (breakout) não há recorte: o modelo pode sair do cartão */
+        clipPath      : recorte,
 
         opacity    : isVisible ? 1 : 0,
         transition : 'opacity 0.35s ease',
@@ -148,6 +157,7 @@ export default function ModelViewerGlobal() {
           rotacaoY={activeModel?.rotacao_y   ?? 0}
           rotacaoZ={activeModel?.rotacao_z   ?? 0}
           posicaoX={activeModel?.posicao_x   ?? 0}
+          enquadrar={enquadrar}
         />
       )}
     </div>

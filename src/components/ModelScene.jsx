@@ -22,6 +22,33 @@ function eio(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
+/* Altura visível (unidades 3D) à distância do modelo: câmara em (0,1,0), fov 45, modelo em z = Z_END */
+const ALTURA_VISIVEL = 2 * Math.hypot(1, Z_END) * Math.tan(THREE.MathUtils.degToRad(45 / 2));
+const RODAM = ['rotation', 'zoom', 'breakout'];
+
+/**
+ * Escala que faz o modelo caber no palco do cartão (com margem), tendo em conta
+ * a rotação: a rodar sobre Y, a largura que conta é o raio no plano XZ.
+ * enquadrar = { fw, fh }: largura e altura do palco em fração do canvas (quadrado).
+ */
+function escalaQueCabe(caixa, autoScale, enquadrar, { animacaoTipo, offsetY, posicaoX }) {
+  const larguraPalco = ALTURA_VISIVEL * enquadrar.fw;
+  const alturaPalco  = ALTURA_VISIVEL * enquadrar.fh;
+
+  const xs = [caixa.min.x, caixa.max.x];
+  const zs = [caixa.min.z, caixa.max.z];
+  const meiaLargura = RODAM.includes(animacaoTipo)
+    ? Math.max(...xs.flatMap(x => zs.map(z => Math.hypot(x, z))))
+    : Math.max(...xs.map(Math.abs));
+  const meiaAltura = Math.max(Math.abs(caixa.min.y), Math.abs(caixa.max.y));
+
+  const livreX = larguraPalco * 0.84 / 2 - Math.abs(posicaoX);
+  const livreY = alturaPalco * 0.78 / 2 - Math.abs(offsetY) - (animacaoTipo === 'float' ? 0.5 : 0);
+  const porX = livreX / Math.max(meiaLargura * autoScale, 1e-6);
+  const porY = livreY / Math.max(meiaAltura * autoScale, 1e-6);
+  return Math.max(0.05, Math.min(porX, porY) - (animacaoTipo === 'pulse' ? 0.1 : 0));
+}
+
 /* ─── Componente partilhado de modelo animado ───────────────────── */
 export function AnimatedModel({
   url,
@@ -32,6 +59,7 @@ export function AnimatedModel({
   rotacaoY     = 0,
   rotacaoZ     = 0,
   posicaoX     = 0,
+  enquadrar    = null, // { fw, fh }: o modelo tem de caber no palco do cartão
 }) {
   const { scene, animations } = useGLTF(url);
   const groupRef   = useRef(null);
@@ -55,8 +83,27 @@ export function AnimatedModel({
     box.getSize(size);
     box.getCenter(center);
     const maiorDimensao = Math.max(size.x, size.y, size.z);
-    return { autoScale: maiorDimensao > 0 ? 2.0 / maiorDimensao : 1, center };
+    return { autoScale: maiorDimensao > 0 ? 2.0 / maiorDimensao : 1, center, box };
   }, [clonedScene]);
+
+  // Caixa do modelo já centrada e rodada como aparece no ecrã
+  const caixaRodada = useMemo(() => {
+    const rotacao = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(
+      THREE.MathUtils.degToRad(rotacaoX),
+      THREE.MathUtils.degToRad(rotacaoY),
+      THREE.MathUtils.degToRad(rotacaoZ),
+    ));
+    return scaleInfo.box.clone().translate(scaleInfo.center.clone().negate()).applyMatrix4(rotacao);
+  }, [scaleInfo, rotacaoX, rotacaoY, rotacaoZ]);
+
+  // No palco do cartão, a escala da BD é um máximo: o modelo nunca passa dos limites
+  const fw = enquadrar?.fw;
+  const fh = enquadrar?.fh;
+  const escalaFinal = useMemo(() => (
+    fw && fh
+      ? Math.min(escala, escalaQueCabe(caixaRodada, scaleInfo.autoScale, { fw, fh }, { animacaoTipo, offsetY, posicaoX }))
+      : escala
+  ), [escala, fw, fh, caixaRodada, scaleInfo.autoScale, animacaoTipo, offsetY, posicaoX]);
 
   // Valor acessível em useFrame sem stale closure
   const autoScaleRef = useRef(scaleInfo.autoScale);
@@ -98,7 +145,7 @@ export function AnimatedModel({
     switch (animacaoTipo) {
       case 'breakout': {
         const c = (t % BCYCLE_SEC) / BCYCLE_SEC;
-        const effScale = escala * autoScaleRef.current;
+        const effScale = escalaFinal * autoScaleRef.current;
         let posZ, sc;
         if (c < 0.45) {
           const p = eio(c / 0.45);
@@ -120,7 +167,7 @@ export function AnimatedModel({
       }
       case 'zoom': {
         const c = (t % CYCLE_SEC) / CYCLE_SEC;
-        const effScale = escala * autoScaleRef.current;
+        const effScale = escalaFinal * autoScaleRef.current;
         let posZ, sc, rotY;
         if (c < T_IN) {
           const p = eio(c / T_IN);
@@ -144,23 +191,23 @@ export function AnimatedModel({
       }
       case 'rotation':
         groupRef.current.position.set(posicaoX, offsetY, Z_END);
-        groupRef.current.scale.setScalar(escala * autoScaleRef.current);
+        groupRef.current.scale.setScalar(escalaFinal * autoScaleRef.current);
         groupRef.current.rotation.y += delta * 1.5;
         camera.lookAt(0, 0, Z_END);
         break;
       case 'float':
         groupRef.current.position.set(posicaoX, offsetY + Math.sin(t * 1.5) * 0.5, Z_END);
-        groupRef.current.scale.setScalar(escala * autoScaleRef.current);
+        groupRef.current.scale.setScalar(escalaFinal * autoScaleRef.current);
         camera.lookAt(0, 0, Z_END);
         break;
       case 'pulse':
         groupRef.current.position.set(posicaoX, offsetY, Z_END);
-        groupRef.current.scale.setScalar((escala + Math.sin(t * 2) * 0.1) * autoScaleRef.current);
+        groupRef.current.scale.setScalar((escalaFinal + Math.sin(t * 2) * 0.1) * autoScaleRef.current);
         camera.lookAt(0, 0, Z_END);
         break;
       default: /* null, 'none', 'custom' */
         groupRef.current.position.set(posicaoX, offsetY, Z_END);
-        groupRef.current.scale.setScalar(escala * autoScaleRef.current);
+        groupRef.current.scale.setScalar(escalaFinal * autoScaleRef.current);
         groupRef.current.rotation.y = 0;
         camera.lookAt(0, 0, Z_END);
         break;
@@ -172,7 +219,7 @@ export function AnimatedModel({
               : Z_END;
   const initS = (animacaoTipo === 'zoom' || animacaoTipo === 'breakout')
               ? S_START
-              : escala * autoScaleRef.current;
+              : escalaFinal * autoScaleRef.current;
 
   return (
     <group ref={groupRef} position={[posicaoX, offsetY, initZ]} scale={[initS, initS, initS]}>

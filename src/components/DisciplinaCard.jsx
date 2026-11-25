@@ -5,15 +5,17 @@ import Link from 'next/link';
 import { useModelViewer, ancoraDoPalco } from '@/context/ModelViewerContext';
 import { resolverTermos, ver } from '@/lib/terminologia';
 import { useToque } from '@/lib/useMedia';
+import { tipoMedia } from '@/lib/media';
 import { IconeCubo, IconeParar } from './Icones';
 
 /**
  * Cartão de um módulo na página do programa.
  *
- * Computador: ao passar o rato, o modelo 3D do módulo anima por cima do palco
- * (e sai do cartão). Telemóvel: não há rato, por isso o modelo só aparece
- * quando se toca em "Ver 3D"; "Parar" (ou o cartão sair do ecrã) termina.
- * Os dois modos usam o mesmo canvas WebGL partilhado (ModelViewerGlobal).
+ * Em repouso mostra a imagem do módulo (ou o código, se não tiver imagem).
+ * Computador: ao passar o rato, a imagem dá lugar ao modelo 3D, que anima dentro
+ * do palco (só sai do cartão quando há vídeo de fundo). Telemóvel: não há rato,
+ * por isso o modelo só aparece quando se toca em "Ver 3D"; "Parar" (ou o cartão
+ * sair do ecrã) termina. Os dois modos usam o mesmo canvas WebGL partilhado.
  */
 export default function DisciplinaCard({ disciplina, basePath = '', termos = null }) {
   const t = termos ?? resolverTermos();
@@ -27,15 +29,15 @@ export default function DisciplinaCard({ disciplina, basePath = '', termos = nul
   const id = String(id_modulo);
 
   const media = modulo_media?.flatMap(mm => (mm.media_items ? [mm.media_items] : [])) ?? [];
-  const glb = media.find(mi =>
-    mi?.url?.toLowerCase().endsWith('.glb') ||
-    ['glb', 'modelo3d'].includes(mi?.tipo?.toLowerCase())
-  ) ?? null;
-  const video = media.find(mi => mi?.tipo?.toLowerCase() === 'video') ?? null;
+  const comUrl = media.filter(mi => mi?.url);
+  const glb = comUrl.find(mi => tipoMedia(mi) === 'modelo') ?? null;
+  const video = comUrl.find(mi => tipoMedia(mi) === 'video') ?? null;
+  const imagem = comUrl.find(mi => tipoMedia(mi) === 'imagem') ?? null;
   const breakout = Boolean(glb && video);
 
   const ativo = activeModel?.cardId === id; // o modelo deste cartão está no ecrã
   const animado = rato || ativo;
+  const capaEscondida = animado && Boolean(glb || video); // a capa dá lugar ao 3D ou ao vídeo
 
   function mostrarModelo(modo) {
     if (!glb || !palcoRef.current) return;
@@ -97,6 +99,17 @@ export default function DisciplinaCard({ disciplina, basePath = '', termos = nul
     >
       {/* Palco: onde o modelo 3D aparece */}
       <div ref={palcoRef} data-palco className="relative aspect-[16/10] overflow-hidden rounded-t-[11px] bg-mosaico">
+        {imagem && (
+          // eslint-disable-next-line @next/next/no-img-element -- imagens de vários domínios (Supabase, R2, links)
+          <img
+            src={imagem.url}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className={`absolute inset-0 size-full object-cover transition-opacity duration-300 ${capaEscondida ? 'opacity-0' : ''}`}
+          />
+        )}
+
         {video && (
           <video
             ref={videoRef}
@@ -110,14 +123,16 @@ export default function DisciplinaCard({ disciplina, basePath = '', termos = nul
           />
         )}
 
-        {/* Em repouso: o código do módulo; some quando o modelo entra */}
-        <span
-          aria-hidden="true"
-          className={`absolute inset-0 grid place-items-center font-mono text-[clamp(26px,2.6vw,36px)] font-medium
-                      tracking-tight text-tinta/15 transition-opacity duration-300 ${animado && glb ? 'opacity-0' : ''}`}
-        >
-          {codigo ?? ''}
-        </span>
+        {/* Sem imagem: o código do módulo; some quando o modelo entra */}
+        {!imagem && (
+          <span
+            aria-hidden="true"
+            className={`absolute inset-0 grid place-items-center font-mono text-[clamp(26px,2.6vw,36px)] font-medium
+                        tracking-tight text-tinta/15 transition-opacity duration-300 ${animado && glb ? 'opacity-0' : ''}`}
+          >
+            {codigo ?? ''}
+          </span>
+        )}
 
         {glb && (
           <span className="absolute right-3 top-3 rounded-md border border-linha-2 bg-superficie/90 px-1.5 py-0.5 font-mono text-[11px] font-medium text-tinta-2">
@@ -131,7 +146,7 @@ export default function DisciplinaCard({ disciplina, basePath = '', termos = nul
             onClick={() => (ativo ? esconderModelo() : mostrarModelo('toque'))}
             aria-pressed={ativo}
             aria-label={ativo ? `Parar o modelo 3D de ${nome}` : `Ver o modelo 3D de ${nome}`}
-            className="absolute bottom-3 right-3 z-20 inline-flex h-10 items-center gap-1.5 rounded-full border border-linha-2
+            className="absolute bottom-3 right-3 z-[45] inline-flex h-10 items-center gap-1.5 rounded-full border border-linha-2
                        bg-superficie px-4 text-sm font-medium text-tinta shadow-sm"
           >
             {ativo ? <><IconeParar tamanho={14} />Parar</> : <><IconeCubo tamanho={16} />Ver 3D</>}

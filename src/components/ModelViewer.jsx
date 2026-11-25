@@ -17,6 +17,7 @@ export default function ModelViewer({
   rotacaoY     = 0,
   rotacaoZ     = 0,
   posicaoX     = 0,
+  enquadrar    = null,
 }) {
   return (
     <Canvas
@@ -45,6 +46,7 @@ export default function ModelViewer({
             rotacaoY={rotacaoY}
             rotacaoZ={rotacaoZ}
             posicaoX={posicaoX}
+            enquadrar={enquadrar}
           />
         </Suspense>
       )}

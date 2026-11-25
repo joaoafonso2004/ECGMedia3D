@@ -15,6 +15,8 @@
  *       centerX: number,    — centro horizontal do palco do cartão no viewport
  *       centerY: number,    — centro vertical do palco do cartão no viewport
  *       canvasSize: number, — lado do canvas quadrado (2× maior lado do palco)
+ *       w, h: number,       — largura e altura do palco
+ *       recorte: boolean,   — sem vídeo: o modelo fica dentro do palco (o canvas é recortado)
  *     }
  *   }
  *   | null  →  nenhum modelo no ecrã
@@ -24,8 +26,9 @@ import { createContext, useContext, useState } from 'react';
 
 /**
  * Âncora do canvas a partir do palco do cartão (a zona onde o modelo aparece).
- * No telemóvel o canvas é menor: o cartão ocupa a largura do ecrã e o modelo
- * não deve tapar o botão "Parar".
+ * No telemóvel o canvas é menor: o cartão ocupa a largura do ecrã.
+ * Só os cartões com vídeo deixam o modelo sair do cartão (breakout); nos outros
+ * o canvas é recortado ao palco e o modelo é ajustado para caber nele.
  */
 export function ancoraDoPalco(palco, breakout = false, toque = false) {
   const r = palco.getBoundingClientRect();
@@ -34,6 +37,9 @@ export function ancoraDoPalco(palco, breakout = false, toque = false) {
     centerX: r.left + r.width / 2,
     centerY: r.top + r.height / 2,
     canvasSize: Math.max(r.width, r.height) * fator,
+    w: r.width,
+    h: r.height,
+    recorte: !breakout,
   };
 }
 
