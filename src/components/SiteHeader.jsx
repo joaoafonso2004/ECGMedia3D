@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Form from 'next/form';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
+import BotaoTema from './BotaoTema';
 
 const LINKS = [
   { href: '/',               chave: 'inicio',       label: 'Início' },
@@ -17,9 +18,9 @@ export function MarcaRGB({ tamanho = 11 }) {
   const sobrepor = { ...s, marginLeft: -tamanho * 0.35 };
   return (
     <span className="inline-flex isolate" aria-hidden="true">
-      <i className="block rounded-full bg-ecgm-r mix-blend-multiply" style={s} />
-      <i className="block rounded-full bg-ecgm-g mix-blend-multiply" style={sobrepor} />
-      <i className="block rounded-full bg-ecgm-b mix-blend-multiply" style={sobrepor} />
+      <i className="block rounded-full bg-ecgm-r mix-blend-multiply dark:mix-blend-screen" style={s} />
+      <i className="block rounded-full bg-ecgm-g mix-blend-multiply dark:mix-blend-screen" style={sobrepor} />
+      <i className="block rounded-full bg-ecgm-b mix-blend-multiply dark:mix-blend-screen" style={sobrepor} />
     </span>
   );
 }
@@ -122,6 +123,7 @@ export default function SiteHeader({ atual = '' }) {
               </Link>
             </>
           )}
+          <BotaoTema />
           <Link
             href={entrada.href}
             className="hidden md:inline-flex h-10 items-center rounded-[10px] bg-acao px-4 text-[14.5px]

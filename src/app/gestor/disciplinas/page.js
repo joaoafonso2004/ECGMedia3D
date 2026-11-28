@@ -4,15 +4,16 @@ import { useEffect, useState, useCallback } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import { useGestorFilter } from '../GestorFilterContext';
 
+import { IconeCubo } from '@/components/Icones';
 /* ─── Modal genérico ────────────────────────────────────────────── */
 function Modal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg rounded-2xl border border-white/10 bg-[#13131a] shadow-2xl max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 shrink-0">
-          <h2 className="text-base font-semibold text-white">{title}</h2>
-          <button onClick={onClose} className="text-white/30 hover:text-white/70 transition text-xl leading-none">×</button>
+      <div className="absolute inset-0 bg-tinta/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-lg rounded-2xl border border-linha bg-superficie shadow-2xl max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-linha shrink-0">
+          <h2 className="text-base font-semibold text-tinta">{title}</h2>
+          <button onClick={onClose} className="text-cinza/80 hover:text-tinta-2 transition text-xl leading-none">×</button>
         </div>
         <div className="px-6 py-5 overflow-y-auto">
           {children}
@@ -25,13 +26,13 @@ function Modal({ title, onClose, children }) {
 function Field({ label, children }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-white/50 mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-cinza mb-1.5">{label}</label>
       {children}
     </div>
   );
 }
 
-const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#a78bfa]/50 focus:ring-1 focus:ring-[#a78bfa]/30 transition`;
+const inputCls = `w-full rounded-lg border border-linha bg-papel px-3 py-2 text-sm text-tinta placeholder:text-cinza focus:outline-none focus:border-acao/60 focus:ring-1 focus:ring-acao/20 transition`;
 
 /* ─── Formulário de Disciplina ──────────────────────────────────── */
 function DisciplinaForm({ initial = {}, onSave, saving }) {
@@ -68,7 +69,7 @@ function DisciplinaForm({ initial = {}, onSave, saving }) {
         <button
           onClick={() => onSave(form)}
           disabled={saving || !form.nome.trim()}
-          className="w-full rounded-lg bg-[#a78bfa] py-2.5 text-sm font-semibold text-white hover:bg-[#8b5cf6] transition disabled:opacity-50"
+          className="w-full rounded-lg bg-acao py-2.5 text-sm font-semibold text-white hover:bg-acao-escuro transition disabled:opacity-50"
         >
           {saving ? 'A guardar…' : 'Guardar Alterações do Módulo'}
         </button>
@@ -227,7 +228,7 @@ export default function GestorDisciplinasPage() {
     <div className="p-8 max-w-5xl mx-auto">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-5 right-5 z-50 rounded-lg border border-white/10 bg-[#13131a] px-4 py-2.5 text-sm text-white shadow-xl">
+        <div className="fixed top-5 right-5 z-50 rounded-lg border border-linha bg-superficie px-4 py-2.5 text-sm text-tinta shadow-xl">
           {toast}
         </div>
       )}
@@ -235,15 +236,15 @@ export default function GestorDisciplinasPage() {
       {/* Cabeçalho */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Módulos</h1>
-          <p className="text-sm text-white/35 mt-1">Apenas pode visualizar e gerir os módulos que lhe foram atribuídos.</p>
+          <h1 className="text-2xl font-bold text-tinta">Módulos</h1>
+          <p className="text-sm text-cinza mt-1">Apenas pode visualizar e gerir os módulos que lhe foram atribuídos.</p>
         </div>
       </div>
 
       {/* Barra de Pesquisa */}
       <div className="mb-6">
         <div className="relative">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-white/30">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-cinza/80">
             {/* Ícone de Lupa */}
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -254,19 +255,19 @@ export default function GestorDisciplinasPage() {
             placeholder="Pesquisar por nome, código ou descrição..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-[#13131a] py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 focus:border-[#a78bfa]/50 focus:outline-none focus:ring-1 focus:ring-[#a78bfa]/30 transition shadow-sm"
+            className="w-full rounded-xl border border-linha bg-superficie py-3 pl-10 pr-4 text-sm text-tinta placeholder:text-cinza focus:border-acao/60 focus:outline-none focus:ring-1 focus:ring-acao/20 transition shadow-sm"
           />
         </div>
       </div>
 
       {/* Tabela */}
-      <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
+      <div className="rounded-xl border border-linha bg-superficie overflow-hidden">
         {loading ? (
-          <div className="py-12 text-center text-sm text-white/25">A carregar…</div>
+          <div className="py-12 text-center text-sm text-cinza/80">A carregar…</div>
         ) : disciplinas.length === 0 ? (
-          <div className="py-12 text-center text-sm text-white/25">Não tem nenhum módulo atribuída.</div>
+          <div className="py-12 text-center text-sm text-cinza/80">Não tem nenhum módulo atribuída.</div>
         ) : filteredDisciplinas.length === 0 ? (
-          <div className="py-12 text-center text-sm text-white/25">
+          <div className="py-12 text-center text-sm text-cinza/80">
             {searchQuery
               ? `Nenhum módulo corresponde à pesquisa "${searchQuery}".`
               : 'Nenhum módulo para o filtro selecionado.'}
@@ -274,7 +275,7 @@ export default function GestorDisciplinasPage() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs text-white/30 border-b border-white/5 bg-white/2">
+              <tr className="text-xs text-cinza/80 border-b border-linha bg-papel">
                 <th className="text-left px-5 py-3 font-medium">Nome</th>
                 <th className="text-left px-5 py-3 font-medium">Código</th>
                 <th className="text-left px-5 py-3 font-medium">Ano / Semestre</th>
@@ -283,19 +284,19 @@ export default function GestorDisciplinasPage() {
             </thead>
             <tbody>
               {filteredDisciplinas.map((d, i) => (
-                <tr key={d.id_modulo} className={`transition hover:bg-white/2 ${i !== filteredDisciplinas.length - 1 ? 'border-b border-white/5' : ''}`}>
+                <tr key={d.id_modulo} className={`transition hover:bg-papel ${i !== filteredDisciplinas.length - 1 ? 'border-b border-linha' : ''}`}>
                   <td className="px-5 py-3.5">
-                    <div className="font-medium text-white/85">{d.nome}</div>
-                    {d.descricao && <div className="text-xs text-white/30 mt-0.5 truncate max-w-xs">{d.descricao}</div>}
+                    <div className="font-medium text-tinta">{d.nome}</div>
+                    {d.descricao && <div className="text-xs text-cinza/80 mt-0.5 truncate max-w-xs">{d.descricao}</div>}
                   </td>
-                  <td className="px-5 py-3.5 font-mono text-xs text-white/35">{d.codigo ?? '—'}</td>
-                  <td className="px-5 py-3.5 text-white/45">
+                  <td className="px-5 py-3.5 font-mono text-xs text-cinza">{d.codigo ?? '—'}</td>
+                  <td className="px-5 py-3.5 text-cinza">
                     {d.ano != null ? `${d.ano}º Ano` : '—'} / {d.semestre != null ? `${d.semestre}º Sem` : '—'}
                   </td>
                   <td className="px-5 py-3.5 text-right">
                     <button
                       onClick={() => setModal({ disciplina: d })}
-                      className="rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition"
+                      className="rounded-md border border-linha px-3 py-1.5 text-xs font-medium text-cinza hover:bg-papel hover:text-tinta transition"
                     >
                       Editar Detalhes
                     </button>
@@ -313,7 +314,7 @@ export default function GestorDisciplinasPage() {
           
           {/* Secção 1: Editar Informações da Disciplina */}
           <div className="mb-8">
-            <h3 className="text-sm font-semibold text-white/80 mb-3">Informação Base</h3>
+            <h3 className="text-sm font-semibold text-tinta mb-3">Informação Base</h3>
             <DisciplinaForm 
               initial={modal.disciplina} 
               onSave={handleEdit} 
@@ -321,38 +322,38 @@ export default function GestorDisciplinasPage() {
             />
           </div>
 
-          <hr className="border-white/5 mb-6" />
+          <hr className="border-linha mb-6" />
 
           {/* Secção 2: Listar Modelos Associados */}
           <div>
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold text-[#a78bfa]">Modelos 3D Associados</h3>
-                <p className="text-xs text-white/40 mt-0.5">Modelos que pertencem a este módulo.</p>
+                <h3 className="text-sm font-semibold text-acao">Modelos 3D Associados</h3>
+                <p className="text-xs text-cinza mt-0.5">Modelos que pertencem a este módulo.</p>
               </div>
             </div>
 
             {loadingModelos ? (
-              <div className="py-6 text-center text-xs text-white/30 border border-white/5 rounded-lg bg-white/2">
+              <div className="py-6 text-center text-xs text-cinza/80 border border-linha rounded-lg bg-papel">
                 A carregar modelos...
               </div>
             ) : modelosDisciplina.length === 0 ? (
-              <div className="py-6 text-center text-xs text-white/30 border border-dashed border-white/10 rounded-lg bg-white/2">
+              <div className="py-6 text-center text-xs text-cinza/80 border border-dashed border-linha rounded-lg bg-papel">
                 Nenhum modelo associado a este módulo.
               </div>
             ) : (
               <div className="space-y-2">
                 {modelosDisciplina.map(m => (
-                  <div key={m.id_media_items} className="flex items-center justify-between p-3 rounded-lg border border-white/10 bg-white/5 transition hover:bg-white/10">
+                  <div key={m.id_media_items} className="flex items-center justify-between p-3 rounded-lg border border-linha bg-papel transition hover:bg-mosaico">
                     <div className="flex items-center gap-3">
-                      <span className="text-lg">🧊</span>
+                      <IconeCubo tamanho={18} />
                       <div>
-                        <p className="text-sm font-medium text-white/85">{m.titulo}</p>
+                        <p className="text-sm font-medium text-tinta">{m.titulo}</p>
                         <a 
                           href={m.url} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-xs text-[#a78bfa]/60 hover:text-[#a78bfa] truncate max-w-[180px] block transition"
+                          className="text-xs text-acao hover:text-acao truncate max-w-[180px] block transition"
                         >
                           Ver Ficheiro
                         </a>
@@ -360,7 +361,7 @@ export default function GestorDisciplinasPage() {
                     </div>
                     <button 
                       onClick={() => handleRemoverModelo(m.id_media_items)}
-                      className="text-xs font-medium text-red-400/60 hover:text-red-400 px-3 py-1.5 rounded-md border border-transparent hover:border-red-500/20 hover:bg-red-500/10 transition"
+                      className="text-xs font-medium text-ecgm-r hover:text-ecgm-r px-3 py-1.5 rounded-md border border-transparent hover:border-ecgm-r/30 hover:bg-ecgm-r/10 transition"
                       title="Remover deste módulo"
                     >
                       Remover

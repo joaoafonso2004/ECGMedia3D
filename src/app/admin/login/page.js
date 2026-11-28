@@ -2,6 +2,7 @@
 
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import { MarcaRGB } from '@/components/SiteHeader';
+import BotaoTema from '@/components/BotaoTema';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -167,10 +168,11 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-papel text-tinta">
-      <div className="contentor w-full pt-5 md:pt-7">
+      <div className="contentor flex w-full items-center justify-between pt-5 md:pt-7">
         <Link href="/" className="inline-flex items-center gap-2 text-[15px] font-medium text-tinta-2 hover:text-tinta">
           <span aria-hidden="true">←</span> Voltar ao site
         </Link>
+        <BotaoTema />
       </div>
 
       <main className="flex flex-1 items-start justify-center px-4 pb-16 pt-8 sm:items-center sm:pt-0">

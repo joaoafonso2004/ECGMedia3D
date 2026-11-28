@@ -1,11 +1,11 @@
 'use client';
 
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
-import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AdminFilterProvider, useAdminFilter } from './AdminFilterContext';
-import NotificacoesSino from '@/components/NotificacoesSino';
+import PainelEstrutura, { PainelAviso } from '@/components/painel/PainelEstrutura';
+import FiltroEntidade from '@/components/painel/FiltroEntidade';
 
 /* ─── Ícones ────────────────────────────────────────────────────── */
 function IconGrid() {
@@ -91,22 +91,6 @@ function IconVideo() {
     </svg>
   );
 }
-function IconLogout() {
-  return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round"
-        d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-    </svg>
-  );
-}
-function IconChevronDown() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 9l6 6 6-6" />
-    </svg>
-  );
-}
 
 /* ─── Nav items ─────────────────────────────────────────────────── */
 const NAV_ITEMS = [
@@ -125,203 +109,9 @@ const NAV_ITEMS = [
   { label: 'Terminologia',    href: '/admin/terminologia',  Icon: IconBook     },
 ];
 
-/* ─── TopNavBar ─────────────────────────────────────────────────── */
-function TopNavBar() {
-  const { entidades, entidadeId, selectEntidade, programas, programaId, setProgramaId } = useAdminFilter();
-  const [entOpen,  setEntOpen]  = useState(false);
-  const [progOpen, setProgOpen] = useState(false);
-  const entRef  = useRef(null);
-  const progRef = useRef(null);
-
-  const filtroAtivo  = !!(entidadeId || programaId);
-  const entidadeNome = entidades.find(e => String(e.id_entidade) === String(entidadeId))?.nome ?? 'Todas as entidades';
-  const programaNome = programaId
-    ? (programas.find(p => String(p.id_programa) === String(programaId))?.nome ?? 'Todos os programas')
-    : 'Todos os programas';
-
-  useEffect(() => {
-    function onMouseDown(e) {
-      if (entRef.current  && !entRef.current.contains(e.target))  setEntOpen(false);
-      if (progRef.current && !progRef.current.contains(e.target)) setProgOpen(false);
-    }
-    document.addEventListener('mousedown', onMouseDown);
-    return () => document.removeEventListener('mousedown', onMouseDown);
-  }, []);
-
-  const dropdownCls =
-    'absolute top-full left-0 mt-1.5 min-w-[200px] rounded-xl ' +
-    'border border-white/10 bg-[#13131a] shadow-2xl shadow-black/50 py-1 z-50';
-
-  function itemCls(active) {
-    return (
-      'w-full px-3.5 py-2 text-left text-sm transition-colors hover:bg-white/[0.05] ' +
-      (active ? 'text-[#4f9eff]' : 'text-white/65')
-    );
-  }
-
-  return (
-    <div className="flex items-center h-[57px] px-5 border-b border-white/[0.06] bg-[#0c0c0f] shrink-0">
-
-      {/* Logo — always visible, links to dashboard */}
-      <Link
-        href="/admin/dashboard"
-        className="text-base font-bold tracking-tight text-white hover:text-white/80 transition-colors shrink-0"
-      >
-        ECGMedia3d
-      </Link>
-
-      {/* "/admin" — collapses smoothly when a filter is active */}
-      <div
-        className="flex items-center overflow-hidden"
-        style={{
-          maxWidth: filtroAtivo ? '0px' : '90px',
-          opacity:  filtroAtivo ? 0 : 1,
-          transition: 'max-width 200ms ease, opacity 150ms ease',
-        }}
-      >
-        <span className="mx-2 text-white/15 select-none whitespace-nowrap">/</span>
-        <span className="text-sm font-semibold text-white whitespace-nowrap">admin</span>
-      </div>
-
-      {/* Separator before entity */}
-      <span className="mx-2 text-white/15 select-none shrink-0">/</span>
-
-      {/* ── Entity dropdown ── */}
-      <div ref={entRef} className="relative shrink-0">
-        <button
-          onClick={() => { setEntOpen(o => !o); setProgOpen(false); }}
-          className={[
-            'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-all',
-            entidadeId
-              ? 'text-[#4f9eff] border border-[#4f9eff]/25'
-              : 'text-white/50 border border-transparent hover:text-white/70 hover:border-white/10',
-          ].join(' ')}
-          style={entidadeId ? { background: 'rgba(79,158,255,0.08)' } : undefined}
-        >
-          <span className="whitespace-nowrap">{entidadeNome}</span>
-          <IconChevronDown />
-        </button>
-
-        {entOpen && (
-          <div className={dropdownCls}>
-            <button
-              className={itemCls(!entidadeId)}
-              onClick={() => { selectEntidade(''); setEntOpen(false); }}
-            >
-              Todas as entidades
-            </button>
-            {entidades.map(ent => (
-              <button
-                key={ent.id_entidade}
-                className={itemCls(String(ent.id_entidade) === String(entidadeId))}
-                onClick={() => { selectEntidade(ent.id_entidade); setEntOpen(false); }}
-              >
-                {ent.nome}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Separator before program */}
-      <span className="mx-2 text-white/15 select-none shrink-0">›</span>
-
-      {/* ── Program dropdown ── */}
-      <div ref={progRef} className="relative shrink-0">
-        <button
-          onClick={() => { if (entidadeId) { setProgOpen(o => !o); setEntOpen(false); } }}
-          className={[
-            'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-all',
-            programaId
-              ? 'text-[#4f9eff] border border-[#4f9eff]/25'
-              : 'text-white/50 border border-transparent',
-            !entidadeId ? 'opacity-40 cursor-default' : 'hover:text-white/70 hover:border-white/10',
-          ].join(' ')}
-          style={programaId ? { background: 'rgba(79,158,255,0.08)' } : undefined}
-        >
-          <span className="whitespace-nowrap">{programaNome}</span>
-          <IconChevronDown />
-        </button>
-
-        {progOpen && entidadeId && (
-          <div className={dropdownCls}>
-            <button
-              className={itemCls(!programaId)}
-              onClick={() => { setProgramaId(''); setProgOpen(false); }}
-            >
-              Todos os programas
-            </button>
-            {programas.map(p => (
-              <button
-                key={p.id_programa}
-                className={itemCls(String(p.id_programa) === String(programaId))}
-                onClick={() => { setProgramaId(p.id_programa); setProgOpen(false); }}
-              >
-                {p.codigo} — {p.nome}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="ml-auto">
-        <NotificacoesSino hrefTodas="/admin/notificacoes" accent="#4f9eff" />
-      </div>
-    </div>
-  );
-}
-
-/* ─── Sidebar ───────────────────────────────────────────────────── */
-function Sidebar() {
-  const pathname = usePathname();
-  const router   = useRouter();
-
-  async function handleLogout() {
-    const supabase = createSupabaseBrowser();
-    await supabase.auth.signOut();
-    router.push('/admin/login');
-    router.refresh();
-  }
-
-  return (
-    <aside className="flex flex-col w-56 min-h-full bg-[#13131a] border-r border-white/5 shrink-0">
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {NAV_ITEMS.map((item, idx) => {
-          if (item.divider) {
-            return <div key={idx} className="my-2 border-t border-white/5" />;
-          }
-          const { label, href, Icon } = item;
-          const active = pathname === href || pathname.startsWith(href + '/');
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all
-                ${active
-                  ? 'bg-[#4f9eff]/12 text-[#4f9eff] border border-[#4f9eff]/20'
-                  : 'text-white/45 hover:bg-white/5 hover:text-white/80 border border-transparent'
-                }`}
-            >
-              <Icon />
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="px-3 py-4 border-t border-white/5">
-        <button
-          onClick={handleLogout}
-          className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm
-                     font-medium text-white/35 hover:bg-red-500/10 hover:text-red-400
-                     border border-transparent transition-all"
-        >
-          <IconLogout />
-          Terminar sessão
-        </button>
-      </div>
-    </aside>
-  );
+/* ─── Filtro de entidade e programa (no topo) ───────────────────── */
+function FiltroAdmin() {
+  return <FiltroEntidade {...useAdminFilter()} />;
 }
 
 /* ─── Layout ────────────────────────────────────────────────────── */
@@ -366,38 +156,24 @@ export default function AdminLayout({ children }) {
     checkRole();
   }, [pathname, router]);
 
-  // Página de login: sem sidebar
+  // Página de login: sem menu
   if (pathname === '/admin/login') {
     return <>{children}</>;
   }
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0c0c0f] text-white/30 text-sm">
-        A verificar permissões...
-      </div>
-    );
-  }
-
-  if (!hasAccess) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0c0c0f] text-white/30 text-sm">
-        A redirecionar...
-      </div>
-    );
-  }
+  if (loading) return <PainelAviso>A verificar permissões…</PainelAviso>;
+  if (!hasAccess) return <PainelAviso>A redirecionar…</PainelAviso>;
 
   return (
     <AdminFilterProvider>
-      <div className="flex flex-col min-h-screen bg-[#0c0c0f]">
-        <TopNavBar />
-        <div className="flex flex-1 min-h-0">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto">
-            {children}
-          </main>
-        </div>
-      </div>
+      <PainelEstrutura
+        area="Administração"
+        itens={NAV_ITEMS}
+        hrefNotificacoes="/admin/notificacoes"
+        barra={<FiltroAdmin />}
+      >
+        {children}
+      </PainelEstrutura>
     </AdminFilterProvider>
   );
 }

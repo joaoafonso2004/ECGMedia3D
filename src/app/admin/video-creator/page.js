@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import { SkeletonUtils } from 'three-stdlib';
 import CropOverlay from '@/components/CropOverlay';
 
+import { IconeCubo, IconeImagem, IconeVideo, IconeCarregar } from '@/components/Icones';
 /* ─── Constants ────────────────────────────────────────────────────── */
 const ANIM_OPTS = [
   { value: 'none',     label: 'Sem Animação' },
@@ -84,9 +85,9 @@ function computeTransform(t, escala, animacaoTipo) {
 }
 
 /* ─── Estilos ─────────────────────────────────────────────────────── */
-const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white
-  placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1
-  focus:ring-[#4f9eff]/30 transition disabled:opacity-40 disabled:cursor-not-allowed`;
+const inputCls = `w-full rounded-lg border border-linha bg-papel px-3 py-2 text-sm text-tinta
+  placeholder:text-cinza focus:outline-none focus:border-acao/60 focus:ring-1
+  focus:ring-acao/20 transition disabled:opacity-40 disabled:cursor-not-allowed`;
 
 /* ─── Exporta câmara para cálculos de drag fora do Canvas ────────── */
 function CameraExporter({ cameraRef }) {
@@ -244,8 +245,8 @@ function VideoModel({
 /* ─── Secção de configuração ──────────────────────────────────────── */
 function Section({ title, children }) {
   return (
-    <div className="rounded-xl border border-white/8 bg-[#13131a] p-4 space-y-3">
-      <p className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">{title}</p>
+    <div className="rounded-xl border border-linha bg-superficie p-4 space-y-3">
+      <p className="text-[11px] font-semibold text-cinza uppercase tracking-widest">{title}</p>
       {children}
     </div>
   );
@@ -253,13 +254,13 @@ function Section({ title, children }) {
 
 function TogglePair({ value, options, onChange }) {
   return (
-    <div className="flex rounded-lg overflow-hidden border border-white/10">
+    <div className="flex rounded-lg overflow-hidden border border-linha">
       {options.map(([v, l]) => (
         <button key={v} onClick={() => onChange(v)}
           className={`flex-1 py-2 text-xs font-medium transition
             ${value === v
-              ? 'bg-[#4f9eff]/15 text-[#4f9eff]'
-              : 'text-white/40 hover:text-white/70 hover:bg-white/5'}`}>
+              ? 'bg-acao/15 text-acao'
+              : 'text-cinza hover:text-tinta-2 hover:bg-papel'}`}>
           {l}
         </button>
       ))}
@@ -633,15 +634,15 @@ export default function VideoCreatorPage() {
     <div className="p-6 max-w-[1600px] mx-auto">
 
       {toast && (
-        <div className="fixed top-5 right-5 z-50 rounded-lg border border-white/10 bg-[#13131a]
-                        px-4 py-2.5 text-sm text-white shadow-xl">
+        <div className="fixed top-5 right-5 z-50 rounded-lg border border-linha bg-superficie
+                        px-4 py-2.5 text-sm text-tinta shadow-xl">
           {toast}
         </div>
       )}
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Criador de Vídeo</h1>
-        <p className="text-sm text-white/35 mt-1">
+        <h1 className="text-2xl font-bold text-tinta">Criador de Vídeo</h1>
+        <p className="text-sm text-cinza mt-1">
           Cria vídeos com modelos 3D animados sobre um fundo personalizado e exporta em MP4, WebM ou GIF.
         </p>
         <FilterContextLine />
@@ -669,7 +670,7 @@ export default function VideoCreatorPage() {
             <div
               onClick={() => bgFileRef.current?.click()}
               className={`flex items-center gap-3 rounded-lg border-2 border-dashed px-4 py-3 cursor-pointer transition
-                ${bgUrl ? 'border-[#4f9eff]/30 bg-[#4f9eff]/5' : 'border-white/10 hover:border-white/20'}`}
+                ${bgUrl ? 'border-acao/30 bg-acao/5' : 'border-linha hover:border-linha-2'}`}
             >
               {bgUrl && bgType === 'imagem' && (
                 <img src={bgUrl} alt="" className="h-10 w-16 object-cover rounded shrink-0" />
@@ -678,12 +679,12 @@ export default function VideoCreatorPage() {
                 <video src={bgUrl} className="h-10 w-16 object-cover rounded shrink-0" muted />
               )}
               {!bgUrl && (
-                <span className="text-2xl shrink-0">{bgType === 'imagem' ? '🖼️' : '🎬'}</span>
+                <span className="shrink-0 text-cinza">{bgType === 'imagem' ? <IconeImagem tamanho={24} /> : <IconeVideo tamanho={24} />}</span>
               )}
               <div className="flex-1 min-w-0">
                 {bgFile
-                  ? <p className="text-sm text-white/80 truncate">{bgFile.name}</p>
-                  : <p className="text-sm text-white/30">
+                  ? <p className="text-sm text-tinta truncate">{bgFile.name}</p>
+                  : <p className="text-sm text-cinza/80">
                       Clica para selecionar {bgType === 'imagem' ? 'JPG / PNG' : 'MP4 / WebM'}
                     </p>
                 }
@@ -697,7 +698,7 @@ export default function VideoCreatorPage() {
                     setBgUrl('');
                     setMediaNaturalSize({ w: 0, h: 0 });
                   }}
-                  className="text-white/20 hover:text-red-400 transition text-xl leading-none shrink-0"
+                  className="text-cinza/70 hover:text-ecgm-r transition text-xl leading-none shrink-0"
                 >×</button>
               )}
             </div>
@@ -740,13 +741,13 @@ export default function VideoCreatorPage() {
                 <div
                   onClick={() => modelFileRef.current?.click()}
                   className={`flex items-center gap-3 rounded-lg border-2 border-dashed px-4 py-3 cursor-pointer transition
-                    ${uploadFile ? 'border-[#4f9eff]/30 bg-[#4f9eff]/5' : 'border-white/10 hover:border-white/20'}`}
+                    ${uploadFile ? 'border-acao/30 bg-acao/5' : 'border-linha hover:border-linha-2'}`}
                 >
-                  <span className="text-2xl shrink-0">{uploadFile ? '🧊' : '📁'}</span>
+                  <span className="shrink-0 text-cinza">{uploadFile ? <IconeCubo tamanho={24} /> : <IconeCarregar tamanho={24} />}</span>
                   <div className="flex-1 min-w-0">
                     {uploadFile
-                      ? <p className="text-sm text-white/80 truncate">{uploadFile.name}</p>
-                      : <p className="text-sm text-white/30">Clica para selecionar .glb</p>
+                      ? <p className="text-sm text-tinta truncate">{uploadFile.name}</p>
+                      : <p className="text-sm text-cinza/80">Clica para selecionar .glb</p>
                     }
                   </div>
                 </div>
@@ -757,45 +758,45 @@ export default function VideoCreatorPage() {
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-medium text-white/50">Escala</label>
-                <span className="text-xs font-mono text-[#4f9eff]">{escala.toFixed(1)}x</span>
+                <label className="text-xs font-medium text-cinza">Escala</label>
+                <span className="text-xs font-mono text-acao">{escala.toFixed(1)}x</span>
               </div>
               <input type="range" min={0.1} max={5} step={0.1} value={escala}
                 onChange={e => setEscala(parseFloat(e.target.value))}
-                className="w-full accent-[#4f9eff] cursor-pointer" />
+                className="w-full accent-acao cursor-pointer" />
             </div>
 
             {/* Posição X / Y — sincronizada com drag no preview */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-white/50">Pos. X</label>
-                  <span className="text-xs font-mono text-[#4f9eff]">{posicaoX.toFixed(2)}</span>
+                  <label className="text-xs font-medium text-cinza">Pos. X</label>
+                  <span className="text-xs font-mono text-acao">{posicaoX.toFixed(2)}</span>
                 </div>
                 <input type="range" min={-10} max={10} step={0.05} value={posicaoX}
                   onChange={e => setPosicaoX(parseFloat(e.target.value))}
-                  className="w-full accent-[#4f9eff] cursor-pointer" />
+                  className="w-full accent-acao cursor-pointer" />
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-white/50">Pos. Y</label>
-                  <span className="text-xs font-mono text-[#4f9eff]">{posicaoY.toFixed(2)}</span>
+                  <label className="text-xs font-medium text-cinza">Pos. Y</label>
+                  <span className="text-xs font-mono text-acao">{posicaoY.toFixed(2)}</span>
                 </div>
                 <input type="range" min={-10} max={10} step={0.05} value={posicaoY}
                   onChange={e => setPosicaoY(parseFloat(e.target.value))}
-                  className="w-full accent-[#4f9eff] cursor-pointer" />
+                  className="w-full accent-acao cursor-pointer" />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-2">Animação</label>
+              <label className="block text-xs font-medium text-cinza mb-2">Animação</label>
               <div className="grid grid-cols-3 gap-1.5">
                 {ANIM_OPTS.map(opt => (
                   <button key={opt.value} onClick={() => setAnimacao(opt.value)}
                     className={`rounded-lg border px-2 py-1.5 text-xs font-medium transition
                       ${animacao === opt.value
-                        ? 'border-[#4f9eff] bg-[#4f9eff]/10 text-[#4f9eff]'
-                        : 'border-white/10 text-white/40 hover:border-white/20 hover:text-white/70'}`}>
+                        ? 'border-acao bg-acao/10 text-acao'
+                        : 'border-linha text-cinza hover:border-linha-2 hover:text-tinta-2'}`}>
                     {opt.label}
                   </button>
                 ))}
@@ -806,12 +807,12 @@ export default function VideoCreatorPage() {
           {/* 3. Formato */}
           <Section title="Formato">
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-1.5">Ratio de Saída</label>
+              <label className="block text-xs font-medium text-cinza mb-1.5">Ratio de Saída</label>
               <select className={inputCls} value={ratioKey} onChange={e => handleRatioChange(e.target.value)}>
                 {RATIOS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
               </select>
               {ratioKey !== 'custom' && (
-                <p className="mt-1.5 text-[11px] text-white/25">
+                <p className="mt-1.5 text-[11px] text-cinza/80">
                   Arrasta e faz zoom no preview para enquadrar · duplo clique para centrar
                 </p>
               )}
@@ -820,7 +821,7 @@ export default function VideoCreatorPage() {
             {ratioKey === 'custom' && (
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-white/50 mb-1.5">Largura (px)</label>
+                  <label className="block text-xs font-medium text-cinza mb-1.5">Largura (px)</label>
                   <input
                     type="number" min={64} max={4096} step={1}
                     value={customW}
@@ -832,7 +833,7 @@ export default function VideoCreatorPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-white/50 mb-1.5">Altura (px)</label>
+                  <label className="block text-xs font-medium text-cinza mb-1.5">Altura (px)</label>
                   <input
                     type="number" min={64} max={4096} step={1}
                     value={customH}
@@ -848,13 +849,13 @@ export default function VideoCreatorPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-white/50 mb-1.5">Duração</label>
+                <label className="block text-xs font-medium text-cinza mb-1.5">Duração</label>
                 <select className={inputCls} value={duracao} onChange={e => setDuracao(Number(e.target.value))}>
                   {[3, 5, 10, 15].map(d => <option key={d} value={d}>{d}s</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-white/50 mb-1.5">Formato</label>
+                <label className="block text-xs font-medium text-cinza mb-1.5">Formato</label>
                 <select className={inputCls} value={formato} onChange={e => setFormato(e.target.value)}>
                   <option value="mp4">MP4</option>
                   <option value="webm">WebM</option>
@@ -864,8 +865,8 @@ export default function VideoCreatorPage() {
             </div>
             <button
               onClick={() => setCropResetKey(k => k + 1)}
-              className="w-full rounded-lg border border-white/10 py-2 text-xs text-white/40
-                         hover:text-white/70 hover:border-white/20 transition"
+              className="w-full rounded-lg border border-linha py-2 text-xs text-cinza
+                         hover:text-tinta-2 hover:border-linha-2 transition"
             >
               Centrar
             </button>
@@ -874,8 +875,8 @@ export default function VideoCreatorPage() {
           {/* 4. Botão gravar */}
           <div className="space-y-2">
             <button onClick={handleGravar} disabled={isBusy}
-              className="w-full rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white
-                         hover:bg-[#3d8aef] transition disabled:opacity-50 disabled:cursor-not-allowed">
+              className="w-full rounded-lg bg-acao py-2.5 text-sm font-semibold text-white
+                         hover:bg-acao-escuro transition disabled:opacity-50 disabled:cursor-not-allowed">
               {recordStatus === 'rendering'
                 ? `A renderizar frame ${frameInfo.atual} de ${frameInfo.total} (${Math.round(progress * 100)}%)`
                 : recordStatus === 'processing'
@@ -885,16 +886,16 @@ export default function VideoCreatorPage() {
 
             {isBusy && (
               <div className="space-y-1">
-                <div className="h-1.5 rounded-full overflow-hidden bg-white/5">
+                <div className="h-1.5 rounded-full overflow-hidden bg-papel">
                   {recordStatus === 'rendering' ? (
-                    <div className="h-full bg-[#4f9eff] rounded-full transition-all duration-100"
+                    <div className="h-full bg-acao rounded-full transition-all duration-100"
                       style={{ width: `${progress * 100}%` }} />
                   ) : (
-                    <div className="h-full bg-[#a78bfa] rounded-full w-full animate-pulse" />
+                    <div className="h-full bg-acao rounded-full w-full animate-pulse" />
                   )}
                 </div>
                 {recordStatus === 'processing' && (
-                  <p className="text-xs text-white/30 text-center">A juntar frames com FFmpeg…</p>
+                  <p className="text-xs text-cinza/80 text-center">A juntar frames com FFmpeg…</p>
                 )}
               </div>
             )}
@@ -903,18 +904,18 @@ export default function VideoCreatorPage() {
 
         {/* ════ Preview em tempo real (direita) ════ */}
         <div className="flex-1 min-w-0 space-y-3">
-          <div className="rounded-xl border border-white/8 bg-[#0c0c0f] overflow-hidden">
-            <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
-              <span className="text-xs font-medium text-white/40">
+          <div className="rounded-xl border border-linha bg-papel overflow-hidden">
+            <div className="px-4 py-3 border-b border-linha flex items-center justify-between">
+              <span className="text-xs font-medium text-cinza">
                 Preview — {resLabel}
               </span>
               <div className="flex items-center gap-3">
-                <span className="text-xs text-white/25">{duracao}s</span>
-                <span className="text-xs font-mono text-white/25 uppercase">{formato}</span>
+                <span className="text-xs text-cinza/80">{duracao}s</span>
+                <span className="text-xs font-mono text-cinza/80 uppercase">{formato}</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-center p-6 bg-[#080808]" style={{ minHeight: 400 }}>
+            <div className="flex items-center justify-center p-6 bg-mosaico" style={{ minHeight: 400 }}>
               <div
                 ref={containerRef}
                 onMouseDown={handlePreviewMouseDown}
@@ -928,9 +929,9 @@ export default function VideoCreatorPage() {
                       : 'default',
                   background: bgUrl
                     ? undefined
-                    : 'repeating-conic-gradient(#2a2a2a 0% 25%, #1a1a1a 0% 50%) 0 0 / 16px 16px',
+                    : 'repeating-conic-gradient(#e2dfd7 0% 25%, #ebe9e3 0% 50%) 0 0 / 16px 16px',
                 }}
-                className={`rounded-lg overflow-hidden${bgUrl ? ' bg-[#0c0c0f]' : ''}`}
+                className={`rounded-lg overflow-hidden${bgUrl ? ' bg-papel' : ''}`}
               >
                 {canvasMounted ? (
                   <Canvas
@@ -946,7 +947,7 @@ export default function VideoCreatorPage() {
                     <SceneBackground url={bgUrl} type={bgType} onVideoReady={v => { bgVideoRef.current = v; }} />
                     <ambientLight intensity={0.5} />
                     <directionalLight position={[10, 10, 5]} intensity={1.2} />
-                    <pointLight position={[0, 4, -8]} color="#4f9eff" intensity={3} distance={60} />
+                    <pointLight position={[0, 4, -8]} color="#12616d" intensity={3} distance={60} />
                     {activeModelUrl && (
                       <Suspense fallback={null}>
                         <VideoModel
@@ -964,7 +965,7 @@ export default function VideoCreatorPage() {
                     )}
                   </Canvas>
                 ) : (
-                  <div className="w-full h-full bg-[#0c0c0f]" />
+                  <div className="w-full h-full bg-papel" />
                 )}
                 <CropOverlay
                   containerWidth={pvW}
@@ -978,8 +979,8 @@ export default function VideoCreatorPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/5 bg-[#13131a] px-4 py-3">
-            <p className="text-xs text-white/25 leading-relaxed">
+          <div className="rounded-xl border border-linha bg-superficie px-4 py-3">
+            <p className="text-xs text-cinza/80 leading-relaxed">
               Arrasta o modelo no preview para reposicionar · os sliders Pos. X / Pos. Y ficam sincronizados ·
               a exportação renderiza cada frame individualmente a {FPS}fps garantindo qualidade
               constante independentemente do desempenho do computador.

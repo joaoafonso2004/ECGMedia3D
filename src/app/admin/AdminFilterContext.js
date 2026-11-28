@@ -70,10 +70,10 @@ export function FilterContextLine() {
   const programa = programas.find(p => String(p.id_programa) === String(programaId));
 
   return (
-    <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+    <p className="text-sm mt-1 text-cinza">
       A mostrar dados de{' '}
       {programa
-        ? <span style={{ color: '#4f9eff' }}>{programa.codigo} — {programa.nome}</span>
+        ? <span className="text-acao">{programa.codigo} — {programa.nome}</span>
         : 'Todos os programas'
       }
       {entidade && <> — {entidade.nome}</>}

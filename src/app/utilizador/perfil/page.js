@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
 
+import { IconeAviso, IconeVisto } from '@/components/Icones';
 export default function UtilizadorPerfil() {
   const [user, setUser] = useState({ nome: '', email: '' });
   const [loading, setLoading] = useState(true);
@@ -117,8 +118,8 @@ export default function UtilizadorPerfil() {
       
       {/* ── Cabeçalho ── */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Perfil</h1>
-        <p className="text-sm text-white/35 mt-1">
+        <h1 className="text-2xl font-bold text-tinta">Perfil</h1>
+        <p className="text-sm text-cinza mt-1">
           Informações pessoais.
         </p>
       </div>
@@ -127,39 +128,39 @@ export default function UtilizadorPerfil() {
       {message.text && (
         <div className={`mb-6 max-w-2xl rounded-lg border px-4 py-3 text-sm flex items-start gap-3 shadow-lg transition-all animate-in fade-in slide-in-from-top-2 ${
           message.type === 'error' 
-            ? 'bg-red-500/10 border-red-500/20 text-red-400' 
-            : 'bg-green-500/10 border-green-500/20 text-green-400'
+            ? 'bg-ecgm-r/10 border-ecgm-r/30 text-ecgm-r' 
+            : 'bg-ecgm-g/10 border-ecgm-g/30 text-ecgm-g'
         }`}>
-          <div className="mt-0.5">{message.type === 'error' ? '⚠️' : '✓'}</div>
+          <div className="mt-0.5">{message.type === 'error' ? <IconeAviso tamanho={16} /> : <IconeVisto tamanho={16} />}</div>
           <p className="leading-relaxed">{message.text}</p>
         </div>
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-white/30 text-sm">
+        <div className="flex items-center justify-center py-20 text-cinza/80 text-sm">
           A carregar informações do perfil...
         </div>
       ) : (
-        <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden max-w-2xl shadow-xl">
+        <div className="rounded-xl border border-linha bg-superficie overflow-hidden max-w-2xl shadow-xl">
           
           {/* Header do Card com Avatar e Botão Editar */}
-          <div className="flex items-center justify-between p-8 bg-gradient-to-r from-white/5 to-transparent border-b border-white/5">
+          <div className="flex items-center justify-between p-8 bg-superficie border-b border-linha">
             <div className="flex items-center gap-5">
-              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#4f9eff] to-[#3d8aef] shadow-[0_0_20px_rgba(79,158,255,0.3)] text-white text-xl font-bold">
+              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-acao to-acao-escuro shadow-[0_0_20px_rgba(18,97,109,0.3)] text-white text-xl font-bold">
                 {user.nome ? user.nome.charAt(0).toUpperCase() : 'U'}
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-white">{user.nome}</h3>
-                <p className="text-sm text-[#4f9eff] font-medium mt-0.5">Aluno</p>
+                <h3 className="text-xl font-semibold text-tinta">{user.nome}</h3>
+                <p className="text-sm text-acao font-medium mt-0.5">Aluno</p>
               </div>
             </div>
             
             {!isEditing && (
               <button
                 onClick={() => { setIsEditing(true); setMessage({type: '', text: ''}); }}
-                className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/10 hover:border-white/20 transition-all shadow-sm"
+                className="flex items-center gap-2 rounded-lg bg-papel border border-linha px-4 py-2.5 text-sm font-medium text-tinta hover:bg-mosaico hover:border-linha-2 transition-all shadow-sm"
               >
-                <svg className="w-4 h-4 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-tinta-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
                 </svg>
                 Editar
@@ -173,12 +174,12 @@ export default function UtilizadorPerfil() {
               // MODO VISUALIZAÇÃO
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <p className="text-xs font-medium text-white/30 uppercase tracking-wider mb-1.5">Nome</p>
-                  <p className="text-base font-medium text-white/90">{user.nome}</p>
+                  <p className="text-xs font-medium text-cinza/80 uppercase tracking-wider mb-1.5">Nome</p>
+                  <p className="text-base font-medium text-tinta">{user.nome}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-white/30 uppercase tracking-wider mb-1.5">Email</p>
-                  <p className="text-base font-medium text-white/90">{user.email}</p>
+                  <p className="text-xs font-medium text-cinza/80 uppercase tracking-wider mb-1.5">Email</p>
+                  <p className="text-base font-medium text-tinta">{user.email}</p>
                 </div>
               </div>
             ) : (
@@ -186,26 +187,26 @@ export default function UtilizadorPerfil() {
               <form onSubmit={handleSave} className="space-y-6 animate-in fade-in duration-300">
                 <div className="grid grid-cols-1 gap-6">
                   <div>
-                    <label className="block text-xs font-medium text-white/50 mb-1.5">Nome Completo</label>
+                    <label className="block text-xs font-medium text-cinza mb-1.5">Nome Completo</label>
                     <input 
                       type="text" 
                       required
                       value={formData.nome}
                       onChange={(e) => setFormData({...formData, nome: e.target.value})}
-                      className="w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition"
+                      className="w-full rounded-lg bg-papel border border-linha px-4 py-3 text-sm text-tinta focus:outline-none focus:border-acao/60 focus:ring-1 focus:ring-acao/20 transition"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-xs font-medium text-white/50 mb-1.5">Email</label>
+                    <label className="block text-xs font-medium text-cinza mb-1.5">Email</label>
                     <input 
                       type="email" 
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition"
+                      className="w-full rounded-lg bg-papel border border-linha px-4 py-3 text-sm text-tinta focus:outline-none focus:border-acao/60 focus:ring-1 focus:ring-acao/20 transition"
                     />
-                    <p className="text-[10px] text-yellow-500/70 mt-2 flex items-center gap-1.5">
+                    <p className="text-[10px] text-amber-700 dark:text-amber-300 mt-2 flex items-center gap-1.5">
                       <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>
@@ -214,47 +215,47 @@ export default function UtilizadorPerfil() {
                   </div>
 
                   {/* Bloco de Alteração de Password (Opcional) */}
-                  <div className="p-5 mt-2 rounded-lg border border-white/5 bg-white/[0.02] space-y-4">
-                    <p className="text-xs font-medium text-[#4f9eff]/80 uppercase tracking-wider mb-2">Alterar Password</p>
+                  <div className="p-5 mt-2 rounded-lg border border-linha bg-papel space-y-4">
+                    <p className="text-xs font-medium text-acao uppercase tracking-wider mb-2">Alterar Password</p>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[11px] font-medium text-white/40 mb-1.5">Password Atual</label>
+                        <label className="block text-[11px] font-medium text-cinza mb-1.5">Password Atual</label>
                         <input 
                           type="password" 
                           placeholder="••••••••"
                           value={formData.currentPassword}
                           onChange={(e) => setFormData({...formData, currentPassword: e.target.value})}
-                          className="w-full rounded-lg bg-[#0c0c0f] border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition placeholder-white/20"
+                          className="w-full rounded-lg bg-papel border border-linha px-4 py-2.5 text-sm text-tinta focus:outline-none focus:border-acao/60 focus:ring-1 focus:ring-acao/20 transition placeholder:text-cinza"
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-medium text-white/40 mb-1.5">Nova Password</label>
+                        <label className="block text-[11px] font-medium text-cinza mb-1.5">Nova Password</label>
                         <input 
                           type="password" 
                           placeholder="••••••••"
                           value={formData.newPassword}
                           onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
-                          className="w-full rounded-lg bg-[#0c0c0f] border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition placeholder-white/20"
+                          className="w-full rounded-lg bg-papel border border-linha px-4 py-2.5 text-sm text-tinta focus:outline-none focus:border-acao/60 focus:ring-1 focus:ring-acao/20 transition placeholder:text-cinza"
                         />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 pt-6 mt-2 border-t border-white/5">
+                <div className="flex items-center gap-3 pt-6 mt-2 border-t border-linha">
                   <button
                     type="button"
                     onClick={handleCancel}
                     disabled={isSaving}
-                    className="px-5 py-2.5 rounded-lg border border-white/10 text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white transition disabled:opacity-50"
+                    className="px-5 py-2.5 rounded-lg border border-linha text-sm font-medium text-cinza hover:bg-papel hover:text-tinta transition disabled:opacity-50"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={isSaving}
-                    className="flex-1 rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white transition hover:bg-[#3d8aef] shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 rounded-lg bg-acao py-2.5 text-sm font-semibold text-white transition hover:bg-acao-escuro shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSaving ? 'A guardar alterações...' : 'Guardar Alterações'}
                   </button>

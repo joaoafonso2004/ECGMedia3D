@@ -4,19 +4,20 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import { useAdminFilter, FilterContextLine } from '../AdminFilterContext';
 
-const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white
-  placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1
-  focus:ring-[#4f9eff]/30 transition`;
+import { IconeVideo, IconeCarregar } from '@/components/Icones';
+const inputCls = `w-full rounded-lg border border-linha bg-papel px-3 py-2 text-sm text-tinta
+  placeholder:text-cinza focus:outline-none focus:border-acao/60 focus:ring-1
+  focus:ring-acao/20 transition`;
 
 /* ─── Modal genérico ─────────────────────────────────────────────── */
 function Modal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-[#13131a] shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
-          <h2 className="text-base font-semibold text-white">{title}</h2>
-          <button onClick={onClose} className="text-white/30 hover:text-white/70 transition text-xl leading-none">×</button>
+      <div className="absolute inset-0 bg-tinta/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-linha bg-superficie shadow-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-linha">
+          <h2 className="text-base font-semibold text-tinta">{title}</h2>
+          <button onClick={onClose} className="text-cinza/80 hover:text-tinta-2 transition text-xl leading-none">×</button>
         </div>
         <div className="px-6 py-5">{children}</div>
       </div>
@@ -65,9 +66,9 @@ function NovoVideoForm({ onSave, onCancel, saving, disciplinas }) {
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-xs font-medium text-white/50 mb-1.5">Disciplina *</label>
+        <label className="block text-xs font-medium text-cinza mb-1.5">Disciplina *</label>
         {disciplinas.length === 0 ? (
-          <p className="text-xs text-white/30 py-2">
+          <p className="text-xs text-cinza/80 py-2">
             Todas as disciplinas já têm um vídeo associado, ou nenhum programa está selecionado.
           </p>
         ) : (
@@ -81,7 +82,7 @@ function NovoVideoForm({ onSave, onCancel, saving, disciplinas }) {
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-white/50 mb-1.5">Título (opcional)</label>
+        <label className="block text-xs font-medium text-cinza mb-1.5">Título (opcional)</label>
         <input
           className={inputCls}
           value={titulo}
@@ -91,27 +92,27 @@ function NovoVideoForm({ onSave, onCancel, saving, disciplinas }) {
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-white/50 mb-1.5">Ficheiro de Vídeo *</label>
+        <label className="block text-xs font-medium text-cinza mb-1.5">Ficheiro de Vídeo *</label>
         <div
           onClick={() => fileRef.current?.click()}
           className={`flex items-center gap-3 rounded-lg border-2 border-dashed px-4 py-4 cursor-pointer transition
-            ${file ? 'border-[#4f9eff]/40 bg-[#4f9eff]/5' : 'border-white/10 hover:border-white/20'}`}
+            ${file ? 'border-acao/60 bg-acao/5' : 'border-linha hover:border-linha-2'}`}
         >
-          <span className="text-2xl">{file ? '🎬' : '📁'}</span>
+          <span className="text-cinza">{file ? <IconeVideo tamanho={24} /> : <IconeCarregar tamanho={24} />}</span>
           <div className="flex-1 min-w-0">
             {file ? (
               <>
-                <p className="text-sm font-medium text-white/80 truncate">{file.name}</p>
-                <p className="text-xs text-white/30">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p className="text-sm font-medium text-tinta truncate">{file.name}</p>
+                <p className="text-xs text-cinza/80">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
               </>
             ) : (
-              <p className="text-sm text-white/30">Clica para selecionar .mp4 ou .webm</p>
+              <p className="text-sm text-cinza/80">Clica para selecionar .mp4 ou .webm</p>
             )}
           </div>
           {file && (
             <button
               onClick={e => { e.stopPropagation(); setFile(null); fileRef.current.value = ''; }}
-              className="text-white/25 hover:text-red-400 transition text-lg leading-none"
+              className="text-cinza/80 hover:text-ecgm-r transition text-lg leading-none"
             >×</button>
           )}
         </div>
@@ -120,8 +121,8 @@ function NovoVideoForm({ onSave, onCancel, saving, disciplinas }) {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-2.5">
-          <p className="text-xs text-red-400">{error}</p>
+        <div className="rounded-lg border border-ecgm-r/30 bg-ecgm-r/10 px-4 py-2.5">
+          <p className="text-xs text-ecgm-r">{error}</p>
         </div>
       )}
 
@@ -129,16 +130,16 @@ function NovoVideoForm({ onSave, onCancel, saving, disciplinas }) {
         <button
           onClick={handleSave}
           disabled={isBusy || disciplinas.length === 0}
-          className="flex-1 rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white
-                     hover:bg-[#3d8aef] transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 rounded-lg bg-acao py-2.5 text-sm font-semibold text-white
+                     hover:bg-acao-escuro transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {uploading ? 'A fazer upload…' : saving ? 'A guardar…' : 'Adicionar Vídeo'}
         </button>
         <button
           onClick={onCancel}
           disabled={isBusy}
-          className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium
-                     text-white/50 hover:bg-white/5 hover:text-white/80 transition"
+          className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium
+                     text-cinza hover:bg-papel hover:text-tinta transition"
         >
           Cancelar
         </button>
@@ -181,20 +182,20 @@ function EditVideoModal({ video, onClose, onSave, saving, todasDisciplinas }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-[#13131a] shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
+      <div className="absolute inset-0 bg-tinta/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-linha bg-superficie shadow-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-linha">
           <div>
-            <h2 className="text-base font-semibold text-white">Editar Vídeo</h2>
-            <p className="text-xs text-white/35 mt-0.5">{titulo || '—'}</p>
+            <h2 className="text-base font-semibold text-tinta">Editar Vídeo</h2>
+            <p className="text-xs text-cinza mt-0.5">{titulo || '—'}</p>
           </div>
-          <button onClick={onClose} className="text-white/30 hover:text-white/70 transition text-2xl leading-none">×</button>
+          <button onClick={onClose} className="text-cinza/80 hover:text-tinta-2 transition text-2xl leading-none">×</button>
         </div>
 
         <div className="px-6 py-5 space-y-4">
           {/* Título */}
           <div>
-            <label className="block text-xs font-medium text-white/50 mb-1.5">Título</label>
+            <label className="block text-xs font-medium text-cinza mb-1.5">Título</label>
             <input
               className={inputCls}
               value={titulo}
@@ -205,7 +206,7 @@ function EditVideoModal({ video, onClose, onSave, saving, todasDisciplinas }) {
 
           {/* Disciplina */}
           <div>
-            <label className="block text-xs font-medium text-white/50 mb-1.5">Disciplina Associada</label>
+            <label className="block text-xs font-medium text-cinza mb-1.5">Disciplina Associada</label>
             <select
               value={disciplinaId}
               onChange={e => setDisciplinaId(e.target.value)}
@@ -217,18 +218,18 @@ function EditVideoModal({ video, onClose, onSave, saving, todasDisciplinas }) {
               ))}
             </select>
             {disciplinaId !== String(currentModuloId ?? '') && (
-              <p className="text-xs text-[#4f9eff]/60 mt-1.5">Alteração guardada ao clicar "Guardar"</p>
+              <p className="text-xs text-acao mt-1.5">Alteração guardada ao clicar "Guardar"</p>
             )}
           </div>
 
           {/* Ficheiro atual */}
           <div>
-            <label className="block text-xs font-medium text-white/50 mb-1.5">Ficheiro Atual</label>
+            <label className="block text-xs font-medium text-cinza mb-1.5">Ficheiro Atual</label>
             <a
               href={video.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-[#4f9eff]/60 hover:text-[#4f9eff] transition truncate block"
+              className="text-xs text-acao hover:text-acao transition truncate block"
               title={video.url}
             >
               {video.url?.split('/').pop() ?? video.url}
@@ -237,27 +238,27 @@ function EditVideoModal({ video, onClose, onSave, saving, todasDisciplinas }) {
 
           {/* Substituir ficheiro */}
           <div>
-            <label className="block text-xs font-medium text-white/50 mb-1.5">Substituir Vídeo</label>
+            <label className="block text-xs font-medium text-cinza mb-1.5">Substituir Vídeo</label>
             <div
               onClick={() => fileRef.current?.click()}
               className={`flex items-center gap-3 rounded-lg border-2 border-dashed px-4 py-3 cursor-pointer transition
-                ${file ? 'border-[#4f9eff]/40 bg-[#4f9eff]/5' : 'border-white/10 hover:border-white/20'}`}
+                ${file ? 'border-acao/60 bg-acao/5' : 'border-linha hover:border-linha-2'}`}
             >
-              <span className="text-xl">{file ? '🎬' : '📁'}</span>
+              <span className="text-cinza">{file ? <IconeVideo tamanho={20} /> : <IconeCarregar tamanho={20} />}</span>
               <div className="flex-1 min-w-0">
                 {file ? (
                   <>
-                    <p className="text-sm text-white/80 truncate">{file.name}</p>
-                    <p className="text-xs text-white/30">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <p className="text-sm text-tinta truncate">{file.name}</p>
+                    <p className="text-xs text-cinza/80">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                   </>
                 ) : (
-                  <p className="text-sm text-white/30">Clica para escolher novo ficheiro</p>
+                  <p className="text-sm text-cinza/80">Clica para escolher novo ficheiro</p>
                 )}
               </div>
               {file && (
                 <button
                   onClick={e => { e.stopPropagation(); setFile(null); fileRef.current.value = ''; }}
-                  className="text-white/25 hover:text-red-400 transition text-lg leading-none"
+                  className="text-cinza/80 hover:text-ecgm-r transition text-lg leading-none"
                 >×</button>
               )}
             </div>
@@ -267,29 +268,29 @@ function EditVideoModal({ video, onClose, onSave, saving, todasDisciplinas }) {
               <button
                 onClick={handleSubstituir}
                 disabled={uploading}
-                className="mt-2 w-full rounded-lg border border-[#4f9eff]/30 bg-[#4f9eff]/10 py-2
-                           text-xs font-medium text-[#4f9eff] hover:bg-[#4f9eff]/20 transition disabled:opacity-50"
+                className="mt-2 w-full rounded-lg border border-acao/30 bg-acao/10 py-2
+                           text-xs font-medium text-acao hover:bg-acao/15 transition disabled:opacity-50"
               >
                 {uploading ? 'A substituir…' : 'Confirmar substituição'}
               </button>
             )}
-            {replaceError && <p className="text-xs text-red-400 mt-1.5">{replaceError}</p>}
+            {replaceError && <p className="text-xs text-ecgm-r mt-1.5">{replaceError}</p>}
           </div>
 
           <div className="flex gap-3 pt-1">
             <button
               onClick={() => onSave({ titulo, disciplinaId, originalModuloId: currentModuloId })}
               disabled={saving || !titulo.trim()}
-              className="flex-1 rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white
-                         hover:bg-[#3d8aef] transition disabled:opacity-50"
+              className="flex-1 rounded-lg bg-acao py-2.5 text-sm font-semibold text-white
+                         hover:bg-acao-escuro transition disabled:opacity-50"
             >
               {saving ? 'A guardar…' : 'Guardar'}
             </button>
             <button
               onClick={onClose}
               disabled={saving}
-              className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium
-                         text-white/50 hover:bg-white/5 transition"
+              className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium
+                         text-cinza hover:bg-papel transition"
             >
               Cancelar
             </button>
@@ -494,8 +495,8 @@ export default function AdminVideosPage() {
     <div className="p-8 max-w-5xl mx-auto">
 
       {toast && (
-        <div className="fixed top-5 right-5 z-50 rounded-lg border border-white/10 bg-[#13131a]
-                        px-4 py-2.5 text-sm text-white shadow-xl">
+        <div className="fixed top-5 right-5 z-50 rounded-lg border border-linha bg-superficie
+                        px-4 py-2.5 text-sm text-tinta shadow-xl">
           {toast}
         </div>
       )}
@@ -503,8 +504,8 @@ export default function AdminVideosPage() {
       {/* Cabeçalho */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Vídeos de Fundo</h1>
-          <p className="text-sm text-white/35 mt-1">
+          <h1 className="text-2xl font-bold text-tinta">Vídeos de Fundo</h1>
+          <p className="text-sm text-cinza mt-1">
             {loading
               ? '…'
               : `${videosFiltrados.length} vídeo${videosFiltrados.length !== 1 ? 's' : ''} encontrados`}
@@ -513,8 +514,8 @@ export default function AdminVideosPage() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 rounded-lg bg-[#4f9eff] px-4 py-2.5 text-sm
-                     font-semibold text-white hover:bg-[#3d8aef] transition"
+          className="flex items-center gap-2 rounded-lg bg-acao px-4 py-2.5 text-sm
+                     font-semibold text-white hover:bg-acao-escuro transition"
         >
           <span className="text-lg leading-none">+</span>
           Novo Vídeo
@@ -522,16 +523,16 @@ export default function AdminVideosPage() {
       </div>
 
       {/* Tabela */}
-      <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden flex flex-col">
+      <div className="rounded-xl border border-linha bg-superficie overflow-hidden flex flex-col">
         {loading ? (
-          <div className="py-12 text-center text-sm text-white/25">A carregar…</div>
+          <div className="py-12 text-center text-sm text-cinza/80">A carregar…</div>
         ) : videosFiltrados.length === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-sm text-white/25 mb-4">Nenhum vídeo adicionado ainda.</p>
+            <p className="text-sm text-cinza/80 mb-4">Nenhum vídeo adicionado ainda.</p>
             <button
               onClick={() => setShowModal(true)}
-              className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2
-                         text-xs font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition"
+              className="inline-flex items-center gap-2 rounded-lg border border-linha px-4 py-2
+                         text-xs font-medium text-cinza hover:bg-papel hover:text-tinta transition"
             >
               <span>+</span> Adicionar primeiro vídeo
             </button>
@@ -541,7 +542,7 @@ export default function AdminVideosPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-xs text-white/30 border-b border-white/5 bg-white/2">
+                  <tr className="text-xs text-cinza/80 border-b border-linha bg-papel">
                     <th className="text-left px-5 py-3 font-medium">Título</th>
                     <th className="text-left px-5 py-3 font-medium">Disciplina</th>
                     <th className="text-left px-5 py-3 font-medium">Ficheiro</th>
@@ -552,21 +553,21 @@ export default function AdminVideosPage() {
                   {paginatedVideos.map((v, i) => (
                     <tr
                       key={v.id_media_items}
-                      className={`transition hover:bg-white/2 ${i !== paginatedVideos.length - 1 ? 'border-b border-white/5' : ''}`}
+                      className={`transition hover:bg-papel ${i !== paginatedVideos.length - 1 ? 'border-b border-linha' : ''}`}
                     >
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <span className="text-base shrink-0">🎬</span>
-                          <p className="font-medium text-white/85 truncate max-w-[180px]">{v.titulo ?? '—'}</p>
+                          <span className="shrink-0 text-cinza"><IconeVideo tamanho={16} /></span>
+                          <p className="font-medium text-tinta truncate max-w-[180px]">{v.titulo ?? '—'}</p>
                         </div>
                       </td>
-                      <td className="px-5 py-3.5 text-white/45 text-xs">{v.nome_disciplina ?? '—'}</td>
+                      <td className="px-5 py-3.5 text-cinza text-xs">{v.nome_disciplina ?? '—'}</td>
                       <td className="px-5 py-3.5">
                         <a
                           href={v.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-[#4f9eff]/60 hover:text-[#4f9eff] transition truncate block max-w-[160px]"
+                          className="text-xs text-acao hover:text-acao transition truncate block max-w-[160px]"
                           title={v.url}
                         >
                           {v.url?.split('/').pop() ?? v.url}
@@ -576,15 +577,15 @@ export default function AdminVideosPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => setEditVideo(v)}
-                            className="rounded-md border border-[#4f9eff]/20 px-3 py-1.5 text-xs font-medium
-                                       text-[#4f9eff]/60 hover:bg-[#4f9eff]/10 hover:text-[#4f9eff] transition"
+                            className="rounded-md border border-acao/30 px-3 py-1.5 text-xs font-medium
+                                       text-acao hover:bg-acao/10 hover:text-acao transition"
                           >
                             Editar
                           </button>
                           <button
                             onClick={() => setConfirmDelete(v.id_media_items)}
-                            className="rounded-md border border-red-500/20 px-3 py-1.5 text-xs font-medium
-                                       text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition"
+                            className="rounded-md border border-ecgm-r/30 px-3 py-1.5 text-xs font-medium
+                                       text-ecgm-r hover:bg-ecgm-r/10 hover:text-ecgm-r transition"
                           >
                             Eliminar
                           </button>
@@ -597,31 +598,31 @@ export default function AdminVideosPage() {
             </div>
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-white/5 bg-[#0c0c0f] px-6 py-4">
-                <p className="text-xs text-white/40">
+              <div className="flex items-center justify-between border-t border-linha bg-papel px-6 py-4">
+                <p className="text-xs text-cinza">
                   A mostrar{' '}
-                  <span className="font-semibold text-white/80">{startIndex + 1}</span> a{' '}
-                  <span className="font-semibold text-white/80">
+                  <span className="font-semibold text-tinta">{startIndex + 1}</span> a{' '}
+                  <span className="font-semibold text-tinta">
                     {Math.min(startIndex + ITEMS_PER_PAGE, videosFiltrados.length)}
                   </span>{' '}
-                  de <span className="font-semibold text-white/80">{videosFiltrados.length}</span> vídeos
+                  de <span className="font-semibold text-tinta">{videosFiltrados.length}</span> vídeos
                 </p>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
                     disabled={currentPage === 1}
-                    className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium
-                               text-white/60 hover:bg-white/10 hover:text-white transition
+                    className="rounded-md border border-linha bg-papel px-3 py-1.5 text-xs font-medium
+                               text-tinta-2 hover:bg-mosaico hover:text-tinta transition
                                disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     Anterior
                   </button>
-                  <span className="text-xs text-white/40 font-mono px-2">{currentPage} / {totalPages}</span>
+                  <span className="text-xs text-cinza font-mono px-2">{currentPage} / {totalPages}</span>
                   <button
                     onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium
-                               text-white/60 hover:bg-white/10 hover:text-white transition
+                    className="rounded-md border border-linha bg-papel px-3 py-1.5 text-xs font-medium
+                               text-tinta-2 hover:bg-mosaico hover:text-tinta transition
                                disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     Próxima
@@ -659,23 +660,23 @@ export default function AdminVideosPage() {
       {/* Modal — Confirmar eliminação */}
       {confirmDelete !== null && (
         <Modal title="Confirmar eliminação" onClose={() => setConfirmDelete(null)}>
-          <p className="text-sm text-white/60 mb-6">
+          <p className="text-sm text-tinta-2 mb-6">
             Tens a certeza que queres eliminar este vídeo? O ficheiro no R2 será apagado permanentemente.
           </p>
           <div className="flex gap-3">
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="flex-1 rounded-lg bg-red-500/80 py-2.5 text-sm font-semibold text-white
-                         hover:bg-red-500 transition disabled:opacity-50"
+              className="flex-1 rounded-lg bg-ecgm-r py-2.5 text-sm font-semibold text-white
+                         hover:bg-ecgm-r transition disabled:opacity-50"
             >
               {deleting ? 'A eliminar…' : 'Eliminar'}
             </button>
             <button
               onClick={() => setConfirmDelete(null)}
               disabled={deleting}
-              className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium
-                         text-white/50 hover:bg-white/5 transition"
+              className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium
+                         text-cinza hover:bg-papel transition"
             >
               Cancelar
             </button>

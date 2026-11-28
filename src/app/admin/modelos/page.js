@@ -6,19 +6,20 @@ import { useAdminFilter, FilterContextLine } from '../AdminFilterContext';
 import { Canvas } from '@react-three/fiber';
 import { AnimatedModel, Z_END } from '@/components/ModelScene';
 
-const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white
-  placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1
-  focus:ring-[#4f9eff]/30 transition`;
+import { IconeCubo, IconeCarregar } from '@/components/Icones';
+const inputCls = `w-full rounded-lg border border-linha bg-papel px-3 py-2 text-sm text-tinta
+  placeholder:text-cinza focus:outline-none focus:border-acao/60 focus:ring-1
+  focus:ring-acao/20 transition`;
 
 /* ─── Modal genérico ─────────────────────────────────────────────── */
 function Modal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-[#13131a] shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
-          <h2 className="text-base font-semibold text-white">{title}</h2>
-          <button onClick={onClose} className="text-white/30 hover:text-white/70 transition text-xl leading-none">×</button>
+      <div className="absolute inset-0 bg-tinta/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-linha bg-superficie shadow-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-linha">
+          <h2 className="text-base font-semibold text-tinta">{title}</h2>
+          <button onClick={onClose} className="text-cinza/80 hover:text-tinta-2 transition text-xl leading-none">×</button>
         </div>
         <div className="px-6 py-5">{children}</div>
       </div>
@@ -72,27 +73,27 @@ function NovoModeloForm({ onSave, onCancel, saving, disciplinas }) {
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-xs font-medium text-white/50 mb-1.5">Ficheiro GLB *</label>
+        <label className="block text-xs font-medium text-cinza mb-1.5">Ficheiro GLB *</label>
         <div
           onClick={() => fileRef.current?.click()}
           className={`flex items-center gap-3 rounded-lg border-2 border-dashed px-4 py-4 cursor-pointer transition
-            ${file ? 'border-[#4f9eff]/40 bg-[#4f9eff]/5' : 'border-white/10 hover:border-white/20'}`}
+            ${file ? 'border-acao/60 bg-acao/5' : 'border-linha hover:border-linha-2'}`}
         >
-          <span className="text-2xl">{file ? '🧊' : '📁'}</span>
+          <span className="text-cinza">{file ? <IconeCubo tamanho={24} /> : <IconeCarregar tamanho={24} />}</span>
           <div className="flex-1 min-w-0">
             {file ? (
               <>
-                <p className="text-sm font-medium text-white/80 truncate">{file.name}</p>
-                <p className="text-xs text-white/30">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p className="text-sm font-medium text-tinta truncate">{file.name}</p>
+                <p className="text-xs text-cinza/80">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
               </>
             ) : (
-              <p className="text-sm text-white/30">Clica para selecionar um ficheiro .glb</p>
+              <p className="text-sm text-cinza/80">Clica para selecionar um ficheiro .glb</p>
             )}
           </div>
           {file && (
             <button
               onClick={e => { e.stopPropagation(); setFile(null); fileRef.current.value = ''; }}
-              className="text-white/25 hover:text-red-400 transition text-lg leading-none"
+              className="text-cinza/80 hover:text-ecgm-r transition text-lg leading-none"
             >×</button>
           )}
         </div>
@@ -106,7 +107,7 @@ function NovoModeloForm({ onSave, onCancel, saving, disciplinas }) {
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-white/50 mb-1.5">Título do Modelo *</label>
+        <label className="block text-xs font-medium text-cinza mb-1.5">Título do Modelo *</label>
         <input
           className={inputCls}
           value={titulo}
@@ -116,7 +117,7 @@ function NovoModeloForm({ onSave, onCancel, saving, disciplinas }) {
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-white/50 mb-1.5">Associar a Disciplina *</label>
+        <label className="block text-xs font-medium text-cinza mb-1.5">Associar a Disciplina *</label>
         <select
           className={inputCls}
           value={moduloId}
@@ -130,8 +131,8 @@ function NovoModeloForm({ onSave, onCancel, saving, disciplinas }) {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-2.5">
-          <p className="text-xs text-red-400">{error}</p>
+        <div className="rounded-lg border border-ecgm-r/30 bg-ecgm-r/10 px-4 py-2.5">
+          <p className="text-xs text-ecgm-r">{error}</p>
         </div>
       )}
 
@@ -139,16 +140,16 @@ function NovoModeloForm({ onSave, onCancel, saving, disciplinas }) {
         <button
           onClick={handleSave}
           disabled={isBusy}
-          className="flex-1 rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white
-                     hover:bg-[#3d8aef] transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 rounded-lg bg-acao py-2.5 text-sm font-semibold text-white
+                     hover:bg-acao-escuro transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {uploading ? 'A fazer upload…' : saving ? 'A guardar…' : 'Adicionar Modelo'}
         </button>
         <button
           onClick={onCancel}
           disabled={isBusy}
-          className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium
-                     text-white/50 hover:bg-white/5 hover:text-white/80 transition"
+          className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium
+                     text-cinza hover:bg-papel hover:text-tinta transition"
         >
           Cancelar
         </button>
@@ -174,13 +175,13 @@ function SliderRow({ label, value, onChange, min, max, step, format }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-white/40">{label}</span>
-        <span className="text-xs font-mono text-[#4f9eff]">{display}</span>
+        <span className="text-xs text-cinza">{label}</span>
+        <span className="text-xs font-mono text-acao">{display}</span>
       </div>
       <input
         type="range" min={min} max={max} step={step}
         value={value} onChange={e => onChange(Number(e.target.value))}
-        className="w-full accent-[#4f9eff] cursor-pointer"
+        className="w-full accent-acao cursor-pointer"
       />
     </div>
   );
@@ -195,35 +196,35 @@ const CARD_H = 280;
 function SimplifiedCardPreview() {
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border border-white/8 bg-[#13131a]"
+      className="relative overflow-hidden rounded-2xl border border-linha bg-superficie"
       style={{ width: CARD_W, height: CARD_H }}
     >
       <div className="relative z-10 flex flex-col justify-between h-full p-6">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="rounded-full border border-[#4f9eff]/25 bg-[#4f9eff]/10
-                           px-3 py-0.5 text-xs font-semibold text-[#4f9eff] tracking-wide">
+          <span className="rounded-full border border-acao/30 bg-acao/10
+                           px-3 py-0.5 text-xs font-semibold text-acao tracking-wide">
             2º Ano
           </span>
-          <span className="rounded-full border border-white/8 bg-white/5
-                           px-3 py-0.5 text-xs font-medium text-white/40 tracking-wide">
+          <span className="rounded-full border border-linha bg-papel
+                           px-3 py-0.5 text-xs font-medium text-cinza tracking-wide">
             1º Sem
           </span>
-          <span className="ml-auto rounded-full border border-white/8 bg-white/5
-                           px-2.5 py-0.5 text-xs text-white/25 tracking-wide">
+          <span className="ml-auto rounded-full border border-linha bg-papel
+                           px-2.5 py-0.5 text-xs text-cinza/80 tracking-wide">
             3D
           </span>
         </div>
         <div className="mt-auto pt-6">
-          <span className="text-xs font-mono text-white/25 tracking-widest uppercase mb-1 block">
+          <span className="text-xs font-mono text-cinza/80 tracking-widest uppercase mb-1 block">
             EX001
           </span>
-          <h2 className="text-base font-semibold text-white leading-snug mb-2 line-clamp-2">
+          <h2 className="text-base font-semibold text-tinta leading-snug mb-2 line-clamp-2">
             Exemplo de Disciplina
           </h2>
-          <p className="text-sm text-white/45 leading-relaxed line-clamp-2">
+          <p className="text-sm text-cinza leading-relaxed line-clamp-2">
             Descrição de exemplo para ver como o modelo fica sobre o card real.
           </p>
-          <div className="mt-4 flex items-center gap-1.5 text-xs font-medium text-[#4f9eff]/50">
+          <div className="mt-4 flex items-center gap-1.5 text-xs font-medium text-[#12616d]/50">
             <span>Ver projetos</span>
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -265,22 +266,22 @@ function EditModelModal({ modelo, onClose, onSave, saving, todasDisciplinas = []
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-tinta/30 backdrop-blur-[2px]" onClick={onClose} />
       <div
-        className="relative z-10 flex flex-col rounded-2xl border border-[#4f9eff]/30 overflow-hidden shadow-2xl"
+        className="relative z-10 flex flex-col rounded-2xl border border-acao/30 overflow-hidden shadow-2xl"
         style={{ width: '80vw', height: '80vh' }}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 bg-[#13131a] flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-linha bg-superficie flex-shrink-0">
           <div>
-            <h2 className="text-base font-semibold text-white">Editar Modelo</h2>
-            <p className="text-xs text-white/35 mt-0.5">{titulo}</p>
+            <h2 className="text-base font-semibold text-tinta">Editar Modelo</h2>
+            <p className="text-xs text-cinza mt-0.5">{titulo}</p>
           </div>
-          <button onClick={onClose} className="text-white/30 hover:text-white/70 transition text-2xl leading-none">×</button>
+          <button onClick={onClose} className="text-cinza/80 hover:text-tinta-2 transition text-2xl leading-none">×</button>
         </div>
 
         <div className="flex flex-1 min-h-0">
           {/* Preview 3D */}
-          <div className="flex-none relative bg-[#0c0c0f]" style={{ width: '60%' }}>
+          <div className="flex-none relative bg-papel" style={{ width: '60%' }}>
             {showCard && (
               <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
                 <SimplifiedCardPreview />
@@ -291,8 +292,8 @@ function EditModelModal({ modelo, onClose, onSave, saving, todasDisciplinas = []
               title={showCard ? 'Ocultar card de exemplo' : 'Ver card de exemplo'}
               className={`absolute bottom-3 left-3 z-20 flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs transition
                 ${showCard
-                  ? 'border-[#4f9eff]/40 bg-[#4f9eff]/10 text-[#4f9eff]'
-                  : 'border-white/10 bg-black/40 text-white/30 hover:text-white/60 hover:border-white/20'
+                  ? 'border-acao/60 bg-acao/10 text-acao'
+                  : 'border-linha bg-superficie text-cinza hover:text-tinta-2 hover:border-linha-2'
                 }`}
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -325,7 +326,7 @@ function EditModelModal({ modelo, onClose, onSave, saving, todasDisciplinas = []
               >
                 <ambientLight intensity={0.5} />
                 <directionalLight position={[10, 10, 5]} intensity={1.2} />
-                <pointLight position={[0, 4, Z_END]} color="#4f9eff" intensity={3} distance={60} />
+                <pointLight position={[0, 4, Z_END]} color="#12616d" intensity={3} distance={60} />
                 <Suspense fallback={null}>
                   <AnimatedModel
                     key={modelo.url}
@@ -344,11 +345,11 @@ function EditModelModal({ modelo, onClose, onSave, saving, todasDisciplinas = []
           </div>
 
           {/* Painel de controlos */}
-          <div className="flex-1 bg-[#13131a] overflow-y-auto p-6 flex flex-col gap-6 border-l border-white/8">
+          <div className="flex-1 bg-superficie overflow-y-auto p-6 flex flex-col gap-6 border-l border-linha">
 
             {/* Campo: Título do Modelo */}
             <div>
-              <label className="block text-sm font-medium text-white/70 mb-3">Título do Modelo</label>
+              <label className="block text-sm font-medium text-tinta-2 mb-3">Título do Modelo</label>
               <input
                 type="text"
                 value={titulo}
@@ -360,7 +361,7 @@ function EditModelModal({ modelo, onClose, onSave, saving, todasDisciplinas = []
 
             {/* Campo: Disciplina Associada */}
             <div>
-              <label className="block text-sm font-medium text-white/70 mb-3">Disciplina Associada</label>
+              <label className="block text-sm font-medium text-tinta-2 mb-3">Disciplina Associada</label>
               <div className="flex items-center gap-2">
                 <select
                   value={disciplinaId}
@@ -376,32 +377,32 @@ function EditModelModal({ modelo, onClose, onSave, saving, todasDisciplinas = []
                   <button
                     onClick={handleRemoverAssociacao}
                     disabled={removingAssoc}
-                    className="flex-shrink-0 text-xs text-red-400/60 hover:text-red-400 transition disabled:opacity-50 whitespace-nowrap"
+                    className="flex-shrink-0 text-xs text-ecgm-r hover:text-ecgm-r transition disabled:opacity-50 whitespace-nowrap"
                   >
                     {removingAssoc ? 'A remover…' : 'Remover'}
                   </button>
                 )}
               </div>
               {disciplinaId !== String(currentModuloId ?? '') && (
-                <p className="text-xs text-[#4f9eff]/60 mt-1.5">Alteração guardada ao clicar "Guardar"</p>
+                <p className="text-xs text-acao mt-1.5">Alteração guardada ao clicar "Guardar"</p>
               )}
             </div>
 
             {/* Campo: Escala */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-medium text-white/70">Escala (Multiplicador)</label>
-                <span className="text-sm font-mono font-semibold text-[#4f9eff]">{escala.toFixed(1)}x</span>
+                <label className="text-sm font-medium text-tinta-2">Escala (Multiplicador)</label>
+                <span className="text-sm font-mono font-semibold text-acao">{escala.toFixed(1)}x</span>
               </div>
               <input
                 type="range" min={0.1} max={5} step={0.1}
                 value={escala} onChange={e => setEscala(parseFloat(e.target.value))}
-                className="w-full accent-[#4f9eff] cursor-pointer"
+                className="w-full accent-acao cursor-pointer"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/70 mb-3">Tipo de Animação</label>
+              <label className="block text-sm font-medium text-tinta-2 mb-3">Tipo de Animação</label>
               <div className="grid grid-cols-2 gap-2">
                 {ANIM_OPTS.map(opt => (
                   <button
@@ -409,14 +410,14 @@ function EditModelModal({ modelo, onClose, onSave, saving, todasDisciplinas = []
                     onClick={() => setAnimacaoTipo(opt.value)}
                     className={`rounded-lg border p-3 text-left transition ${
                       animacaoTipo === opt.value
-                        ? 'border-[#4f9eff] bg-[#4f9eff]/10'
-                        : 'border-white/10 bg-white/3 hover:border-white/20 hover:bg-white/5'
+                        ? 'border-acao bg-acao/10'
+                        : 'border-linha bg-papel hover:border-linha-2 hover:bg-papel'
                     }`}
                   >
-                    <p className={`text-sm font-semibold ${animacaoTipo === opt.value ? 'text-[#4f9eff]' : 'text-white/70'}`}>
+                    <p className={`text-sm font-semibold ${animacaoTipo === opt.value ? 'text-acao' : 'text-tinta-2'}`}>
                       {opt.label}
                     </p>
-                    <p className="text-xs text-white/30 mt-0.5 leading-snug">{opt.desc}</p>
+                    <p className="text-xs text-cinza/80 mt-0.5 leading-snug">{opt.desc}</p>
                   </button>
                 ))}
               </div>
@@ -425,11 +426,11 @@ function EditModelModal({ modelo, onClose, onSave, saving, todasDisciplinas = []
             {/* Campo: Posição e Rotação */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-medium text-white/70">Posição e Rotação</label>
+                <label className="text-sm font-medium text-tinta-2">Posição e Rotação</label>
                 <button
                   type="button"
                   onClick={() => { setRotacaoX(0); setRotacaoY(0); setRotacaoZ(0); setPosicaoX(0); setPosicaoY(0); }}
-                  className="text-xs text-white/30 hover:text-white/60 transition"
+                  className="text-xs text-cinza/80 hover:text-tinta-2 transition"
                 >
                   Repor
                 </button>
@@ -449,12 +450,12 @@ function EditModelModal({ modelo, onClose, onSave, saving, todasDisciplinas = []
               <button
                 onClick={() => onSave({ titulo, escala, animacao_tipo: animacaoTipo, rotacao_x: rotacaoX, rotacao_y: rotacaoY, rotacao_z: rotacaoZ, posicao_x: posicaoX, offset_y: posicaoY, disciplinaId, originalModuloId: currentModuloId })}
                 disabled={saving || !titulo.trim()}
-                className="flex-1 rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white hover:bg-[#3d8aef] transition disabled:opacity-50"
+                className="flex-1 rounded-lg bg-acao py-2.5 text-sm font-semibold text-white hover:bg-acao-escuro transition disabled:opacity-50"
               >
                 {saving ? 'A guardar…' : 'Guardar'}
               </button>
               <button onClick={onClose} disabled={saving}
-                className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium text-white/50 hover:bg-white/5 transition">
+                className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium text-cinza hover:bg-papel transition">
                 Cancelar
               </button>
             </div>
@@ -708,8 +709,8 @@ export default function ModelosPage() {
     <div className="p-8 max-w-5xl mx-auto">
 
       {toast && (
-        <div className="fixed top-5 right-5 z-50 rounded-lg border border-white/10 bg-[#13131a]
-                        px-4 py-2.5 text-sm text-white shadow-xl">
+        <div className="fixed top-5 right-5 z-50 rounded-lg border border-linha bg-superficie
+                        px-4 py-2.5 text-sm text-tinta shadow-xl">
           {toast}
         </div>
       )}
@@ -717,16 +718,16 @@ export default function ModelosPage() {
       {/* Cabeçalho */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Modelos 3D</h1>
-          <p className="text-sm text-white/35 mt-1">
+          <h1 className="text-2xl font-bold text-tinta">Modelos 3D</h1>
+          <p className="text-sm text-cinza mt-1">
             {loading ? '…' : `${modelosFiltrados.length} modelo${modelosFiltrados.length !== 1 ? 's' : ''} encontrados`}
           </p>
           <FilterContextLine />
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 rounded-lg bg-[#4f9eff] px-4 py-2.5 text-sm
-                     font-semibold text-white hover:bg-[#3d8aef] transition"
+          className="flex items-center gap-2 rounded-lg bg-acao px-4 py-2.5 text-sm
+                     font-semibold text-white hover:bg-acao-escuro transition"
         >
           <span className="text-lg leading-none">+</span>
           Novo Modelo
@@ -736,7 +737,7 @@ export default function ModelosPage() {
       {/* Barra de Pesquisa */}
       <div className="mb-6">
         <div className="relative">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-white/30">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-cinza/80">
             {/* Ícone de Lupa */}
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -747,17 +748,17 @@ export default function ModelosPage() {
             placeholder="Pesquisar por título ou disciplina..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-[#13131a] py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 focus:border-[#4f9eff]/50 focus:outline-none focus:ring-1 focus:ring-[#4f9eff]/30 transition shadow-sm"
+            className="w-full rounded-xl border border-linha bg-superficie py-3 pl-10 pr-4 text-sm text-tinta placeholder:text-cinza focus:border-acao/60 focus:outline-none focus:ring-1 focus:ring-acao/20 transition shadow-sm"
           />
         </div>
       </div>
 
       {/* Tabela */}
-      <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden flex flex-col">
+      <div className="rounded-xl border border-linha bg-superficie overflow-hidden flex flex-col">
         {loading ? (
-          <div className="py-12 text-center text-sm text-white/25">A carregar…</div>
+          <div className="py-12 text-center text-sm text-cinza/80">A carregar…</div>
         ) : modelosFiltrados.length === 0 ? (
-          <div className="py-12 text-center text-sm text-white/25">
+          <div className="py-12 text-center text-sm text-cinza/80">
             {modelos.length === 0 
               ? 'Nenhum modelo encontrado. Faz o upload do primeiro!' 
               : 'Nenhum modelo para a pesquisa ou filtro atual.'}
@@ -767,7 +768,7 @@ export default function ModelosPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-xs text-white/30 border-b border-white/5 bg-white/2">
+                  <tr className="text-xs text-cinza/80 border-b border-linha bg-papel">
                     <th className="text-left px-5 py-3 font-medium">Título</th>
                     <th className="text-left px-5 py-3 font-medium">Disciplina</th>
                     <th className="text-left px-5 py-3 font-medium">Escala</th>
@@ -780,12 +781,12 @@ export default function ModelosPage() {
                   {paginatedModelos.map((m, i) => (
                     <tr
                       key={m.id_media_items}
-                      className={`transition hover:bg-white/2 ${i !== paginatedModelos.length - 1 ? 'border-b border-white/5' : ''}`}
+                      className={`transition hover:bg-papel ${i !== paginatedModelos.length - 1 ? 'border-b border-linha' : ''}`}
                     >
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
                           {/* Mini Visualizador 3D na Tabela */}
-                          <div className="h-12 w-12 overflow-hidden rounded-md border border-white/10 bg-[#0c0c0f] flex-shrink-0 flex items-center justify-center">
+                          <div className="h-12 w-12 overflow-hidden rounded-md border border-linha bg-papel flex-shrink-0 flex items-center justify-center">
                             <Canvas
                               camera={{ position: [0, 1, 0], fov: 45, near: 0.1, far: 200 }}
                               gl={{ alpha: true, antialias: true }}
@@ -808,17 +809,17 @@ export default function ModelosPage() {
                               </Suspense>
                             </Canvas>
                           </div>
-                          <p className="font-medium text-white/85 truncate max-w-[150px]">{m.titulo ?? '—'}</p>
+                          <p className="font-medium text-tinta truncate max-w-[150px]">{m.titulo ?? '—'}</p>
                         </div>
                       </td>
-                      <td className="px-5 py-3.5 text-white/45 text-xs">
+                      <td className="px-5 py-3.5 text-cinza text-xs">
                         {m.nome_disciplina ?? '—'}
                       </td>
-                      <td className="px-5 py-3.5 text-white/45 font-mono text-xs">
+                      <td className="px-5 py-3.5 text-cinza font-mono text-xs">
                         {m.escala ?? 1.5}
                       </td>
                       <td className="px-5 py-3.5">
-                        <span className="text-xs text-[#4f9eff] bg-[#4f9eff]/10 px-2 py-1 rounded-md font-mono">
+                        <span className="text-xs text-acao bg-acao/10 px-2 py-1 rounded-md font-mono">
                           {m.animacao_tipo ?? 'none'}
                         </span>
                       </td>
@@ -827,7 +828,7 @@ export default function ModelosPage() {
                           href={m.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-[#4f9eff]/60 hover:text-[#4f9eff] transition truncate block max-w-[120px]"
+                          className="text-xs text-acao hover:text-acao transition truncate block max-w-[120px]"
                           title={m.url}
                         >
                           {m.url?.split('/').pop() ?? m.url}
@@ -837,15 +838,15 @@ export default function ModelosPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => setEditModelo(m)}
-                            className="rounded-md border border-[#4f9eff]/20 px-3 py-1.5 text-xs font-medium
-                                       text-[#4f9eff]/60 hover:bg-[#4f9eff]/10 hover:text-[#4f9eff] transition"
+                            className="rounded-md border border-acao/30 px-3 py-1.5 text-xs font-medium
+                                       text-acao hover:bg-acao/10 hover:text-acao transition"
                           >
                             Editar
                           </button>
                           <button
                             onClick={() => setConfirmDelete(m.id_media_items)}
-                            className="rounded-md border border-red-500/20 px-3 py-1.5 text-xs font-medium
-                                       text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition"
+                            className="rounded-md border border-ecgm-r/30 px-3 py-1.5 text-xs font-medium
+                                       text-ecgm-r hover:bg-ecgm-r/10 hover:text-ecgm-r transition"
                           >
                             Eliminar
                           </button>
@@ -859,29 +860,29 @@ export default function ModelosPage() {
 
             {/* Controlos de Paginação (Só mostram se houver mais que 1 página) */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-white/5 bg-[#0c0c0f] px-6 py-4">
-                <p className="text-xs text-white/40">
-                  A mostrar <span className="font-semibold text-white/80">{startIndex + 1}</span> a{' '}
-                  <span className="font-semibold text-white/80">
+              <div className="flex items-center justify-between border-t border-linha bg-papel px-6 py-4">
+                <p className="text-xs text-cinza">
+                  A mostrar <span className="font-semibold text-tinta">{startIndex + 1}</span> a{' '}
+                  <span className="font-semibold text-tinta">
                     {Math.min(startIndex + ITEMS_PER_PAGE, modelosFiltrados.length)}
                   </span>{' '}
-                  de <span className="font-semibold text-white/80">{modelosFiltrados.length}</span> modelos
+                  de <span className="font-semibold text-tinta">{modelosFiltrados.length}</span> modelos
                 </p>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="rounded-md border border-linha bg-papel px-3 py-1.5 text-xs font-medium text-tinta-2 transition hover:bg-mosaico hover:text-tinta disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     Anterior
                   </button>
-                  <span className="text-xs text-white/40 font-mono px-2">
+                  <span className="text-xs text-cinza font-mono px-2">
                     {currentPage} / {totalPages}
                   </span>
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="rounded-md border border-linha bg-papel px-3 py-1.5 text-xs font-medium text-tinta-2 transition hover:bg-mosaico hover:text-tinta disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     Próxima
                   </button>
@@ -919,7 +920,7 @@ export default function ModelosPage() {
       {/* Modal — Confirmar eliminação */}
       {confirmDelete !== null && (
         <Modal title="Confirmar eliminação" onClose={() => setConfirmDelete(null)}>
-          <p className="text-sm text-white/60 mb-6">
+          <p className="text-sm text-tinta-2 mb-6">
             Tens a certeza que queres eliminar este modelo?
             O ficheiro no R2 não será eliminado automaticamente.
           </p>
@@ -927,16 +928,16 @@ export default function ModelosPage() {
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="flex-1 rounded-lg bg-red-500/80 py-2.5 text-sm font-semibold text-white
-                         hover:bg-red-500 transition disabled:opacity-50"
+              className="flex-1 rounded-lg bg-ecgm-r py-2.5 text-sm font-semibold text-white
+                         hover:bg-ecgm-r transition disabled:opacity-50"
             >
               {deleting ? 'A eliminar…' : 'Eliminar'}
             </button>
             <button
               onClick={() => setConfirmDelete(null)}
               disabled={deleting}
-              className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium
-                         text-white/50 hover:bg-white/5 transition"
+              className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium
+                         text-cinza hover:bg-papel transition"
             >
               Cancelar
             </button>

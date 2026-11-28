@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import Link from 'next/link';
 
+import { IconeVideo } from '@/components/Icones';
 export default function UtilizadorBiblioteca() {
   const [activeTab, setActiveTab] = useState('comunidade'); // 'comunidade' | 'pessoal'
   const [disciplinas, setDisciplinas] = useState([]);
@@ -185,33 +186,33 @@ export default function UtilizadorBiblioteca() {
       
       {/* ── Cabeçalho ── */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Biblioteca</h1>
-        <p className="text-sm text-white/35 mt-1">
+        <h1 className="text-2xl font-bold text-tinta">Biblioteca</h1>
+        <p className="text-sm text-cinza mt-1">
           Explora os projetos da comunidade ou gere a tua biblioteca pessoal.
         </p>
       </div>
 
       {/* ── Separadores (Tabs) e Botões Globais ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-white/5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-linha">
         <div className="flex items-center gap-6">
           <button
             onClick={() => setActiveTab('comunidade')}
             className={`pb-3.5 px-1 text-sm font-medium transition-all relative whitespace-nowrap
-              ${activeTab === 'comunidade' ? 'text-[#4f9eff]' : 'text-white/40 hover:text-white/70'}`}
+              ${activeTab === 'comunidade' ? 'text-acao' : 'text-cinza hover:text-tinta-2'}`}
           >
             Biblioteca Comunidade
             {activeTab === 'comunidade' && (
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#4f9eff] rounded-t-full shadow-[0_0_8px_rgba(79,158,255,0.6)]"></span>
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-acao rounded-t-full "></span>
             )}
           </button>
           <button
             onClick={() => setActiveTab('pessoal')}
             className={`pb-3.5 px-1 text-sm font-medium transition-all relative whitespace-nowrap
-              ${activeTab === 'pessoal' ? 'text-[#4f9eff]' : 'text-white/40 hover:text-white/70'}`}
+              ${activeTab === 'pessoal' ? 'text-acao' : 'text-cinza hover:text-tinta-2'}`}
           >
             Biblioteca Pessoal
             {activeTab === 'pessoal' && (
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#4f9eff] rounded-t-full shadow-[0_0_8px_rgba(79,158,255,0.6)]"></span>
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-acao rounded-t-full "></span>
             )}
           </button>
         </div>
@@ -221,7 +222,7 @@ export default function UtilizadorBiblioteca() {
           <div className="flex items-center gap-2.5 pb-3 sm:pb-3">
             <button
               onClick={() => setIsUploadModalOpen(true)}
-              className="h-9 px-4 rounded-lg border border-white/10 bg-white/5 text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white active:scale-95 transition-all flex items-center gap-2"
+              className="h-9 px-4 rounded-lg border border-linha bg-papel text-xs font-semibold text-tinta hover:bg-mosaico hover:text-tinta active:scale-95 transition-all flex items-center gap-2"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -230,7 +231,7 @@ export default function UtilizadorBiblioteca() {
             </button>
             <Link 
               href="/utilizador/video-creator"
-              className="h-9 px-4 rounded-lg bg-[#4f9eff] text-xs font-semibold text-white hover:bg-[#3d8aef] active:scale-95 shadow-md shadow-[#4f9eff]/10 transition-all flex items-center gap-2"
+              className="h-9 px-4 rounded-lg bg-acao text-xs font-semibold text-white hover:bg-acao-escuro active:scale-95 shadow-md shadow-[#12616d]/10 transition-all flex items-center gap-2"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -242,20 +243,20 @@ export default function UtilizadorBiblioteca() {
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-white/30 text-sm">
+        <div className="flex flex-col items-center justify-center py-20 text-cinza/80 text-sm">
           A carregar a biblioteca...
         </div>
       ) : activeTab === 'comunidade' ? (
         /* ════ TAB 1: COMUNIDADE (DISCIPLINAS) ════ */
         disciplinas.length === 0 ? (
-          <div className="rounded-xl border border-white/8 bg-[#13131a] py-20 text-center flex flex-col items-center justify-center">
-            <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-white/5 text-white/40 mb-4">
+          <div className="rounded-xl border border-linha bg-superficie py-20 text-center flex flex-col items-center justify-center">
+            <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-papel text-cinza mb-4">
               <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-white">Nenhuma disciplina associada</h3>
-            <p className="text-sm text-white/40 max-w-sm mt-2 leading-relaxed">
+            <h3 className="text-lg font-semibold text-tinta">Nenhuma disciplina associada</h3>
+            <p className="text-sm text-cinza max-w-sm mt-2 leading-relaxed">
               Quando um administrador te associar a um módulo, ele aparecerá aqui automaticamente.
             </p>
           </div>
@@ -268,18 +269,18 @@ export default function UtilizadorBiblioteca() {
                 <Link 
                   href={`/utilizador/biblioteca/${d.id_modulo}`}
                   key={i} 
-                  className="group relative rounded-xl border border-white/8 bg-[#13131a] p-6 transition-all duration-200 hover:border-white/20 hover:bg-white/5 cursor-pointer flex flex-col justify-between h-44 shadow-sm hover:shadow-xl block"
+                  className="group relative rounded-xl border border-linha bg-superficie p-6 transition-all duration-200 hover:border-linha-2 hover:bg-papel cursor-pointer flex flex-col justify-between h-44 shadow-sm hover:shadow-xl block"
                 >
                   <div>
-                    <span className="inline-flex items-center rounded-md bg-[#4f9eff]/10 px-2.5 py-1 text-xs font-semibold text-[#4f9eff] ring-1 ring-inset ring-[#4f9eff]/20">
+                    <span className="inline-flex items-center rounded-md bg-acao/10 px-2.5 py-1 text-xs font-semibold text-acao ring-1 ring-inset ring-[#12616d]/20">
                       {mod.codigo || 'MÓDULO'}
                     </span>
-                    <h2 className="text-lg font-bold text-white mt-4 line-clamp-2 group-hover:text-[#4f9eff] transition-colors">
+                    <h2 className="text-lg font-bold text-tinta mt-4 line-clamp-2 group-hover:text-acao transition-colors">
                       {mod.nome}
                     </h2>
                   </div>
                   <div className="flex items-center justify-end mt-4">
-                    <span className="flex items-center text-xs font-medium text-white/30 group-hover:text-white transition-colors">
+                    <span className="flex items-center text-xs font-medium text-cinza/80 group-hover:text-tinta transition-colors">
                       Abrir Galeria
                       <svg className="ml-1.5 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -294,21 +295,21 @@ export default function UtilizadorBiblioteca() {
       ) : (
         /* ════ TAB 2: A MINHA BIBLIOTECA PESSOAL ════ */
         meusProjetos.length === 0 ? (
-          <div className="rounded-xl border border-white/8 bg-[#13131a] py-20 text-center flex flex-col items-center justify-center">
-            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-white/5 text-3xl mb-4">🎬</div>
-            <h3 className="text-lg font-semibold text-white">Ainda não tens projetos</h3>
-            <p className="text-sm text-white/40 max-w-sm mt-2 leading-relaxed">
+          <div className="rounded-xl border border-linha bg-superficie py-20 text-center flex flex-col items-center justify-center">
+            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-papel text-cinza mb-4"><IconeVideo tamanho={28} /></div>
+            <h3 className="text-lg font-semibold text-tinta">Ainda não tens projetos</h3>
+            <p className="text-sm text-cinza max-w-sm mt-2 leading-relaxed">
               Usa o Criador de Vídeo para gerares animações ou faz upload de um projeto externo.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {meusProjetos.map((proj) => (
-              <div key={proj.id_media_items} className="group/card rounded-xl border border-white/8 bg-[#13131a] overflow-hidden flex flex-col transition-all duration-200 hover:border-white/20 hover:shadow-xl">
+              <div key={proj.id_media_items} className="group/card rounded-xl border border-linha bg-superficie overflow-hidden flex flex-col transition-all duration-200 hover:border-linha-2 hover:shadow-xl">
                 
                 {/* Visualizador clicável (Icon de Play removido no hover) */}
                 <div 
-                  className="aspect-video bg-black relative flex items-center justify-center border-b border-white/5 cursor-pointer overflow-hidden"
+                  className="aspect-video bg-mosaico relative flex items-center justify-center border-b border-linha cursor-pointer overflow-hidden"
                   onClick={() => setProjetoEmDestaque(proj)}
                 >
                   {proj.url ? (
@@ -318,28 +319,28 @@ export default function UtilizadorBiblioteca() {
                       <video src={`${proj.url}#t=0.001`} preload="metadata" className="w-full h-full object-cover opacity-80 group-hover/card:opacity-100 transition-opacity duration-300" muted playsInline />
                     )
                   ) : (
-                    <span className="text-white/20 text-xs">Sem preview</span>
+                    <span className="text-cinza/70 text-xs">Sem preview</span>
                   )}
                   
                   {/* Badge de Estado */}
                   <div className="absolute top-3 right-3">
-                    {(!proj.status || proj.status === 'pessoal') && <span className="px-2 py-1 rounded bg-gray-500/80 backdrop-blur-sm text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">Pessoal</span>}
-                    {proj.status === 'pendente' && <span className="px-2 py-1 rounded bg-yellow-500/80 backdrop-blur-sm text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">Em Avaliação</span>}
-                    {proj.status === 'aprovado' && <span className="px-2 py-1 rounded bg-green-500/80 backdrop-blur-sm text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">Publicado</span>}
-                    {proj.status === 'rejeitado' && <span className="px-2 py-1 rounded bg-red-500/80 backdrop-blur-sm text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">Rejeitado</span>}
+                    {(!proj.status || proj.status === 'pessoal') && <span className="px-2 py-1 rounded bg-gray-500/80 backdrop-blur-sm text-[10px] font-bold text-tinta uppercase tracking-wider shadow-sm">Pessoal</span>}
+                    {proj.status === 'pendente' && <span className="px-2 py-1 rounded bg-amber-500 backdrop-blur-sm text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">Em Avaliação</span>}
+                    {proj.status === 'aprovado' && <span className="px-2 py-1 rounded bg-ecgm-g backdrop-blur-sm text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">Publicado</span>}
+                    {proj.status === 'rejeitado' && <span className="px-2 py-1 rounded bg-ecgm-r backdrop-blur-sm text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">Rejeitado</span>}
                   </div>
                 </div>
                 
                 {/* Info do Projeto */}
                 <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="font-semibold text-white truncate text-base" title={proj.titulo}>{proj.titulo || 'Projeto Sem Título'}</h3>
-                  <p className="text-[11px] text-white/40 mt-1 mb-4 uppercase tracking-wider font-medium">
+                  <h3 className="font-semibold text-tinta truncate text-base" title={proj.titulo}>{proj.titulo || 'Projeto Sem Título'}</h3>
+                  <p className="text-[11px] text-cinza mt-1 mb-4 uppercase tracking-wider font-medium">
                     {proj.tipo === 'gif_gerado' ? 'Animação GIF (Criador Video)' : 
                      proj.tipo === 'video_gerado' ? 'Vídeo (Criador Video)' : 
                      proj.tipo === 'imagem_externa' ? 'Imagem (Externa)' : 'Video (Externo)'}
                   </p>
                   
-                  <div className="mt-auto pt-4 border-t border-white/5">
+                  <div className="mt-auto pt-4 border-t border-linha">
                     {(!proj.status || proj.status === 'pessoal' || proj.status === 'rejeitado') ? (
                       
                       /* Zona de Acões para Projetos Não Avaliados (Enviar + Apagar) */
@@ -347,10 +348,10 @@ export default function UtilizadorBiblioteca() {
                         <button
                           onClick={() => abrirModalAprovacao(proj)}
                           disabled={actionLoading === proj.id_media_items}
-                          className="group/btn flex-1 h-9 rounded-lg bg-[#4f9eff]/10 border border-[#4f9eff]/20 text-xs font-semibold text-[#4f9eff] hover:bg-[#4f9eff]/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-1.5"
+                          className="group/btn flex-1 h-9 rounded-lg bg-acao/10 border border-acao/30 text-xs font-semibold text-acao hover:bg-acao/15 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-1.5"
                         >
                           Enviar para avaliação
-                          <span className="transform transition-transform duration-200 group-hover/btn:translate-x-0.5">➔</span>
+                          <span className="transform transition-transform duration-200 group-hover/btn:translate-x-0.5" aria-hidden="true">→</span>
                         </button>
 
                         {/* Botão de Apagar Projeto */}
@@ -358,7 +359,7 @@ export default function UtilizadorBiblioteca() {
                           onClick={() => abrirModalApagar(proj)}
                           disabled={actionLoading === proj.id_media_items}
                           title="Apagar Projeto"
-                          className="w-9 h-9 flex shrink-0 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-95 transition-all duration-200"
+                          className="w-9 h-9 flex shrink-0 items-center justify-center rounded-lg border border-ecgm-r/30 bg-ecgm-r/10 text-ecgm-r hover:bg-ecgm-r/15 active:scale-95 transition-all duration-200"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -367,11 +368,11 @@ export default function UtilizadorBiblioteca() {
                       </div>
 
                     ) : proj.status === 'pendente' ? (
-                      <div className="w-full h-9 flex items-center justify-center text-xs font-medium text-yellow-500/80 bg-yellow-500/5 rounded-lg border border-yellow-500/10 select-none">
+                      <div className="w-full h-9 flex items-center justify-center text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 rounded-lg border border-amber-500/30 select-none">
                         A aguardar revisão do professor...
                       </div>
                     ) : (
-                      <div className="w-full h-9 flex items-center justify-center text-xs font-medium text-green-400 bg-green-500/5 rounded-lg border border-green-500/10 select-none">
+                      <div className="w-full h-9 flex items-center justify-center text-xs font-medium text-ecgm-g bg-ecgm-g/5 rounded-lg border border-ecgm-g/30 select-none">
                         Visível na Biblioteca da Comunidade
                       </div>
                     )}
@@ -385,28 +386,28 @@ export default function UtilizadorBiblioteca() {
 
       {/* ════ MODAL DE APROVAÇÃO COM DROPDOWN DA DISCIPLINA ════ */}
       {projetoParaAprovar && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-xl border border-white/10 bg-[#13131a] p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-tinta/30 backdrop-blur-[2px] z-50 flex items-center justify-center p-4 transition-all animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-xl border border-linha bg-superficie p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-[#4f9eff]/10 flex items-center justify-center text-[#4f9eff]">
+              <div className="w-10 h-10 rounded-full bg-acao/10 flex items-center justify-center text-acao">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-white">Submeter Projeto</h3>
+              <h3 className="text-lg font-bold text-tinta">Submeter Projeto</h3>
             </div>
             
-            <p className="text-sm text-white/60 mb-6 leading-relaxed">
-              Vais submeter <span className="text-white font-semibold">"{projetoParaAprovar.titulo || 'Projeto Sem Título'}"</span> para avaliação. Seleciona a disciplina correspondente:
+            <p className="text-sm text-tinta-2 mb-6 leading-relaxed">
+              Vais submeter <span className="text-tinta font-semibold">"{projetoParaAprovar.titulo || 'Projeto Sem Título'}"</span> para avaliação. Seleciona a disciplina correspondente:
             </p>
 
             <div className="mb-6">
-              <label className="block text-xs font-medium text-white/50 mb-2">Disciplina / Módulo</label>
+              <label className="block text-xs font-medium text-cinza mb-2">Disciplina / Módulo</label>
               <select 
                 value={disciplinaSelecionada}
                 onChange={(e) => setDisciplinaSelecionada(e.target.value)}
-                className="w-full h-10 rounded-lg bg-[#0c0c0f] border border-white/10 px-4 text-sm text-white focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition cursor-pointer"
+                className="w-full h-10 rounded-lg bg-papel border border-linha px-4 text-sm text-tinta focus:outline-none focus:border-acao/60 focus:ring-1 focus:ring-acao/20 transition cursor-pointer"
               >
                 <option value="" disabled>Selecione uma disciplina...</option>
                 {disciplinas.map((d, i) => (
@@ -424,7 +425,7 @@ export default function UtilizadorBiblioteca() {
                 type="button"
                 onClick={() => setProjetoParaAprovar(null)}
                 disabled={actionLoading !== null}
-                className="flex-1 h-10 rounded-lg border border-white/10 text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white transition disabled:opacity-50"
+                className="flex-1 h-10 rounded-lg border border-linha text-sm font-medium text-cinza hover:bg-papel hover:text-tinta transition disabled:opacity-50"
               >
                 Cancelar
               </button>
@@ -432,7 +433,7 @@ export default function UtilizadorBiblioteca() {
                 type="button"
                 onClick={confirmarPedidoAprovacao}
                 disabled={actionLoading !== null || !disciplinaSelecionada}
-                className="flex-1 h-10 rounded-lg bg-[#4f9eff] text-sm font-semibold text-white hover:bg-[#3d8aef] shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 h-10 rounded-lg bg-acao text-sm font-semibold text-white hover:bg-acao-escuro shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {actionLoading !== null ? 'A enviar...' : 'Confirmar Envio'}
               </button>
@@ -444,20 +445,20 @@ export default function UtilizadorBiblioteca() {
 
       {/* ════ MODAL PARA APAGAR PROJETO ════ */}
       {projetoParaApagar && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-xl border border-white/10 bg-[#13131a] p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-tinta/30 backdrop-blur-[2px] z-50 flex items-center justify-center p-4 transition-all animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-xl border border-linha bg-superficie p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-400">
+              <div className="w-10 h-10 rounded-full bg-ecgm-r/10 flex items-center justify-center text-ecgm-r">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-white">Apagar Projeto</h3>
+              <h3 className="text-lg font-bold text-tinta">Apagar Projeto</h3>
             </div>
             
-            <p className="text-sm text-white/60 mb-6 leading-relaxed">
-              Tens a certeza que queres eliminar definitivamente o projeto <span className="text-white font-semibold">"{projetoParaApagar.titulo || 'Projeto Sem Título'}"</span>? Esta ação não pode ser desfeita.
+            <p className="text-sm text-tinta-2 mb-6 leading-relaxed">
+              Tens a certeza que queres eliminar definitivamente o projeto <span className="text-tinta font-semibold">"{projetoParaApagar.titulo || 'Projeto Sem Título'}"</span>? Esta ação não pode ser desfeita.
             </p>
             
             <div className="flex items-center gap-3 pt-2">
@@ -465,7 +466,7 @@ export default function UtilizadorBiblioteca() {
                 type="button"
                 onClick={() => setProjetoParaApagar(null)}
                 disabled={actionLoading !== null}
-                className="flex-1 h-10 rounded-lg border border-white/10 text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white transition disabled:opacity-50"
+                className="flex-1 h-10 rounded-lg border border-linha text-sm font-medium text-cinza hover:bg-papel hover:text-tinta transition disabled:opacity-50"
               >
                 Cancelar
               </button>
@@ -473,7 +474,7 @@ export default function UtilizadorBiblioteca() {
                 type="button"
                 onClick={confirmarApagar}
                 disabled={actionLoading !== null}
-                className="flex-1 h-10 rounded-lg bg-red-600 text-sm font-semibold text-white hover:bg-red-500 shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 h-10 rounded-lg bg-ecgm-r text-sm font-semibold text-white hover:bg-ecgm-r shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {actionLoading !== null ? 'A apagar...' : 'Sim, Apagar'}
               </button>
@@ -485,58 +486,58 @@ export default function UtilizadorBiblioteca() {
 
       {/* ════ MODAL DE UPLOAD EXTERNO ════ */}
       {isUploadModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-xl border border-white/10 bg-[#13131a] p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-tinta/30 backdrop-blur-[2px] z-50 flex items-center justify-center p-4 transition-all animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-xl border border-linha bg-superficie p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/80">
+              <div className="w-10 h-10 rounded-full bg-mosaico flex items-center justify-center text-tinta">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Upload de Projeto</h3>
-                <p className="text-xs text-white/40">Suporta MP4, WEBM, MOV, PNG, JPG, GIF</p>
+                <h3 className="text-lg font-bold text-tinta">Upload de Projeto</h3>
+                <p className="text-xs text-cinza">Suporta MP4, WEBM, MOV, PNG, JPG, GIF</p>
               </div>
             </div>
 
             <form onSubmit={handleUploadExterno} className="space-y-5">
               <div>
-                <label className="block text-xs font-medium text-white/50 mb-1.5">Título do Projeto</label>
+                <label className="block text-xs font-medium text-cinza mb-1.5">Título do Projeto</label>
                 <input 
                   type="text" 
                   required
                   value={uploadData.titulo}
                   onChange={(e) => setUploadData({ ...uploadData, titulo: e.target.value })}
-                  className="w-full h-10 rounded-lg bg-[#0c0c0f] border border-white/10 px-4 text-sm text-white focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition placeholder-white/20"
+                  className="w-full h-10 rounded-lg bg-papel border border-linha px-4 text-sm text-tinta focus:outline-none focus:border-acao/60 focus:ring-1 focus:ring-acao/20 transition placeholder:text-cinza"
                   placeholder="Ex: Apresentação Final"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-white/50 mb-1.5">Ficheiro</label>
+                <label className="block text-xs font-medium text-cinza mb-1.5">Ficheiro</label>
                 <input 
                   type="file" 
                   required
                   accept="video/mp4,video/webm,video/quicktime,image/png,image/jpeg,image/gif"
                   onChange={(e) => setUploadData({ ...uploadData, file: e.target.files[0] })}
-                  className="w-full text-sm text-white/60 file:mr-4 file:h-9 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-white/5 file:text-white hover:file:bg-white/10 file:transition-colors file:cursor-pointer cursor-pointer"
+                  className="w-full text-sm text-tinta-2 file:mr-4 file:h-9 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-papel file:text-tinta hover:file:bg-mosaico file:transition-colors file:cursor-pointer cursor-pointer"
                 />
               </div>
 
-              <div className="flex items-center gap-3 pt-4 border-t border-white/5 mt-6">
+              <div className="flex items-center gap-3 pt-4 border-t border-linha mt-6">
                 <button
                   type="button"
                   onClick={() => { setIsUploadModalOpen(false); setUploadData({ titulo: '', file: null, uploading: false }); }}
                   disabled={uploadData.uploading}
-                  className="flex-1 h-10 rounded-lg border border-white/10 text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white transition disabled:opacity-50"
+                  className="flex-1 h-10 rounded-lg border border-linha text-sm font-medium text-cinza hover:bg-papel hover:text-tinta transition disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={uploadData.uploading || !uploadData.file || !uploadData.titulo.trim()}
-                  className="flex-1 h-10 rounded-lg bg-[#4f9eff] text-sm font-semibold text-white hover:bg-[#3d8aef] shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 h-10 rounded-lg bg-acao text-sm font-semibold text-white hover:bg-acao-escuro shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {uploadData.uploading ? 'A enviar...' : 'Fazer Upload'}
                 </button>
@@ -549,11 +550,11 @@ export default function UtilizadorBiblioteca() {
 
       {/* ════ MODAL DE VISUALIZAÇÃO DE MEDIA EM DESTAQUE ════ */}
       {projetoEmDestaque && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-tinta/50 backdrop-blur-md z-[60] flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200">
           
           <button 
             onClick={() => setProjetoEmDestaque(null)}
-            className="absolute top-6 right-6 w-12 h-12 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all duration-200 z-10"
+            className="absolute top-6 right-6 w-12 h-12 flex items-center justify-center rounded-full bg-papel hover:bg-mosaico text-tinta-2 hover:text-tinta transition-all duration-200 z-10"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
@@ -576,12 +577,12 @@ export default function UtilizadorBiblioteca() {
                 />
               )
             ) : (
-              <div className="text-white/50 py-20">Media indisponível.</div>
+              <div className="text-cinza py-20">Media indisponível.</div>
             )}
             
             <div className="mt-6 text-center">
-              <h2 className="text-2xl font-bold text-white">{projetoEmDestaque.titulo || 'Projeto Sem Título'}</h2>
-              <p className="text-sm text-white/40 mt-1 uppercase tracking-widest">{projetoEmDestaque.status}</p>
+              <h2 className="text-2xl font-bold text-tinta">{projetoEmDestaque.titulo || 'Projeto Sem Título'}</h2>
+              <p className="text-sm text-cinza mt-1 uppercase tracking-widest">{projetoEmDestaque.status}</p>
             </div>
           </div>
         </div>

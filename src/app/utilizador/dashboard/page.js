@@ -5,21 +5,11 @@ import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import Link from 'next/link';
 
 /* ─── Card de estatística (Estilo Admin) ───────────────────────── */
-function StatCard({ label, value, icon, color = '#4f9eff' }) {
+function StatCard({ label, value }) {
   return (
-    <div className="rounded-xl border border-white/8 bg-[#13131a] p-5 flex items-center gap-4">
-      <div
-        className="flex items-center justify-center w-11 h-11 rounded-lg text-xl"
-        style={{ background: `${color}18`, color }}
-      >
-        {icon}
-      </div>
-      <div>
-        <p className="text-2xl font-bold text-white">
-          {value === null ? '…' : value}
-        </p>
-        <p className="text-xs text-white/40 mt-0.5">{label}</p>
-      </div>
+    <div className="rounded-xl border border-linha bg-superficie px-6 py-5">
+      <b className="block text-3xl font-semibold tracking-tight tabular-nums text-tinta">{value === null ? '…' : value}</b>
+      <span className="text-sm text-cinza">{label}</span>
     </div>
   );
 }
@@ -84,8 +74,8 @@ export default function UtilizadorDashboard() {
       {/* ── Cabeçalho ── */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-          <p className="text-sm text-white/35 mt-1">O teu resumo e progresso na plataforma</p>
+          <h1 className="text-2xl font-bold text-tinta">Dashboard</h1>
+          <p className="text-sm text-cinza mt-1">O teu resumo e progresso na plataforma</p>
         </div>
       </div>
 
@@ -94,36 +84,32 @@ export default function UtilizadorDashboard() {
         <StatCard
           label="Módulos Inscritos"
           value={loading ? null : stats.disciplinas}
-          icon="🎓"
-          color="#4f9eff"
         />
         <StatCard
           label="As tuas Publicações"
           value={loading ? null : stats.publicacoes}
-          icon="📤"
-          color="#a78bfa"
         />
       </div>
 
       {/* ── Tabela de Últimas Disciplinas (Estilo Admin) ── */}
-      <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-white">Os teus módulos recentes</h2>
-          <Link href="/utilizador/biblioteca" className="text-xs text-[#4f9eff]/70 hover:text-[#4f9eff] transition">
+      <div className="rounded-xl border border-linha bg-superficie overflow-hidden">
+        <div className="px-5 py-4 border-b border-linha flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-tinta">Os teus módulos recentes</h2>
+          <Link href="/utilizador/biblioteca" className="text-xs text-acao hover:text-acao transition">
             Ver todas →
           </Link>
         </div>
 
         {loading ? (
-          <div className="px-5 py-8 text-center text-sm text-white/25">A carregar…</div>
+          <div className="px-5 py-8 text-center text-sm text-cinza/80">A carregar…</div>
         ) : recentes.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-white/25">
+          <div className="px-5 py-8 text-center text-sm text-cinza/80">
             Ainda não estás inscrito em nenhuma disciplina.
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs text-white/30 border-b border-white/5">
+              <tr className="text-xs text-cinza/80 border-b border-linha">
                 <th className="text-left px-5 py-2.5 font-medium">Nome</th>
                 <th className="text-left px-5 py-2.5 font-medium">Código</th>
                 <th className="text-left px-5 py-2.5 font-medium">Ano</th>
@@ -139,12 +125,12 @@ export default function UtilizadorDashboard() {
                 return (
                   <tr
                     key={d.id_modulo}
-                    className={`transition hover:bg-white/3 ${i !== recentes.length - 1 ? 'border-b border-white/5' : ''}`}
+                    className={`transition hover:bg-papel ${i !== recentes.length - 1 ? 'border-b border-linha' : ''}`}
                   >
-                    <td className="px-5 py-3 text-white/80 font-medium">{mod.nome}</td>
-                    <td className="px-5 py-3 font-mono text-xs text-white/35">{mod.codigo ?? '—'}</td>
-                    <td className="px-5 py-3 text-white/45">{mod.ano != null ? `${mod.ano}º Ano` : '—'}</td>
-                    <td className="px-5 py-3 text-white/45">{mod.semestre != null ? `${mod.semestre}º Sem` : '—'}</td>
+                    <td className="px-5 py-3 text-tinta font-medium">{mod.nome}</td>
+                    <td className="px-5 py-3 font-mono text-xs text-cinza">{mod.codigo ?? '—'}</td>
+                    <td className="px-5 py-3 text-cinza">{mod.ano != null ? `${mod.ano}º Ano` : '—'}</td>
+                    <td className="px-5 py-3 text-cinza">{mod.semestre != null ? `${mod.semestre}º Sem` : '—'}</td>
                   </tr>
                 );
               })}

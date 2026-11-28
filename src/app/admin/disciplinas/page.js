@@ -4,20 +4,21 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import { useAdminFilter, FilterContextLine } from '../AdminFilterContext';
 
+import { IconeCubo, IconeCarregar, IconeEspera } from '@/components/Icones';
 /* ─── Modal genérico ────────────────────────────────────────────── */
 function Modal({ title, onClose, children, large = false }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-tinta/30 backdrop-blur-[2px]"
         onClick={onClose}
       />
-      <div className={`relative z-10 w-full ${large ? 'max-w-2xl' : 'max-w-lg'} rounded-2xl border border-white/10 bg-[#13131a] shadow-2xl flex flex-col max-h-[90vh]`}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
-          <h2 className="text-base font-semibold text-white">{title}</h2>
+      <div className={`relative z-10 w-full ${large ? 'max-w-2xl' : 'max-w-lg'} rounded-2xl border border-linha bg-superficie shadow-2xl flex flex-col max-h-[90vh]`}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-linha">
+          <h2 className="text-base font-semibold text-tinta">{title}</h2>
           <button
             onClick={onClose}
-            className="text-white/30 hover:text-white/70 transition text-xl leading-none"
+            className="text-cinza/80 hover:text-tinta-2 transition text-xl leading-none"
           >
             ×
           </button>
@@ -109,7 +110,7 @@ function DisciplinaMedia({ idModulo }) {
     fetchMedia();
   }
 
-  if (loading) return <p className="text-xs text-white/25 py-2">A carregar media…</p>;
+  if (loading) return <p className="text-xs text-cinza/80 py-2">A carregar media…</p>;
 
   return (
     <div className="space-y-6">
@@ -118,24 +119,24 @@ function DisciplinaMedia({ idModulo }) {
       <div>
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-[#4f9eff]">Modelos 3D Associados</h3>
-            <p className="text-xs text-white/40 mt-0.5">
+            <h3 className="text-sm font-semibold text-acao">Modelos 3D Associados</h3>
+            <p className="text-xs text-cinza mt-0.5">
               Associa modelos na página{' '}
-              <a href="/admin/modelos" className="text-[#4f9eff]/70 hover:text-[#4f9eff] transition">Modelos 3D</a>.
+              <a href="/admin/modelos" className="text-acao hover:text-acao transition">Modelos 3D</a>.
             </p>
           </div>
         </div>
         {modelos.length === 0 ? (
-          <div className="py-6 text-center text-xs text-white/30 border border-dashed border-white/10 rounded-lg bg-white/2">
+          <div className="py-6 text-center text-xs text-cinza/80 border border-dashed border-linha rounded-lg bg-papel">
             Nenhum modelo associado a este módulo.
           </div>
         ) : (
           <div className="space-y-2">
             {modelos.map(m => (
               <div key={m.id_media_items}
-                className="flex items-center gap-3 p-3 rounded-lg border border-white/10 bg-white/5 transition hover:bg-white/10">
-                <span className="text-lg">🧊</span>
-                <p className="text-sm font-medium text-white/85 truncate">
+                className="flex items-center gap-3 p-3 rounded-lg border border-linha bg-papel transition hover:bg-mosaico">
+                <IconeCubo tamanho={18} />
+                <p className="text-sm font-medium text-tinta truncate">
                   {m.titulo || `Modelo #${m.id_media_items}`}
                 </p>
               </div>
@@ -144,22 +145,22 @@ function DisciplinaMedia({ idModulo }) {
         )}
       </div>
 
-      <hr className="border-white/5" />
+      <hr className="border-linha" />
 
       {/* Vídeo / Imagem do card */}
       <div>
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-[#4f9eff]">Vídeo / Imagem do Card</h3>
-            <p className="text-xs text-white/40 mt-0.5">Media apresentada no card público do módulo.</p>
+            <h3 className="text-sm font-semibold text-acao">Vídeo / Imagem do Card</h3>
+            <p className="text-xs text-cinza mt-0.5">Media apresentada no card público do módulo.</p>
           </div>
         </div>
         {cardMedia.length > 0 ? (
           <div className="space-y-2">
             {cardMedia.map(item => (
               <div key={item.id_media_items}
-                className="flex items-center gap-3 p-3 rounded-lg border border-white/10 bg-white/5 transition hover:bg-white/10">
-                <div className="w-20 h-14 rounded overflow-hidden shrink-0 bg-[#0c0c0f]">
+                className="flex items-center gap-3 p-3 rounded-lg border border-linha bg-papel transition hover:bg-mosaico">
+                <div className="w-20 h-14 rounded overflow-hidden shrink-0 bg-papel">
                   {isVideo(item.url) ? (
                     <video src={item.url} className="w-full h-full object-cover" muted loop playsInline />
                   ) : (
@@ -167,22 +168,22 @@ function DisciplinaMedia({ idModulo }) {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-white/60 truncate">{item.titulo || item.url?.split('/').pop()}</p>
-                  <p className="text-[10px] text-white/25 uppercase mt-0.5">{item.tipo}</p>
+                  <p className="text-xs text-tinta-2 truncate">{item.titulo || item.url?.split('/').pop()}</p>
+                  <p className="text-[10px] text-cinza/80 uppercase mt-0.5">{item.tipo}</p>
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <button
                     onClick={() => fileRef.current?.click()}
                     disabled={uploading}
-                    className="text-xs text-white/40 border border-white/10 px-2 py-1 rounded hover:bg-white/5 transition"
+                    className="text-xs text-cinza border border-linha px-2 py-1 rounded hover:bg-papel transition"
                   >
                     Substituir
                   </button>
                   <button
                     onClick={() => handleRemover(item)}
                     disabled={uploading}
-                    className="text-xs text-red-400/50 border border-red-500/20 px-2 py-1 rounded
-                               hover:bg-red-500/10 hover:text-red-400 transition"
+                    className="text-xs text-red-400/50 border border-ecgm-r/30 px-2 py-1 rounded
+                               hover:bg-ecgm-r/10 hover:text-ecgm-r transition"
                   >
                     Remover
                   </button>
@@ -194,14 +195,14 @@ function DisciplinaMedia({ idModulo }) {
           <div
             onClick={() => !uploading && fileRef.current?.click()}
             className={`flex items-center gap-3 rounded-lg border-2 border-dashed px-4 py-4 transition
-              ${uploading ? 'border-white/5 cursor-wait' : 'border-white/10 hover:border-[#4f9eff]/40 hover:bg-[#4f9eff]/5 cursor-pointer'}`}
+              ${uploading ? 'border-linha cursor-wait' : 'border-linha hover:border-acao/60 hover:bg-acao/5 cursor-pointer'}`}
           >
-            <span className="text-2xl">{uploading ? '⏳' : '📥'}</span>
+            <span className="text-cinza">{uploading ? <IconeEspera tamanho={24} /> : <IconeCarregar tamanho={24} />}</span>
             <div>
-              <p className="text-sm font-medium text-white/70">
+              <p className="text-sm font-medium text-tinta-2">
                 {uploading ? 'A enviar…' : 'Adicionar vídeo ou imagem ao card'}
               </p>
-              <p className="text-xs text-white/25 mt-0.5">JPG, PNG, MP4, WebM</p>
+              <p className="text-xs text-cinza/80 mt-0.5">JPG, PNG, MP4, WebM</p>
             </div>
           </div>
         )}
@@ -222,15 +223,15 @@ function DisciplinaMedia({ idModulo }) {
 function Field({ label, children }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-white/50 mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-cinza mb-1.5">{label}</label>
       {children}
     </div>
   );
 }
 
-const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white
-  placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1
-  focus:ring-[#4f9eff]/30 transition`;
+const inputCls = `w-full rounded-lg border border-linha bg-papel px-3 py-2 text-sm text-tinta
+  placeholder:text-cinza focus:outline-none focus:border-acao/60 focus:ring-1
+  focus:ring-acao/20 transition`;
 
 /* ─── Formulário de disciplina ──────────────────────────────────── */
 function DisciplinaForm({ initial = {}, programas = [], onSave, onCancel, saving }) {
@@ -280,19 +281,19 @@ function DisciplinaForm({ initial = {}, programas = [], onSave, onCancel, saving
           : null;
         return (
           <Field label="Programa">
-            <div className="flex items-center gap-2 rounded-lg border border-white/8 bg-white/3 px-3 py-2 text-sm">
+            <div className="flex items-center gap-2 rounded-lg border border-linha bg-papel px-3 py-2 text-sm">
               {prog ? (
                 <>
                   {prog.codigo && (
-                    <span className="rounded-full border border-[#4f9eff]/25 bg-[#4f9eff]/10
-                                     px-2 py-0.5 text-xs font-semibold uppercase tracking-widest text-[#4f9eff]">
+                    <span className="rounded-full border border-acao/30 bg-acao/10
+                                     px-2 py-0.5 text-xs font-semibold uppercase tracking-widest text-acao">
                       {prog.codigo}
                     </span>
                   )}
-                  <span className="text-white/70">{prog.nome}</span>
+                  <span className="text-tinta-2">{prog.nome}</span>
                 </>
               ) : (
-                <span className="text-white/25 italic">Sem programa — seleciona um no filtro do topo</span>
+                <span className="text-cinza/80 italic">Sem programa — seleciona um no filtro do topo</span>
               )}
             </div>
           </Field>
@@ -328,8 +329,8 @@ function DisciplinaForm({ initial = {}, programas = [], onSave, onCancel, saving
         <button
           onClick={() => onSave(form)}
           disabled={saving || !form.nome.trim()}
-          className={`${onCancel ? 'flex-1' : 'w-full'} rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white
-                     hover:bg-[#3d8aef] transition disabled:opacity-50 disabled:cursor-not-allowed`}
+          className={`${onCancel ? 'flex-1' : 'w-full'} rounded-lg bg-acao py-2.5 text-sm font-semibold text-white
+                     hover:bg-acao-escuro transition disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           {saving ? 'A guardar…' : 'Guardar Alterações do Módulo'}
         </button>
@@ -337,8 +338,8 @@ function DisciplinaForm({ initial = {}, programas = [], onSave, onCancel, saving
           <button
             onClick={onCancel}
             disabled={saving}
-            className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium
-                       text-white/50 hover:bg-white/5 hover:text-white/80 transition"
+            className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium
+                       text-cinza hover:bg-papel hover:text-tinta transition"
           >
             Cancelar
           </button>
@@ -494,8 +495,8 @@ export default function DisciplinasPage() {
   const paginatedDiscs = disciplinasFiltradas.slice(startIndexDis, startIndexDis + ITEMS_PER_PAGE_DISC);
 
   const btnPageCls = (disabled) =>
-    `rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60
-     transition hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed`;
+    `rounded-md border border-linha bg-papel px-3 py-1.5 text-xs font-medium text-tinta-2
+     transition hover:bg-mosaico hover:text-tinta disabled:opacity-30 disabled:cursor-not-allowed`;
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -503,15 +504,15 @@ export default function DisciplinasPage() {
       {/* Toast */}
       {toast && (
         <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 rounded-lg border
-                         px-4 py-2.5 text-sm text-white shadow-xl
+                         px-4 py-2.5 text-sm text-tinta shadow-xl
                          ${toast.isError
-                           ? 'border-red-500/30 bg-red-950/80'
-                           : 'border-white/10 bg-[#13131a]'}`}>
+                           ? 'border-ecgm-r/30 bg-ecgm-r/10'
+                           : 'border-linha bg-superficie'}`}>
           <span>{toast.msg}</span>
           {toast.isError && (
             <button
               onClick={() => setToast(null)}
-              className="text-white/40 hover:text-white transition text-lg leading-none"
+              className="text-cinza hover:text-tinta transition text-lg leading-none"
             >×</button>
           )}
         </div>
@@ -520,16 +521,16 @@ export default function DisciplinasPage() {
       {/* Cabeçalho */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Módulos</h1>
-          <p className="text-sm text-white/35 mt-1">
+          <h1 className="text-2xl font-bold text-tinta">Módulos</h1>
+          <p className="text-sm text-cinza mt-1">
             {loading ? '…' : `${disciplinasFiltradas.length} disciplina${disciplinasFiltradas.length !== 1 ? 's' : ''}`}
           </p>
           <FilterContextLine />
         </div>
         <button
           onClick={() => setModal('nova')}
-          className="flex items-center gap-2 rounded-lg bg-[#4f9eff] px-4 py-2.5 text-sm
-                     font-semibold text-white hover:bg-[#3d8aef] transition"
+          className="flex items-center gap-2 rounded-lg bg-acao px-4 py-2.5 text-sm
+                     font-semibold text-white hover:bg-acao-escuro transition"
         >
           <span className="text-lg leading-none">+</span>
           Novo Módulo
@@ -539,7 +540,7 @@ export default function DisciplinasPage() {
       {/* Barra de Pesquisa */}
       <div className="mb-6">
         <div className="relative">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-white/30">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-cinza/80">
             {/* Ícone de Lupa */}
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -550,17 +551,17 @@ export default function DisciplinasPage() {
             placeholder="Pesquisar por nome, código ou descrição..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-[#13131a] py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 focus:border-[#4f9eff]/50 focus:outline-none focus:ring-1 focus:ring-[#4f9eff]/30 transition shadow-sm"
+            className="w-full rounded-xl border border-linha bg-superficie py-3 pl-10 pr-4 text-sm text-tinta placeholder:text-cinza focus:border-acao/60 focus:outline-none focus:ring-1 focus:ring-acao/20 transition shadow-sm"
           />
         </div>
       </div>
 
       {/* Tabela */}
-      <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
+      <div className="rounded-xl border border-linha bg-superficie overflow-hidden">
         {loading ? (
-          <div className="py-12 text-center text-sm text-white/25">A carregar…</div>
+          <div className="py-12 text-center text-sm text-cinza/80">A carregar…</div>
         ) : disciplinasFiltradas.length === 0 ? (
-          <div className="py-12 text-center text-sm text-white/25">
+          <div className="py-12 text-center text-sm text-cinza/80">
             {disciplinas.length === 0
               ? 'Nenhum módulo encontrado. Cria o primeiro!'
               : searchQuery
@@ -571,7 +572,7 @@ export default function DisciplinasPage() {
           <>
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs text-white/30 border-b border-white/5 bg-white/2">
+              <tr className="text-xs text-cinza/80 border-b border-linha bg-papel">
                 <th className="text-left px-5 py-3 font-medium">Nome</th>
                 <th className="text-left px-5 py-3 font-medium">Código</th>
                 <th className="text-left px-5 py-3 font-medium">Ano</th>
@@ -583,30 +584,30 @@ export default function DisciplinasPage() {
               {paginatedDiscs.map((d, i) => (
                 <tr
                   key={d.id_modulo}
-                  className={`transition hover:bg-white/2 ${i !== paginatedDiscs.length - 1 ? 'border-b border-white/5' : ''}`}
+                  className={`transition hover:bg-papel ${i !== paginatedDiscs.length - 1 ? 'border-b border-linha' : ''}`}
                 >
                   <td className="px-5 py-3.5">
-                    <div className="font-medium text-white/85">{d.nome}</div>
+                    <div className="font-medium text-tinta">{d.nome}</div>
                     {d.descricao && (
-                      <div className="text-xs text-white/30 mt-0.5 truncate max-w-xs">{d.descricao}</div>
+                      <div className="text-xs text-cinza/80 mt-0.5 truncate max-w-xs">{d.descricao}</div>
                     )}
                   </td>
-                  <td className="px-5 py-3.5 font-mono text-xs text-white/35">{d.codigo ?? '—'}</td>
-                  <td className="px-5 py-3.5 text-white/45">{d.ano != null ? `${d.ano}º` : '—'}</td>
-                  <td className="px-5 py-3.5 text-white/45">{d.semestre != null ? `${d.semestre}º` : '—'}</td>
+                  <td className="px-5 py-3.5 font-mono text-xs text-cinza">{d.codigo ?? '—'}</td>
+                  <td className="px-5 py-3.5 text-cinza">{d.ano != null ? `${d.ano}º` : '—'}</td>
+                  <td className="px-5 py-3.5 text-cinza">{d.semestre != null ? `${d.semestre}º` : '—'}</td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => setModal({ disciplina: d })}
-                        className="rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium
-                                   text-white/50 hover:bg-white/5 hover:text-white/80 transition"
+                        className="rounded-md border border-linha px-3 py-1.5 text-xs font-medium
+                                   text-cinza hover:bg-papel hover:text-tinta transition"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => setConfirmDelete(d.id_modulo)}
-                        className="rounded-md border border-red-500/20 px-3 py-1.5 text-xs font-medium
-                                   text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition"
+                        className="rounded-md border border-ecgm-r/30 px-3 py-1.5 text-xs font-medium
+                                   text-ecgm-r hover:bg-ecgm-r/10 hover:text-ecgm-r transition"
                       >
                         Eliminar
                       </button>
@@ -617,15 +618,15 @@ export default function DisciplinasPage() {
             </tbody>
           </table>
           {totalPagesDis > 1 && (
-            <div className="flex items-center justify-between border-t border-white/5 bg-[#0c0c0f] px-6 py-4">
-              <p className="text-xs text-white/40">
-                A mostrar <span className="font-semibold text-white/80">{startIndexDis + 1}</span> a{' '}
-                <span className="font-semibold text-white/80">{Math.min(startIndexDis + ITEMS_PER_PAGE_DISC, disciplinasFiltradas.length)}</span>{' '}
-                de <span className="font-semibold text-white/80">{disciplinasFiltradas.length}</span> módulos
+            <div className="flex items-center justify-between border-t border-linha bg-papel px-6 py-4">
+              <p className="text-xs text-cinza">
+                A mostrar <span className="font-semibold text-tinta">{startIndexDis + 1}</span> a{' '}
+                <span className="font-semibold text-tinta">{Math.min(startIndexDis + ITEMS_PER_PAGE_DISC, disciplinasFiltradas.length)}</span>{' '}
+                de <span className="font-semibold text-tinta">{disciplinasFiltradas.length}</span> módulos
               </p>
               <div className="flex items-center gap-2">
                 <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className={btnPageCls(currentPage === 1)}>Anterior</button>
-                <span className="text-xs text-white/40 font-mono px-2">{currentPage} / {totalPagesDis}</span>
+                <span className="text-xs text-cinza font-mono px-2">{currentPage} / {totalPagesDis}</span>
                 <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPagesDis))} disabled={currentPage === totalPagesDis} className={btnPageCls(currentPage === totalPagesDis)}>Próxima</button>
               </div>
             </div>
@@ -651,7 +652,7 @@ export default function DisciplinasPage() {
       {modal?.disciplina && (
         <Modal title={`Gerir: ${modal.disciplina.nome}`} onClose={() => setModal(null)}>
           <div className="mb-8">
-            <h3 className="text-sm font-semibold text-white/80 mb-3">Informação Base</h3>
+            <h3 className="text-sm font-semibold text-tinta mb-3">Informação Base</h3>
             <DisciplinaForm
               initial={modal.disciplina}
               programas={todosProgramas}
@@ -659,7 +660,7 @@ export default function DisciplinasPage() {
               saving={saving}
             />
           </div>
-          <hr className="border-white/5 mb-6" />
+          <hr className="border-linha mb-6" />
           <DisciplinaMedia idModulo={modal.disciplina.id_modulo} />
         </Modal>
       )}
@@ -667,7 +668,7 @@ export default function DisciplinasPage() {
       {/* Modal — Confirmar eliminação */}
       {confirmDelete !== null && (
         <Modal title="Confirmar eliminação" onClose={() => setConfirmDelete(null)}>
-          <p className="text-sm text-white/60 mb-6">
+          <p className="text-sm text-tinta-2 mb-6">
             Tens a certeza que queres eliminar este módulo?
             Esta ação não pode ser desfeita e remove todas as associações com modelos 3D.
           </p>
@@ -675,16 +676,16 @@ export default function DisciplinasPage() {
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="flex-1 rounded-lg bg-red-500/80 py-2.5 text-sm font-semibold text-white
-                         hover:bg-red-500 transition disabled:opacity-50"
+              className="flex-1 rounded-lg bg-ecgm-r py-2.5 text-sm font-semibold text-white
+                         hover:bg-ecgm-r transition disabled:opacity-50"
             >
               {deleting ? 'A eliminar…' : 'Eliminar'}
             </button>
             <button
               onClick={() => setConfirmDelete(null)}
               disabled={deleting}
-              className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium
-                         text-white/50 hover:bg-white/5 transition"
+              className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium
+                         text-cinza hover:bg-papel transition"
             >
               Cancelar
             </button>

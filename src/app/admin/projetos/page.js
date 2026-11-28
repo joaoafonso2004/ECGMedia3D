@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import { useAdminFilter, FilterContextLine } from '../AdminFilterContext';
 
+import { IconeImagem, IconeVideo, IconePasta, IconeCarregar, IconeEspera } from '@/components/Icones';
 /* Helper para detetar se o URL aponta para um vídeo */
 function isVideoUrl(url) {
   if (!url) return false;
@@ -14,11 +15,11 @@ function isVideoUrl(url) {
 function Modal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-xl rounded-2xl border border-white/10 bg-[#13131a] shadow-2xl flex flex-col max-h-[90vh]">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 shrink-0">
-          <h2 className="text-base font-semibold text-white">{title}</h2>
-          <button onClick={onClose} className="text-white/30 hover:text-white/70 transition text-xl leading-none">×</button>
+      <div className="absolute inset-0 bg-tinta/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-xl rounded-2xl border border-linha bg-superficie shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-linha shrink-0">
+          <h2 className="text-base font-semibold text-tinta">{title}</h2>
+          <button onClick={onClose} className="text-cinza/80 hover:text-tinta-2 transition text-xl leading-none">×</button>
         </div>
         <div className="px-6 py-5 overflow-y-auto">
           {children}
@@ -31,13 +32,13 @@ function Modal({ title, onClose, children }) {
 function Field({ label, children }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-white/50 mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-cinza mb-1.5">{label}</label>
       {children}
     </div>
   );
 }
 
-const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1 focus:ring-[#4f9eff]/30 transition`;
+const inputCls = `w-full rounded-lg border border-linha bg-papel px-3 py-2 text-sm text-tinta placeholder:text-cinza focus:outline-none focus:border-acao/60 focus:ring-1 focus:ring-acao/20 transition`;
 
 /* ─── Galeria de Imagens e Vídeos do Projeto (Modo Edição) ──────── */
 function GaleriaProjeto({ id_projetos }) {
@@ -121,15 +122,15 @@ function GaleriaProjeto({ id_projetos }) {
         onClick={() => !uploading && fileRef.current?.click()}
         className={`flex items-center justify-center gap-3 rounded-lg border-2 border-dashed px-4 py-6 transition
           ${uploading 
-            ? 'border-white/5 bg-white/2 cursor-wait' 
-            : 'border-white/10 hover:border-[#4f9eff]/40 hover:bg-[#4f9eff]/5 cursor-pointer'}`}
+            ? 'border-linha bg-papel cursor-wait' 
+            : 'border-linha hover:border-acao/60 hover:bg-acao/5 cursor-pointer'}`}
       >
-        <span className="text-3xl">{uploading ? '⏳' : '📥'}</span>
+        <span className="text-cinza">{uploading ? <IconeEspera tamanho={28} /> : <IconeCarregar tamanho={28} />}</span>
         <div>
-          <p className="text-sm font-medium text-white/80">
+          <p className="text-sm font-medium text-tinta">
             {uploading ? 'A enviar ficheiros...' : 'Adicionar à Galeria'}
           </p>
-          <p className="text-xs text-white/30 mt-0.5">
+          <p className="text-xs text-cinza/80 mt-0.5">
             Seleciona várias imagens (JPG/PNG) ou vídeos (MP4)
           </p>
         </div>
@@ -145,11 +146,11 @@ function GaleriaProjeto({ id_projetos }) {
       />
 
       {loading ? (
-        <div className="text-center py-4 text-xs text-white/30">A carregar galeria...</div>
+        <div className="text-center py-4 text-xs text-cinza/80">A carregar galeria...</div>
       ) : media.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
           {media.map(item => (
-            <div key={item.id_media_items} className="relative group rounded-lg overflow-hidden border border-white/10 bg-[#0c0c0f] aspect-video">
+            <div key={item.id_media_items} className="relative group rounded-lg overflow-hidden border border-linha bg-papel aspect-video">
               {item.tipo === 'video' ? (
                 <video src={item.url} className="w-full h-full object-cover" muted loop playsInline />
               ) : (
@@ -159,13 +160,13 @@ function GaleriaProjeto({ id_projetos }) {
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                 <button
                   onClick={() => handleRemove(item.id_media_items, item.url)}
-                  className="text-xs font-semibold text-red-400 bg-red-500/20 px-3 py-1.5 rounded-md hover:bg-red-500 hover:text-white transition"
+                  className="text-xs font-semibold text-ecgm-r bg-ecgm-r/15 px-3 py-1.5 rounded-md hover:bg-ecgm-r hover:text-white transition"
                 >
                   Remover
                 </button>
               </div>
               
-              <div className="absolute top-1.5 left-1.5 bg-black/50 text-white/70 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider backdrop-blur-md">
+              <div className="absolute top-1.5 left-1.5 bg-tinta/30 text-tinta-2 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider backdrop-blur-md">
                 {item.tipo}
               </div>
             </div>
@@ -234,25 +235,25 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isN
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-xs font-medium text-white/50 mb-1.5">Capa do projeto (Opcional)</label>
+        <label className="block text-xs font-medium text-cinza mb-1.5">Capa do projeto (Opcional)</label>
         <div
           onClick={() => fileRef.current?.click()}
           className={`flex items-center gap-3 rounded-lg border-2 border-dashed px-4 py-4 cursor-pointer transition
-            ${file || form.projeto_url ? 'border-[#4f9eff]/40 bg-[#4f9eff]/5' : 'border-white/10 hover:border-white/20'}`}
+            ${file || form.projeto_url ? 'border-acao/60 bg-acao/5' : 'border-linha hover:border-linha-2'}`}
         >
-          <span className="text-2xl text-[#4f9eff]">
-            {file || form.projeto_url ? (isVideoUrl(file?.name || form.projeto_url) ? '🎬' : '🖼️') : '📸'}
+          <span className="text-2xl text-acao">
+            {file || form.projeto_url ? (isVideoUrl(file?.name || form.projeto_url) ? <IconeVideo tamanho={26} /> : <IconeImagem tamanho={26} />) : <IconeImagem tamanho={26} />}
           </span>
           <div className="flex-1 min-w-0">
             {file ? (
               <>
-                <p className="text-sm font-medium text-white/80 truncate">{file.name}</p>
-                <p className="text-xs text-white/30">Novo recurso selecionado</p>
+                <p className="text-sm font-medium text-tinta truncate">{file.name}</p>
+                <p className="text-xs text-cinza/80">Novo recurso selecionado</p>
               </>
             ) : form.projeto_url ? (
-              <p className="text-sm text-white/80 truncate">Recurso definido (Clica para alterar)</p>
+              <p className="text-sm text-tinta truncate">Recurso definido (Clica para alterar)</p>
             ) : (
-              <p className="text-sm text-white/30">Clica para selecionar uma imagem ou vídeo</p>
+              <p className="text-sm text-cinza/80">Clica para selecionar uma imagem ou vídeo</p>
             )}
           </div>
           {(file || form.projeto_url) && (
@@ -263,7 +264,7 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isN
                 set('projeto_url', ''); 
                 if(fileRef.current) fileRef.current.value = ''; 
               }}
-              className="text-white/25 hover:text-red-400 transition text-lg leading-none"
+              className="text-cinza/80 hover:text-ecgm-r transition text-lg leading-none"
             >×</button>
           )}
         </div>
@@ -299,19 +300,19 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isN
       </Field>
 
       {isNew && (
-        <div className="pt-2 border-t border-white/10 mt-4">
+        <div className="pt-2 border-t border-linha mt-4">
           <div className="mb-4">
-            <h3 className="text-sm font-semibold text-[#4f9eff]">Galeria do Projeto (Opcional)</h3>
-            <p className="text-xs text-white/40 mt-0.5">Podes já adicionar imagens ou vídeos detalhados.</p>
+            <h3 className="text-sm font-semibold text-acao">Galeria do Projeto (Opcional)</h3>
+            <p className="text-xs text-cinza mt-0.5">Podes já adicionar imagens ou vídeos detalhados.</p>
           </div>
           <div
             onClick={() => galleryRef.current?.click()}
-            className="flex items-center justify-center gap-3 rounded-lg border-2 border-dashed border-white/10 hover:border-[#4f9eff]/40 hover:bg-[#4f9eff]/5 px-4 py-6 cursor-pointer transition"
+            className="flex items-center justify-center gap-3 rounded-lg border-2 border-dashed border-linha hover:border-acao/60 hover:bg-acao/5 px-4 py-6 cursor-pointer transition"
           >
-             <span className="text-3xl">📥</span>
+             <span className="text-cinza"><IconeCarregar tamanho={28} /></span>
              <div>
-               <p className="text-sm font-medium text-white/80">Selecionar Ficheiros</p>
-               <p className="text-xs text-white/30 mt-0.5">Múltiplas imagens (JPG/PNG) ou vídeos (MP4)</p>
+               <p className="text-sm font-medium text-tinta">Selecionar Ficheiros</p>
+               <p className="text-xs text-cinza/80 mt-0.5">Múltiplas imagens (JPG/PNG) ou vídeos (MP4)</p>
              </div>
           </div>
           <input
@@ -329,7 +330,7 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isN
                 const isVid = f.type.startsWith('video/');
                 const objUrl = URL.createObjectURL(f);
                 return (
-                  <div key={i} className="relative group rounded-lg overflow-hidden border border-white/10 bg-[#0c0c0f] aspect-video">
+                  <div key={i} className="relative group rounded-lg overflow-hidden border border-linha bg-papel aspect-video">
                     {isVid ? (
                       <video src={objUrl} className="w-full h-full object-cover" muted />
                     ) : (
@@ -338,7 +339,7 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isN
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                       <button
                         onClick={(e) => { e.stopPropagation(); setGalleryFiles(prev => prev.filter((_, idx) => idx !== i)); }}
-                        className="text-xs font-semibold text-red-400 bg-red-500/20 px-3 py-1.5 rounded-md hover:bg-red-500 hover:text-white transition"
+                        className="text-xs font-semibold text-ecgm-r bg-ecgm-r/15 px-3 py-1.5 rounded-md hover:bg-ecgm-r hover:text-white transition"
                       >
                         Remover
                       </button>
@@ -352,8 +353,8 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isN
       )}
 
       {error && (
-        <div className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-2.5">
-          <p className="text-xs text-red-400">{error}</p>
+        <div className="rounded-lg border border-ecgm-r/30 bg-ecgm-r/10 px-4 py-2.5">
+          <p className="text-xs text-ecgm-r">{error}</p>
         </div>
       )}
 
@@ -361,11 +362,11 @@ function ProjetoForm({ initial = {}, modulos = [], onSave, onCancel, saving, isN
         <button
           onClick={handleSave}
           disabled={isBusy}
-          className="flex-1 rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white hover:bg-[#3d8aef] transition disabled:opacity-50"
+          className="flex-1 rounded-lg bg-acao py-2.5 text-sm font-semibold text-white hover:bg-acao-escuro transition disabled:opacity-50"
         >
           {uploading || saving ? 'A processar e guardar…' : 'Guardar Projeto'}
         </button>
-        <button onClick={onCancel} disabled={isBusy} className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium text-white/50 hover:bg-white/5 transition">
+        <button onClick={onCancel} disabled={isBusy} className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium text-cinza hover:bg-papel transition">
           Cancelar
         </button>
       </div>
@@ -576,13 +577,13 @@ export default function ProjetosPage() {
   const paginatedProjs  = projetosFiltrados.slice(startIndexProj, startIndexProj + ITEMS_PER_PAGE_PROJ);
 
   const btnPageCls = (disabled) =>
-    `rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60
-     transition hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed`;
+    `rounded-md border border-linha bg-papel px-3 py-1.5 text-xs font-medium text-tinta-2
+     transition hover:bg-mosaico hover:text-tinta disabled:opacity-30 disabled:cursor-not-allowed`;
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
       {toast && (
-        <div className="fixed top-5 right-5 z-50 rounded-lg border border-white/10 bg-[#13131a] px-4 py-2.5 text-sm text-white shadow-xl">
+        <div className="fixed top-5 right-5 z-50 rounded-lg border border-linha bg-superficie px-4 py-2.5 text-sm text-tinta shadow-xl">
           {toast}
         </div>
       )}
@@ -590,13 +591,13 @@ export default function ProjetosPage() {
       {/* Cabeçalho */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Projetos</h1>
-          <p className="text-sm text-white/35 mt-1">{loading ? '…' : `${projetosFiltrados.length} projeto${projetosFiltrados.length !== 1 ? 's' : ''} registados`}</p>
+          <h1 className="text-2xl font-bold text-tinta">Projetos</h1>
+          <p className="text-sm text-cinza mt-1">{loading ? '…' : `${projetosFiltrados.length} projeto${projetosFiltrados.length !== 1 ? 's' : ''} registados`}</p>
           <FilterContextLine />
         </div>
         <button
           onClick={() => setModal('novo')}
-          className="flex items-center gap-2 rounded-lg bg-[#4f9eff] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#3d8aef] transition"
+          className="flex items-center gap-2 rounded-lg bg-acao px-4 py-2.5 text-sm font-semibold text-white hover:bg-acao-escuro transition"
         >
           <span className="text-lg leading-none">+</span> Novo Projeto
         </button>
@@ -605,7 +606,7 @@ export default function ProjetosPage() {
       {/* Barra de Pesquisa */}
       <div className="mb-6">
         <div className="relative">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-white/30">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-cinza/80">
             {/* Ícone de Lupa */}
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -616,24 +617,24 @@ export default function ProjetosPage() {
             placeholder="Pesquisar por título, disciplina ou autores..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-[#13131a] py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 focus:border-[#4f9eff]/50 focus:outline-none focus:ring-1 focus:ring-[#4f9eff]/30 transition shadow-sm"
+            className="w-full rounded-xl border border-linha bg-superficie py-3 pl-10 pr-4 text-sm text-tinta placeholder:text-cinza focus:border-acao/60 focus:outline-none focus:ring-1 focus:ring-acao/20 transition shadow-sm"
           />
         </div>
       </div>
 
       {/* Tabela */}
-      <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
+      <div className="rounded-xl border border-linha bg-superficie overflow-hidden">
         {loading ? (
-          <div className="py-12 text-center text-sm text-white/25">A carregar…</div>
+          <div className="py-12 text-center text-sm text-cinza/80">A carregar…</div>
         ) : projetosFiltrados.length === 0 ? (
-          <div className="py-12 text-center text-sm text-white/25">
+          <div className="py-12 text-center text-sm text-cinza/80">
             {projetos.length === 0 ? 'Nenhum projeto encontrado. Cria o primeiro!' : 'Nenhum projeto para a pesquisa atual.'}
           </div>
         ) : (
           <>
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs text-white/30 border-b border-white/5 bg-white/2">
+              <tr className="text-xs text-cinza/80 border-b border-linha bg-papel">
                 <th className="text-left px-5 py-3 font-medium w-16">Capa</th>
                 <th className="text-left px-5 py-3 font-medium">Título do Projeto</th>
                 <th className="text-left px-5 py-3 font-medium">Disciplina Associada</th>
@@ -643,10 +644,10 @@ export default function ProjetosPage() {
             </thead>
             <tbody>
               {paginatedProjs.map((p, i) => (
-                <tr key={p.id_projetos} className={`transition hover:bg-white/2 ${i !== paginatedProjs.length - 1 ? 'border-b border-white/5' : ''}`}>
+                <tr key={p.id_projetos} className={`transition hover:bg-papel ${i !== paginatedProjs.length - 1 ? 'border-b border-linha' : ''}`}>
                   <td className="px-5 py-3.5">
                     {p.projeto_url ? (
-                      <div className="h-10 w-10 overflow-hidden rounded-md border border-white/10 bg-[#0c0c0f]">
+                      <div className="h-10 w-10 overflow-hidden rounded-md border border-linha bg-papel">
                         {isVideoUrl(p.projeto_url) ? (
                           <video src={p.projeto_url} className="h-full w-full object-cover" muted />
                         ) : (
@@ -654,21 +655,21 @@ export default function ProjetosPage() {
                         )}
                       </div>
                     ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-md border border-white/5 bg-white/5 text-white/20 text-lg">📁</div>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-md border border-linha bg-papel text-cinza/70"><IconePasta tamanho={18} /></div>
                     )}
                   </td>
                   <td className="px-5 py-3.5">
-                    <div className="font-medium text-white/85">{p.titulo}</div>
-                    {p.descricao && <div className="text-xs text-white/30 mt-0.5 truncate max-w-xs">{p.descricao}</div>}
+                    <div className="font-medium text-tinta">{p.titulo}</div>
+                    {p.descricao && <div className="text-xs text-cinza/80 mt-0.5 truncate max-w-xs">{p.descricao}</div>}
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className="text-xs text-white/60 bg-white/5 px-2 py-1 rounded-md">{p.modulo?.nome || '—'}</span>
+                    <span className="text-xs text-tinta-2 bg-papel px-2 py-1 rounded-md">{p.modulo?.nome || '—'}</span>
                   </td>
-                  <td className="px-5 py-3.5 text-white/45 text-xs">{p.autores ?? '—'}</td>
+                  <td className="px-5 py-3.5 text-cinza text-xs">{p.autores ?? '—'}</td>
                   <td className="px-5 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => setModal({ projeto: p })} className="rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition">Editar</button>
-                      <button onClick={() => setConfirmDelete(p)} className="rounded-md border border-red-500/20 px-3 py-1.5 text-xs font-medium text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition">Eliminar</button>
+                      <button onClick={() => setModal({ projeto: p })} className="rounded-md border border-linha px-3 py-1.5 text-xs font-medium text-cinza hover:bg-papel hover:text-tinta transition">Editar</button>
+                      <button onClick={() => setConfirmDelete(p)} className="rounded-md border border-ecgm-r/30 px-3 py-1.5 text-xs font-medium text-ecgm-r hover:bg-ecgm-r/10 hover:text-ecgm-r transition">Eliminar</button>
                     </div>
                   </td>
                 </tr>
@@ -676,15 +677,15 @@ export default function ProjetosPage() {
             </tbody>
           </table>
           {totalPagesProj > 1 && (
-            <div className="flex items-center justify-between border-t border-white/5 bg-[#0c0c0f] px-6 py-4">
-              <p className="text-xs text-white/40">
-                A mostrar <span className="font-semibold text-white/80">{startIndexProj + 1}</span> a{' '}
-                <span className="font-semibold text-white/80">{Math.min(startIndexProj + ITEMS_PER_PAGE_PROJ, projetosFiltrados.length)}</span>{' '}
-                de <span className="font-semibold text-white/80">{projetosFiltrados.length}</span> projetos
+            <div className="flex items-center justify-between border-t border-linha bg-papel px-6 py-4">
+              <p className="text-xs text-cinza">
+                A mostrar <span className="font-semibold text-tinta">{startIndexProj + 1}</span> a{' '}
+                <span className="font-semibold text-tinta">{Math.min(startIndexProj + ITEMS_PER_PAGE_PROJ, projetosFiltrados.length)}</span>{' '}
+                de <span className="font-semibold text-tinta">{projetosFiltrados.length}</span> projetos
               </p>
               <div className="flex items-center gap-2">
                 <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className={btnPageCls(currentPage === 1)}>Anterior</button>
-                <span className="text-xs text-white/40 font-mono px-2">{currentPage} / {totalPagesProj}</span>
+                <span className="text-xs text-cinza font-mono px-2">{currentPage} / {totalPagesProj}</span>
                 <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPagesProj))} disabled={currentPage === totalPagesProj} className={btnPageCls(currentPage === totalPagesProj)}>Próxima</button>
               </div>
             </div>
@@ -708,7 +709,7 @@ export default function ProjetosPage() {
       {modal?.projeto && (
         <Modal title="Gerir Projeto" onClose={() => setModal(null)}>
           <div className="mb-8">
-            <h3 className="text-sm font-semibold text-white/80 mb-3">Informações e Recurso Principal</h3>
+            <h3 className="text-sm font-semibold text-tinta mb-3">Informações e Recurso Principal</h3>
             <ProjetoForm 
               initial={modal.projeto} 
               modulos={modulosList} 
@@ -717,11 +718,11 @@ export default function ProjetosPage() {
               saving={saving} 
             />
           </div>
-          <hr className="border-white/5 mb-6" />
+          <hr className="border-linha mb-6" />
           <div>
             <div className="mb-4">
-              <h3 className="text-sm font-semibold text-[#4f9eff]">Galeria do Projeto</h3>
-              <p className="text-xs text-white/40 mt-0.5">Adiciona as imagens ou vídeos deste projeto.</p>
+              <h3 className="text-sm font-semibold text-acao">Galeria do Projeto</h3>
+              <p className="text-xs text-cinza mt-0.5">Adiciona as imagens ou vídeos deste projeto.</p>
             </div>
             <GaleriaProjeto id_projetos={modal.projeto.id_projetos} />
           </div>
@@ -730,10 +731,10 @@ export default function ProjetosPage() {
 
       {confirmDelete !== null && (
         <Modal title="Confirmar eliminação" onClose={() => setConfirmDelete(null)}>
-          <p className="text-sm text-white/60 mb-6">Tens a certeza que queres eliminar o projeto <strong>{confirmDelete.titulo}</strong>?<br/>Esta ação também vai apagar fisicamente as fotografias e vídeos do sistema.</p>
+          <p className="text-sm text-tinta-2 mb-6">Tens a certeza que queres eliminar o projeto <strong>{confirmDelete.titulo}</strong>?<br/>Esta ação também vai apagar fisicamente as fotografias e vídeos do sistema.</p>
           <div className="flex gap-3">
-            <button onClick={handleDelete} disabled={deleting} className="flex-1 rounded-lg bg-red-500/80 py-2.5 text-sm font-semibold text-white hover:bg-red-500 transition disabled:opacity-50">{deleting ? 'A eliminar ficheiros e projeto…' : 'Eliminar Tudo'}</button>
-            <button onClick={() => setConfirmDelete(null)} disabled={deleting} className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium text-white/50 hover:bg-white/5 transition">Cancelar</button>
+            <button onClick={handleDelete} disabled={deleting} className="flex-1 rounded-lg bg-ecgm-r py-2.5 text-sm font-semibold text-white hover:bg-ecgm-r transition disabled:opacity-50">{deleting ? 'A eliminar ficheiros e projeto…' : 'Eliminar Tudo'}</button>
+            <button onClick={() => setConfirmDelete(null)} disabled={deleting} className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium text-cinza hover:bg-papel transition">Cancelar</button>
           </div>
         </Modal>
       )}

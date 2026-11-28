@@ -6,19 +6,20 @@ import { useGestorFilter } from '../GestorFilterContext';
 import { Canvas } from '@react-three/fiber';
 import { AnimatedModel, Z_END } from '@/components/ModelScene';
 
-const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white
-  placeholder-white/20 focus:outline-none focus:border-[#a78bfa]/50 focus:ring-1
-  focus:ring-[#a78bfa]/30 transition`;
+import { IconeCubo, IconeCarregar } from '@/components/Icones';
+const inputCls = `w-full rounded-lg border border-linha bg-papel px-3 py-2 text-sm text-tinta
+  placeholder:text-cinza focus:outline-none focus:border-acao/60 focus:ring-1
+  focus:ring-acao/20 transition`;
 
 /* ─── Modal genérico ─────────────────────────────────────────────── */
 function Modal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-[#13131a] shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
-          <h2 className="text-base font-semibold text-white">{title}</h2>
-          <button onClick={onClose} className="text-white/30 hover:text-white/70 transition text-xl leading-none">×</button>
+      <div className="absolute inset-0 bg-tinta/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-linha bg-superficie shadow-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-linha">
+          <h2 className="text-base font-semibold text-tinta">{title}</h2>
+          <button onClick={onClose} className="text-cinza/80 hover:text-tinta-2 transition text-xl leading-none">×</button>
         </div>
         <div className="px-6 py-5">{children}</div>
       </div>
@@ -70,27 +71,27 @@ function NovoModeloForm({ onSave, onCancel, saving, disciplinasGestor }) {
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-xs font-medium text-white/50 mb-1.5">Ficheiro GLB *</label>
+        <label className="block text-xs font-medium text-cinza mb-1.5">Ficheiro GLB *</label>
         <div
           onClick={() => fileRef.current?.click()}
           className={`flex items-center gap-3 rounded-lg border-2 border-dashed px-4 py-4 cursor-pointer transition
-            ${file ? 'border-[#a78bfa]/40 bg-[#a78bfa]/5' : 'border-white/10 hover:border-white/20'}`}
+            ${file ? 'border-acao/60 bg-acao/5' : 'border-linha hover:border-linha-2'}`}
         >
-          <span className="text-2xl">{file ? '🧊' : '📁'}</span>
+          <span className="text-cinza">{file ? <IconeCubo tamanho={24} /> : <IconeCarregar tamanho={24} />}</span>
           <div className="flex-1 min-w-0">
             {file ? (
               <>
-                <p className="text-sm font-medium text-white/80 truncate">{file.name}</p>
-                <p className="text-xs text-white/30">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p className="text-sm font-medium text-tinta truncate">{file.name}</p>
+                <p className="text-xs text-cinza/80">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
               </>
             ) : (
-              <p className="text-sm text-white/30">Clica para selecionar um ficheiro .glb</p>
+              <p className="text-sm text-cinza/80">Clica para selecionar um ficheiro .glb</p>
             )}
           </div>
           {file && (
             <button
               onClick={e => { e.stopPropagation(); setFile(null); fileRef.current.value = ''; }}
-              className="text-white/25 hover:text-red-400 transition text-lg leading-none"
+              className="text-cinza/80 hover:text-ecgm-r transition text-lg leading-none"
             >×</button>
           )}
         </div>
@@ -99,12 +100,12 @@ function NovoModeloForm({ onSave, onCancel, saving, disciplinasGestor }) {
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-white/50 mb-1.5">Título do Modelo *</label>
+        <label className="block text-xs font-medium text-cinza mb-1.5">Título do Modelo *</label>
         <input className={inputCls} value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="ex: Motor V8" />
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-white/50 mb-1.5">Associar a Disciplina *</label>
+        <label className="block text-xs font-medium text-cinza mb-1.5">Associar a Disciplina *</label>
         <select className={inputCls} value={moduloId} onChange={e => setModuloId(e.target.value)}>
           <option value="" disabled>Seleciona a disciplina...</option>
           {disciplinasGestor.map(d => (
@@ -114,20 +115,20 @@ function NovoModeloForm({ onSave, onCancel, saving, disciplinasGestor }) {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-2.5">
-          <p className="text-xs text-red-400">{error}</p>
+        <div className="rounded-lg border border-ecgm-r/30 bg-ecgm-r/10 px-4 py-2.5">
+          <p className="text-xs text-ecgm-r">{error}</p>
         </div>
       )}
 
       <div className="flex gap-3 pt-1">
         <button onClick={handleSave} disabled={isBusy}
-          className="flex-1 rounded-lg bg-[#a78bfa] py-2.5 text-sm font-semibold text-white
-                     hover:bg-[#8b5cf6] transition disabled:opacity-50 disabled:cursor-not-allowed">
+          className="flex-1 rounded-lg bg-acao py-2.5 text-sm font-semibold text-white
+                     hover:bg-acao-escuro transition disabled:opacity-50 disabled:cursor-not-allowed">
           {uploading ? 'A fazer upload…' : saving ? 'A guardar…' : 'Adicionar Modelo'}
         </button>
         <button onClick={onCancel} disabled={isBusy}
-          className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium
-                     text-white/50 hover:bg-white/5 hover:text-white/80 transition">
+          className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium
+                     text-cinza hover:bg-papel hover:text-tinta transition">
           Cancelar
         </button>
       </div>
@@ -152,13 +153,13 @@ function SliderRow({ label, value, onChange, min, max, step, format }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-white/40">{label}</span>
-        <span className="text-xs font-mono text-[#a78bfa]">{display}</span>
+        <span className="text-xs text-cinza">{label}</span>
+        <span className="text-xs font-mono text-acao">{display}</span>
       </div>
       <input
         type="range" min={min} max={max} step={step}
         value={value} onChange={e => onChange(Number(e.target.value))}
-        className="w-full accent-[#a78bfa] cursor-pointer"
+        className="w-full accent-acao cursor-pointer"
       />
     </div>
   );
@@ -177,21 +178,21 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-tinta/30 backdrop-blur-[2px]" onClick={onClose} />
       <div
-        className="relative z-10 flex flex-col rounded-2xl border border-[#a78bfa]/30 overflow-hidden shadow-2xl"
+        className="relative z-10 flex flex-col rounded-2xl border border-acao/30 overflow-hidden shadow-2xl"
         style={{ width: '80vw', height: '80vh' }}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 bg-[#13131a] flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-linha bg-superficie flex-shrink-0">
           <div>
-            <h2 className="text-base font-semibold text-white">Editar Modelo</h2>
-            <p className="text-xs text-white/35 mt-0.5">{titulo}</p>
+            <h2 className="text-base font-semibold text-tinta">Editar Modelo</h2>
+            <p className="text-xs text-cinza mt-0.5">{titulo}</p>
           </div>
-          <button onClick={onClose} className="text-white/30 hover:text-white/70 transition text-2xl leading-none">×</button>
+          <button onClick={onClose} className="text-cinza/80 hover:text-tinta-2 transition text-2xl leading-none">×</button>
         </div>
 
         <div className="flex flex-1 min-h-0">
-          <div className="flex-none bg-[#0c0c0f]" style={{ width: '60%' }}>
+          <div className="flex-none bg-papel" style={{ width: '60%' }}>
             <Canvas
               camera={{ position: [0, 1, 0], fov: 45, near: 0.1, far: 200 }}
               gl={{ alpha: true, antialias: true }}
@@ -199,7 +200,7 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
             >
               <ambientLight intensity={0.5} />
               <directionalLight position={[10, 10, 5]} intensity={1.2} />
-              <pointLight position={[0, 4, Z_END]} color="#a78bfa" intensity={3} distance={60} />
+              <pointLight position={[0, 4, Z_END]} color="#12616d" intensity={3} distance={60} />
               <Suspense fallback={null}>
                 <AnimatedModel
                   key={modelo.url}
@@ -216,11 +217,11 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
             </Canvas>
           </div>
 
-          <div className="flex-1 bg-[#13131a] overflow-y-auto p-6 flex flex-col gap-6 border-l border-white/8">
+          <div className="flex-1 bg-superficie overflow-y-auto p-6 flex flex-col gap-6 border-l border-linha">
             
             {/* Campo de edição do Título */}
             <div>
-              <label className="block text-sm font-medium text-white/70 mb-3">Título do Modelo</label>
+              <label className="block text-sm font-medium text-tinta-2 mb-3">Título do Modelo</label>
               <input
                 type="text"
                 value={titulo}
@@ -232,18 +233,18 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
 
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-medium text-white/70">Escala</label>
-                <span className="text-sm font-mono font-semibold text-[#a78bfa]">{escala.toFixed(1)}</span>
+                <label className="text-sm font-medium text-tinta-2">Escala</label>
+                <span className="text-sm font-mono font-semibold text-acao">{escala.toFixed(1)}</span>
               </div>
               <input
                 type="range" min={0.1} max={35} step={0.1}
                 value={escala} onChange={e => setEscala(parseFloat(e.target.value))}
-                className="w-full accent-[#a78bfa] cursor-pointer"
+                className="w-full accent-acao cursor-pointer"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/70 mb-3">Tipo de Animação</label>
+              <label className="block text-sm font-medium text-tinta-2 mb-3">Tipo de Animação</label>
               <div className="grid grid-cols-2 gap-2">
                 {ANIM_OPTS.map(opt => (
                   <button
@@ -251,14 +252,14 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
                     onClick={() => setAnimacaoTipo(opt.value)}
                     className={`rounded-lg border p-3 text-left transition ${
                       animacaoTipo === opt.value
-                        ? 'border-[#a78bfa] bg-[#a78bfa]/10'
-                        : 'border-white/10 bg-white/3 hover:border-white/20 hover:bg-white/5'
+                        ? 'border-acao bg-acao/10'
+                        : 'border-linha bg-papel hover:border-linha-2 hover:bg-papel'
                     }`}
                   >
-                    <p className={`text-sm font-semibold ${animacaoTipo === opt.value ? 'text-[#a78bfa]' : 'text-white/70'}`}>
+                    <p className={`text-sm font-semibold ${animacaoTipo === opt.value ? 'text-acao' : 'text-tinta-2'}`}>
                       {opt.label}
                     </p>
-                    <p className="text-xs text-white/30 mt-0.5 leading-snug">{opt.desc}</p>
+                    <p className="text-xs text-cinza/80 mt-0.5 leading-snug">{opt.desc}</p>
                   </button>
                 ))}
               </div>
@@ -267,11 +268,11 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
             {/* Campo: Posição e Rotação */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-medium text-white/70">Posição e Rotação</label>
+                <label className="text-sm font-medium text-tinta-2">Posição e Rotação</label>
                 <button
                   type="button"
                   onClick={() => { setRotacaoX(0); setRotacaoY(0); setRotacaoZ(0); setPosicaoX(0); setPosicaoY(0); }}
-                  className="text-xs text-white/30 hover:text-white/60 transition"
+                  className="text-xs text-cinza/80 hover:text-tinta-2 transition"
                 >
                   Repor
                 </button>
@@ -291,13 +292,13 @@ function EditModelModal({ modelo, onClose, onSave, saving }) {
               <button
                 onClick={() => onSave({ titulo, escala, animacao_tipo: animacaoTipo, rotacao_x: rotacaoX, rotacao_y: rotacaoY, rotacao_z: rotacaoZ, posicao_x: posicaoX, offset_y: posicaoY })}
                 disabled={saving || !titulo.trim()}
-                className="flex-1 rounded-lg bg-[#a78bfa] py-2.5 text-sm font-semibold text-white
-                           hover:bg-[#8b5cf6] transition disabled:opacity-50"
+                className="flex-1 rounded-lg bg-acao py-2.5 text-sm font-semibold text-white
+                           hover:bg-acao-escuro transition disabled:opacity-50"
               >
                 {saving ? 'A guardar…' : 'Guardar'}
               </button>
               <button onClick={onClose} disabled={saving}
-                className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium text-white/50 hover:bg-white/5 transition">
+                className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium text-cinza hover:bg-papel transition">
                 Cancelar
               </button>
             </div>
@@ -481,8 +482,8 @@ export default function GestorModelosPage() {
     <div className="p-8 max-w-5xl mx-auto space-y-12">
 
       {toast && (
-        <div className="fixed top-5 right-5 z-50 rounded-lg border border-white/10 bg-[#13131a]
-                        px-4 py-2.5 text-sm text-white shadow-xl">
+        <div className="fixed top-5 right-5 z-50 rounded-lg border border-linha bg-superficie
+                        px-4 py-2.5 text-sm text-tinta shadow-xl">
           {toast}
         </div>
       )}
@@ -491,32 +492,32 @@ export default function GestorModelosPage() {
       <section>
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-white">
-              Modelos 3D <span className="text-[#a78bfa] text-base">(Área do Gestor)</span>
+            <h1 className="text-2xl font-bold text-tinta">
+              Modelos 3D <span className="text-acao text-base">(Área do Gestor)</span>
             </h1>
-            <p className="text-sm text-white/35 mt-1">
+            <p className="text-sm text-cinza mt-1">
               {loading ? '…' : `${modelosFiltrados.length} modelo${modelosFiltrados.length !== 1 ? 's' : ''} nas suas disciplinas`}
             </p>
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 rounded-lg bg-[#a78bfa] px-4 py-2.5 text-sm
-                       font-semibold text-white hover:bg-[#8b5cf6] transition"
+            className="flex items-center gap-2 rounded-lg bg-acao px-4 py-2.5 text-sm
+                       font-semibold text-white hover:bg-acao-escuro transition"
           >
             <span className="text-lg leading-none">+</span>
             Novo Modelo
           </button>
         </div>
 
-        <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
+        <div className="rounded-xl border border-linha bg-superficie overflow-hidden">
           {loading ? (
-            <div className="py-12 text-center text-sm text-white/25">A carregar…</div>
+            <div className="py-12 text-center text-sm text-cinza/80">A carregar…</div>
           ) : disciplinasGestor.length === 0 ? (
-            <div className="py-12 text-center text-sm text-red-300/80">
+            <div className="py-12 text-center text-sm text-ecgm-r">
               Ainda não lhe foi associada nenhuma disciplina. Fale com um Administrador.
             </div>
           ) : modelosFiltrados.length === 0 ? (
-            <div className="py-12 text-center text-sm text-white/25">
+            <div className="py-12 text-center text-sm text-cinza/80">
               {modelos.length === 0
                 ? 'Nenhum modelo nas suas disciplinas. Crie o primeiro!'
                 : 'Nenhum modelo para o filtro selecionado.'}
@@ -524,7 +525,7 @@ export default function GestorModelosPage() {
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-white/30 border-b border-white/5 bg-white/2">
+                <tr className="text-xs text-cinza/80 border-b border-linha bg-papel">
                   <th className="text-left px-5 py-3 font-medium">Título</th>
                   <th className="text-left px-5 py-3 font-medium">Disciplina</th>
                   <th className="text-left px-5 py-3 font-medium">Escala</th>
@@ -536,11 +537,11 @@ export default function GestorModelosPage() {
               <tbody>
                 {modelosFiltrados.map((m, i) => (
                   <tr key={m.id_media_items}
-                      className={`transition hover:bg-white/2 ${i !== modelosFiltrados.length - 1 ? 'border-b border-white/5' : ''}`}>
+                      className={`transition hover:bg-papel ${i !== modelosFiltrados.length - 1 ? 'border-b border-linha' : ''}`}>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         {/* Mini Visualizador 3D na Tabela */}
-                        <div className="h-12 w-12 overflow-hidden rounded-md border border-white/10 bg-[#0c0c0f] flex-shrink-0 flex items-center justify-center">
+                        <div className="h-12 w-12 overflow-hidden rounded-md border border-linha bg-papel flex-shrink-0 flex items-center justify-center">
                           <Canvas
                             camera={{ position: [0, 1, 0], fov: 45, near: 0.1, far: 200 }}
                             gl={{ alpha: true, antialias: true }}
@@ -563,19 +564,19 @@ export default function GestorModelosPage() {
                             </Suspense>
                           </Canvas>
                         </div>
-                        <p className="font-medium text-white/85 truncate max-w-[150px]">{m.titulo ?? '—'}</p>
+                        <p className="font-medium text-tinta truncate max-w-[150px]">{m.titulo ?? '—'}</p>
                       </div>
                     </td>
-                    <td className="px-5 py-3.5 text-white/45 text-xs">{m.nome_disciplina ?? '—'}</td>
-                    <td className="px-5 py-3.5 text-white/45 font-mono text-xs">{m.escala ?? 1.5}</td>
+                    <td className="px-5 py-3.5 text-cinza text-xs">{m.nome_disciplina ?? '—'}</td>
+                    <td className="px-5 py-3.5 text-cinza font-mono text-xs">{m.escala ?? 1.5}</td>
                     <td className="px-5 py-3.5">
-                      <span className="text-xs text-[#a78bfa] bg-[#a78bfa]/10 px-2 py-1 rounded-md font-mono">
+                      <span className="text-xs text-acao bg-acao/10 px-2 py-1 rounded-md font-mono">
                         {m.animacao_tipo ?? 'none'}
                       </span>
                     </td>
                     <td className="px-5 py-3.5">
                       <a href={m.url} target="_blank" rel="noopener noreferrer"
-                         className="text-xs text-[#a78bfa]/60 hover:text-[#a78bfa] transition truncate block max-w-[150px]"
+                         className="text-xs text-acao hover:text-acao transition truncate block max-w-[150px]"
                          title={m.url}>
                         {m.url?.split('/').pop() ?? m.url}
                       </a>
@@ -583,13 +584,13 @@ export default function GestorModelosPage() {
                     <td className="px-5 py-3.5 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button onClick={() => setEditModelo(m)}
-                          className="rounded-md border border-[#a78bfa]/20 px-3 py-1.5 text-xs font-medium
-                                     text-[#a78bfa]/60 hover:bg-[#a78bfa]/10 hover:text-[#a78bfa] transition">
+                          className="rounded-md border border-acao/30 px-3 py-1.5 text-xs font-medium
+                                     text-acao hover:bg-acao/10 hover:text-acao transition">
                           Editar
                         </button>
                         <button onClick={() => setConfirmDelete(m.id_media_items)}
-                          className="rounded-md border border-red-500/20 px-3 py-1.5 text-xs font-medium
-                                     text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition">
+                          className="rounded-md border border-ecgm-r/30 px-3 py-1.5 text-xs font-medium
+                                     text-ecgm-r hover:bg-ecgm-r/10 hover:text-ecgm-r transition">
                           Eliminar
                         </button>
                       </div>
@@ -627,16 +628,16 @@ export default function GestorModelosPage() {
       {/* ── Modal Confirmar eliminar modelo ──────────────────────── */}
       {confirmDelete !== null && (
         <Modal title="Confirmar eliminação" onClose={() => setConfirmDelete(null)}>
-          <p className="text-sm text-white/60 mb-6">Tens a certeza que queres eliminar este modelo?</p>
+          <p className="text-sm text-tinta-2 mb-6">Tens a certeza que queres eliminar este modelo?</p>
           <div className="flex gap-3">
             <button onClick={handleDelete} disabled={deleting}
-              className="flex-1 rounded-lg bg-red-500/80 py-2.5 text-sm font-semibold text-white
-                         hover:bg-red-500 transition disabled:opacity-50">
+              className="flex-1 rounded-lg bg-ecgm-r py-2.5 text-sm font-semibold text-white
+                         hover:bg-ecgm-r transition disabled:opacity-50">
               {deleting ? 'A eliminar…' : 'Eliminar'}
             </button>
             <button onClick={() => setConfirmDelete(null)} disabled={deleting}
-              className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium
-                         text-white/50 hover:bg-white/5 transition">
+              className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium
+                         text-cinza hover:bg-papel transition">
               Cancelar
             </button>
           </div>

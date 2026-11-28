@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0c0c0f;
-  --foreground: #f0f0f5;
+  --background: #f6f5f2;
+  --foreground: #0b0904;
 }
 
 @theme inline {
@@ -31,6 +31,43 @@
   --color-ecgm-r: #e2362a;
   --color-ecgm-g: #12a463;
   --color-ecgm-b: #2b5fe5;
+}
+
+/* Modo escuro: as mesmas cores com nome, com outros valores.
+   O botão lua/sol põe a classe .dark no <html>; um script no <head>
+   repõe a escolha antes de a página ser pintada (para não piscar). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+html.dark {
+  color-scheme: dark;
+  --background: #100f0d;
+  --foreground: #f2f0eb;
+  --color-papel: #100f0d;
+  --color-superficie: #1a1916;
+  --color-mosaico: #24221e;
+  --color-mosaico-2: #2e2b26;
+  --color-tinta: #f2f0eb;
+  --color-tinta-2: #c2bdb2;
+  --color-cinza: #8f897e;
+  --color-linha: rgb(242 240 235 / 0.1);
+  --color-linha-2: rgb(242 240 235 / 0.2);
+  --color-acao: #2a8f9b;
+  --color-acao-escuro: #227985;
+  --color-ecgm-r: #ef5a4f;
+  --color-ecgm-g: #2fbf7d;
+  --color-ecgm-b: #5a85f0;
+}
+
+/* Mudança de modo gradual (ver BotaoTema.jsx) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.45s;
+  animation-timing-function: ease;
+}
+html.tema-a-mudar,
+html.tema-a-mudar * {
+  transition: background-color 0.45s ease, color 0.45s ease, border-color 0.45s ease,
+              fill 0.45s ease, stroke 0.45s ease !important;
 }
 
 /* Largura máxima e margens laterais das páginas públicas */

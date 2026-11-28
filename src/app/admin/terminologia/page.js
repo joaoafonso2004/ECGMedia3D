@@ -12,15 +12,15 @@ import {
 function Field({ label, children }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-white/50 mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-cinza mb-1.5">{label}</label>
       {children}
     </div>
   );
 }
 
-const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white
-  placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1
-  focus:ring-[#4f9eff]/30 transition`;
+const inputCls = `w-full rounded-lg border border-linha bg-papel px-3 py-2 text-sm text-tinta
+  placeholder:text-cinza focus:outline-none focus:border-acao/60 focus:ring-1
+  focus:ring-acao/20 transition`;
 
 /* ─── Constantes ────────────────────────────────────────────────── */
 
@@ -336,8 +336,8 @@ export default function TerminologiaPage() {
   const pillCls = ativo =>
     `rounded-full border px-3.5 py-1.5 text-xs font-medium transition ${
       ativo
-        ? 'border-[#4f9eff]/30 bg-[#4f9eff]/12 text-[#4f9eff]'
-        : 'border-white/10 text-white/50 hover:bg-white/5 hover:text-white/80'
+        ? 'border-acao/30 bg-acao/10 text-acao'
+        : 'border-linha text-cinza hover:bg-papel hover:text-tinta'
     }`;
 
   const vazio = (v) => !v.trim();
@@ -348,41 +348,41 @@ export default function TerminologiaPage() {
     <div className="p-4 sm:p-8 max-w-6xl mx-auto">
 
       {toast && (
-        <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 rounded-lg border px-4 py-2.5 text-sm text-white shadow-xl
-          ${toast.isError ? 'border-red-500/30 bg-red-950/80' : 'border-white/10 bg-[#13131a]'}`}>
+        <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 rounded-lg border px-4 py-2.5 text-sm text-tinta shadow-xl
+          ${toast.isError ? 'border-ecgm-r/30 bg-ecgm-r/10' : 'border-linha bg-superficie'}`}>
           <span>{toast.msg}</span>
           {toast.isError && (
-            <button onClick={() => setToast(null)} className="text-white/40 hover:text-white transition text-lg leading-none">×</button>
+            <button onClick={() => setToast(null)} className="text-cinza hover:text-tinta transition text-lg leading-none">×</button>
           )}
         </div>
       )}
 
       {/* Cabeçalho */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Terminologia</h1>
-        <p className="text-sm text-white/35 mt-1">
+        <h1 className="text-2xl font-bold text-tinta">Terminologia</h1>
+        <p className="text-sm text-cinza mt-1">
           Define como se chamam os níveis da hierarquia em cada tipo de entidade.
         </p>
       </div>
 
       {loading ? (
-        <div className="rounded-xl border border-white/8 bg-[#13131a] py-12 text-center text-sm text-white/25">
+        <div className="rounded-xl border border-linha bg-superficie py-12 text-center text-sm text-cinza/80">
           A carregar…
         </div>
       ) : semTabela ? (
-        <div className="rounded-xl border border-amber-500/25 bg-amber-500/8 px-5 py-4 text-sm text-amber-200/80 leading-relaxed">
-          <p className="font-semibold text-amber-200">A tabela de terminologia ainda não existe na base de dados.</p>
-          <p className="mt-1 text-xs text-amber-200/70">
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/8 px-5 py-4 text-sm text-amber-800 dark:text-amber-300 leading-relaxed">
+          <p className="font-semibold text-amber-800 dark:text-amber-300">A tabela de terminologia ainda não existe na base de dados.</p>
+          <p className="mt-1 text-xs text-amber-800 dark:text-amber-300">
             Aplica a migração <span className="font-mono">20261119_terminologia.sql</span> no Supabase e recarrega esta página.
             Enquanto isso, o site usa os termos predefinidos.
           </p>
         </div>
       ) : erroCarga ? (
-        <div className="rounded-xl border border-red-500/25 bg-red-500/8 px-5 py-4 text-sm text-red-300/80">
+        <div className="rounded-xl border border-ecgm-r/30 bg-ecgm-r/5 px-5 py-4 text-sm text-ecgm-r">
           <p>Não foi possível carregar a terminologia: {erroCarga}</p>
           <button
             onClick={() => { setLoading(true); fetchData(); }}
-            className="mt-3 rounded-md border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-300 hover:bg-red-500/10 transition"
+            className="mt-3 rounded-md border border-ecgm-r/30 px-3 py-1.5 text-xs font-medium text-ecgm-r hover:bg-ecgm-r/10 transition"
           >
             Tentar novamente
           </button>
@@ -394,8 +394,8 @@ export default function TerminologiaPage() {
           <div className="min-w-0 space-y-6">
 
             {/* Alvo */}
-            <div className="rounded-xl border border-white/8 bg-[#13131a] p-5">
-              <p className="text-xs font-medium text-white/50 mb-3">Aplicar a</p>
+            <div className="rounded-xl border border-linha bg-superficie p-5">
+              <p className="text-xs font-medium text-cinza mb-3">Aplicar a</p>
               <div className="flex flex-wrap gap-2">
                 <button className={pillCls(modo === 'predefinicao')} onClick={() => escolherModo('predefinicao')}>
                   Predefinição
@@ -427,13 +427,13 @@ export default function TerminologiaPage() {
                       />
                       <button
                         onClick={adicionarTipo}
-                        className="shrink-0 rounded-lg bg-[#4f9eff] px-4 py-2 text-sm font-semibold text-white hover:bg-[#3d8aef] transition"
+                        className="shrink-0 rounded-lg bg-acao px-4 py-2 text-sm font-semibold text-white hover:bg-acao-escuro transition"
                       >
                         Adicionar
                       </button>
                     </div>
                   </Field>
-                  {novoErro && <p className="mt-2 text-xs text-red-400">{novoErro}</p>}
+                  {novoErro && <p className="mt-2 text-xs text-ecgm-r">{novoErro}</p>}
                 </div>
               )}
 
@@ -453,7 +453,7 @@ export default function TerminologiaPage() {
                       ))}
                     </select>
                   </Field>
-                  <p className="mt-2 text-xs text-white/30">
+                  <p className="mt-2 text-xs text-cinza/80">
                     Os termos guardados aqui valem só para esta entidade e substituem os do tipo.
                   </p>
                 </div>
@@ -461,20 +461,20 @@ export default function TerminologiaPage() {
             </div>
 
             {!alvoValido ? (
-              <div className="rounded-xl border border-white/8 bg-[#13131a] py-12 text-center text-sm text-white/25">
+              <div className="rounded-xl border border-linha bg-superficie py-12 text-center text-sm text-cinza/80">
                 {modo === 'entidade' ? 'Seleciona uma entidade para editar os seus termos.' : 'Seleciona um tipo de entidade.'}
               </div>
             ) : (
-              <div className="rounded-xl border border-white/8 bg-[#13131a] p-5">
+              <div className="rounded-xl border border-linha bg-superficie p-5">
 
                 {/* Idioma */}
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
                   <div>
-                    <h2 className="text-sm font-semibold text-white">{nomeAlvo}</h2>
-                    {sujo && <p className="text-xs text-[#4f9eff]/80 mt-0.5">Alterações por guardar</p>}
+                    <h2 className="text-sm font-semibold text-tinta">{nomeAlvo}</h2>
+                    {sujo && <p className="text-xs text-acao mt-0.5">Alterações por guardar</p>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-white/40">Idioma dos nomes</span>
+                    <span className="text-xs text-cinza">Idioma dos nomes</span>
                     {['pt', 'en'].map(i => (
                       <button key={i} className={pillCls(idioma === i)} onClick={() => { setIdioma(i); setErroForm(''); }}>
                         {i.toUpperCase()}
@@ -484,7 +484,7 @@ export default function TerminologiaPage() {
                 </div>
 
                 {/* Cabeçalho da tabela (só em ecrãs largos) */}
-                <div className="hidden md:grid grid-cols-[1.1fr_1fr_1fr_8.5rem] gap-3 px-1 pb-2 text-xs font-medium text-white/30 border-b border-white/5">
+                <div className="hidden md:grid grid-cols-[1.1fr_1fr_1fr_8.5rem] gap-3 px-1 pb-2 text-xs font-medium text-cinza/80 border-b border-linha">
                   <span>Nível</span>
                   <span>Singular</span>
                   <span>Plural</span>
@@ -498,20 +498,20 @@ export default function TerminologiaPage() {
                     <div
                       key={n}
                       className={`grid gap-3 py-4 md:grid-cols-[1.1fr_1fr_1fr_8.5rem] md:items-start
-                        ${i !== NIVEIS.length - 1 ? 'border-b border-white/5' : ''}`}
+                        ${i !== NIVEIS.length - 1 ? 'border-b border-linha' : ''}`}
                     >
                       <div className="px-1">
-                        <div className="text-sm font-medium text-white/85">{NOMES_NIVEL[n].titulo}</div>
-                        <div className="text-xs text-white/30 mt-0.5">{NOMES_NIVEL[n].exemplo}</div>
-                        <div className={`text-[11px] mt-1 ${proprio ? 'text-[#4f9eff]/80' : 'text-white/30'}`}>
+                        <div className="text-sm font-medium text-tinta">{NOMES_NIVEL[n].titulo}</div>
+                        <div className="text-xs text-cinza/80 mt-0.5">{NOMES_NIVEL[n].exemplo}</div>
+                        <div className={`text-[11px] mt-1 ${proprio ? 'text-acao' : 'text-cinza/80'}`}>
                           {proprio ? 'definido para este alvo' : origemHerdada(n)}
                         </div>
                       </div>
 
                       <div>
-                        <label className="md:hidden block text-xs font-medium text-white/50 mb-1.5">Singular</label>
+                        <label className="md:hidden block text-xs font-medium text-cinza mb-1.5">Singular</label>
                         <input
-                          className={inputCls + (vazio(c.singular) ? ' !border-red-500/40' : '')}
+                          className={inputCls + (vazio(c.singular) ? ' !border-ecgm-r/40' : '')}
                           value={c.singular}
                           maxLength={60}
                           onChange={e => editar(n, 'singular', e.target.value)}
@@ -520,9 +520,9 @@ export default function TerminologiaPage() {
                       </div>
 
                       <div>
-                        <label className="md:hidden block text-xs font-medium text-white/50 mb-1.5">Plural</label>
+                        <label className="md:hidden block text-xs font-medium text-cinza mb-1.5">Plural</label>
                         <input
-                          className={inputCls + (vazio(c.plural) ? ' !border-red-500/40' : '')}
+                          className={inputCls + (vazio(c.plural) ? ' !border-ecgm-r/40' : '')}
                           value={c.plural}
                           maxLength={60}
                           onChange={e => editar(n, 'plural', e.target.value)}
@@ -531,7 +531,7 @@ export default function TerminologiaPage() {
                       </div>
 
                       <div>
-                        <label className="md:hidden block text-xs font-medium text-white/50 mb-1.5">Género</label>
+                        <label className="md:hidden block text-xs font-medium text-cinza mb-1.5">Género</label>
                         <select
                           className={inputCls + ' appearance-none'}
                           value={c.genero}
@@ -545,17 +545,17 @@ export default function TerminologiaPage() {
                   );
                 })}
 
-                <p className="text-xs text-white/30 mt-1">
+                <p className="text-xs text-cinza/80 mt-1">
                   O género define a concordância: «Nova disciplina», «Novo projeto».
                 </p>
 
-                {erroForm && <p className="mt-4 text-xs text-red-400">{erroForm}</p>}
+                {erroForm && <p className="mt-4 text-xs text-ecgm-r">{erroForm}</p>}
 
                 <div className="flex flex-wrap gap-3 mt-5">
                   <button
                     onClick={handleGuardar}
                     disabled={saving}
-                    className="rounded-lg bg-[#4f9eff] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#3d8aef] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded-lg bg-acao px-6 py-2.5 text-sm font-semibold text-white hover:bg-acao-escuro transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {saving ? 'A guardar…' : 'Guardar'}
                   </button>
@@ -564,14 +564,14 @@ export default function TerminologiaPage() {
                       onClick={handleRepor}
                       disabled={saving || linhasAlvo.length === 0}
                       title={linhasAlvo.length === 0 ? 'Não há termos próprios para repor.' : undefined}
-                      className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="rounded-lg border border-linha px-5 py-2.5 text-sm font-medium text-cinza hover:bg-papel hover:text-tinta transition disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       Repor
                     </button>
                   )}
                 </div>
                 {modo === 'predefinicao' && (
-                  <p className="text-xs text-white/30 mt-3">
+                  <p className="text-xs text-cinza/80 mt-3">
                     A predefinição não se repõe: tem de existir sempre, pois é usada por todos os tipos sem termos próprios.
                   </p>
                 )}
@@ -581,13 +581,13 @@ export default function TerminologiaPage() {
 
           {/* ─── Pré-visualização ─── */}
           {alvoValido && (
-            <aside className="rounded-xl border border-white/8 bg-[#13131a] p-5 lg:sticky lg:top-6">
-              <h2 className="text-sm font-semibold text-white">Pré-visualização</h2>
-              <p className="text-xs text-white/35 mt-0.5 mb-4">Atualiza ao escrever, antes de guardar.</p>
+            <aside className="rounded-xl border border-linha bg-superficie p-5 lg:sticky lg:top-6">
+              <h2 className="text-sm font-semibold text-tinta">Pré-visualização</h2>
+              <p className="text-xs text-cinza mt-0.5 mb-4">Atualiza ao escrever, antes de guardar.</p>
 
-              <p className="text-xs font-medium text-white/50 mb-2">{nomeAlvo}</p>
+              <p className="text-xs font-medium text-cinza mb-2">{nomeAlvo}</p>
 
-              <div className="rounded-lg border border-white/8 bg-white/[0.02] px-3 py-2 text-xs text-white/45 mb-3 break-words">
+              <div className="rounded-lg border border-linha bg-papel px-3 py-2 text-xs text-cinza mb-3 break-words">
                 Início / {termos.entidade.singular} / {termos.programa.singular} / {termos.modulo.singular}
               </div>
 
@@ -600,13 +600,13 @@ export default function TerminologiaPage() {
                   `${ver(termos.modulo)} →`,
                   publicados(termos.projeto),
                 ].map((frase, i) => (
-                  <div key={i} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 break-words">
+                  <div key={i} className="rounded-lg border border-linha bg-papel px-3 py-2 text-sm text-tinta break-words">
                     {frase}
                   </div>
                 ))}
               </div>
 
-              <p className="text-xs text-white/30 mt-4 leading-relaxed">
+              <p className="text-xs text-cinza/80 mt-4 leading-relaxed">
                 Estes termos aparecem nas páginas públicas: entidade, programa/curso, disciplina e projeto.
                 Sem tradução em EN, o site usa o texto em PT.
               </p>

@@ -51,7 +51,7 @@ export function IconTipoNotificacao({ tipo }) {
  * @param {string} hrefTodas  página com o histórico completo
  * @param {string} accent     cor de destaque do painel (hex)
  */
-export default function NotificacoesSino({ hrefTodas, accent = '#a78bfa' }) {
+export default function NotificacoesSino({ hrefTodas, accent = '#12616d' }) {
   const router = useRouter();
   const [userId, setUserId] = useState(null);
   const [aberto, setAberto] = useState(false);
@@ -218,7 +218,7 @@ export default function NotificacoesSino({ hrefTodas, accent = '#a78bfa' }) {
         type="button"
         onClick={() => setAberto(a => !a)}
         className={`relative flex items-center justify-center w-9 h-9 rounded-lg border transition-all
-          ${aberto ? 'bg-white/8 border-white/10 text-white' : 'border-transparent text-white/45 hover:bg-white/5 hover:text-white/80'}`}
+          ${aberto ? 'bg-mosaico border-linha text-tinta' : 'border-transparent text-cinza hover:bg-papel hover:text-tinta'}`}
         aria-label={naoLidas > 0 ? `Notificações (${naoLidas} por ler)` : 'Notificações'}
         aria-expanded={aberto}
         aria-haspopup="true"
@@ -226,7 +226,7 @@ export default function NotificacoesSino({ hrefTodas, accent = '#a78bfa' }) {
         <IconSino />
         {naoLidas > 0 && (
           <span
-            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold leading-[18px] text-center text-black"
+            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold leading-[18px] text-center text-white"
             style={{ backgroundColor: accent }}
           >
             {badge}
@@ -234,7 +234,7 @@ export default function NotificacoesSino({ hrefTodas, accent = '#a78bfa' }) {
         )}
         {tempoReal === false && (
           <span
-            className="absolute bottom-0.5 right-0.5 w-2 h-2 rounded-full bg-white/30 ring-2 ring-[#0c0c0f]"
+            className="absolute bottom-0.5 right-0.5 w-2 h-2 rounded-full bg-cinza/60 ring-2 ring-papel"
             title="Sem ligação em tempo real: a atualizar a cada 30 segundos"
           />
         )}
@@ -248,17 +248,17 @@ export default function NotificacoesSino({ hrefTodas, accent = '#a78bfa' }) {
       {/* Aviso no canto do ecrã quando chega uma notificação */}
       {aviso && (
         <div className="fixed bottom-6 right-6 z-[60] w-[340px] max-w-[calc(100vw-3rem)] animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-[#13131a] p-4 shadow-2xl shadow-black/60">
+          <div className="flex items-start gap-3 rounded-xl border border-linha bg-superficie p-4 shadow-2xl shadow-tinta/10">
             <IconTipoNotificacao tipo={aviso.tipo} />
             <button type="button" onClick={() => { const n = aviso; setAviso(null); abrirNotificacao(n); }} className="flex-1 min-w-0 text-left">
-              <span className="block text-sm font-medium text-white">{aviso.titulo}</span>
-              {aviso.mensagem && <span className="block text-xs text-white/50 mt-0.5 line-clamp-2 leading-relaxed">{aviso.mensagem}</span>}
+              <span className="block text-sm font-medium text-tinta">{aviso.titulo}</span>
+              {aviso.mensagem && <span className="block text-xs text-cinza mt-0.5 line-clamp-2 leading-relaxed">{aviso.mensagem}</span>}
               <span className="block text-[11px] font-medium mt-1.5" style={{ color: accent }}>Abrir</span>
             </button>
             <button
               type="button"
               onClick={() => setAviso(null)}
-              className="text-white/30 hover:text-white/70 transition text-lg leading-none"
+              className="text-cinza/80 hover:text-tinta-2 transition text-lg leading-none"
               aria-label="Fechar aviso"
             >
               ×
@@ -269,12 +269,12 @@ export default function NotificacoesSino({ hrefTodas, accent = '#a78bfa' }) {
 
       {aberto && (
         <div
-          className="absolute right-0 top-11 z-50 w-[360px] max-w-[calc(100vw-2rem)] rounded-xl border border-white/10 bg-[#13131a] shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+          className="absolute right-0 top-11 z-50 w-[360px] max-w-[calc(100vw-2rem)] rounded-xl border border-linha bg-superficie shadow-2xl shadow-tinta/10 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
           role="menu"
         >
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-linha">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-white">Notificações</span>
+              <span className="text-sm font-semibold text-tinta">Notificações</span>
               {naoLidas > 0 && (
                 <span className="text-[11px] font-medium px-2 py-0.5 rounded-full" style={{ color: accent, backgroundColor: `${accent}1a` }}>
                   {naoLidas} por ler
@@ -285,7 +285,7 @@ export default function NotificacoesSino({ hrefTodas, accent = '#a78bfa' }) {
               type="button"
               onClick={lerTodas}
               disabled={naoLidas === 0}
-              className="text-xs font-medium text-white/40 hover:text-white/80 transition disabled:opacity-30 disabled:cursor-default"
+              className="text-xs font-medium text-cinza hover:text-tinta transition disabled:opacity-30 disabled:cursor-default"
             >
               Marcar todas como lidas
             </button>
@@ -293,37 +293,37 @@ export default function NotificacoesSino({ hrefTodas, accent = '#a78bfa' }) {
 
           <div className="max-h-[420px] overflow-y-auto">
             {loading ? (
-              <p className="px-4 py-10 text-center text-sm text-white/30">A carregar…</p>
+              <p className="px-4 py-10 text-center text-sm text-cinza/80">A carregar…</p>
             ) : erro ? (
-              <p className="px-4 py-10 text-center text-sm text-red-400/80">{erro}</p>
+              <p className="px-4 py-10 text-center text-sm text-ecgm-r">{erro}</p>
             ) : notificacoes.length === 0 ? (
               <div className="px-4 py-12 flex flex-col items-center text-center">
-                <span className="flex items-center justify-center w-12 h-12 rounded-full bg-white/5 text-white/25 mb-3">
+                <span className="flex items-center justify-center w-12 h-12 rounded-full bg-papel text-cinza/80 mb-3">
                   <IconSino className="w-6 h-6" />
                 </span>
-                <p className="text-sm font-medium text-white/70">Sem notificações</p>
-                <p className="text-xs text-white/35 mt-1">Avisamos-te aqui quando houver novidades.</p>
+                <p className="text-sm font-medium text-tinta-2">Sem notificações</p>
+                <p className="text-xs text-cinza mt-1">Avisamos-te aqui quando houver novidades.</p>
               </div>
             ) : (
-              <ul className="divide-y divide-white/5">
+              <ul className="divide-y divide-linha">
                 {notificacoes.map(n => (
                   <li key={n.id_notificacao}>
                     <button
                       type="button"
                       onClick={() => abrirNotificacao(n)}
-                      className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-white/[0.04]
-                        ${n.lida ? '' : 'bg-white/[0.02]'}`}
+                      className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-papel
+                        ${n.lida ? '' : 'bg-papel'}`}
                       role="menuitem"
                     >
                       <IconTipoNotificacao tipo={n.tipo} />
                       <span className="flex-1 min-w-0">
-                        <span className={`block text-sm truncate ${n.lida ? 'text-white/60' : 'text-white font-medium'}`}>
+                        <span className={`block text-sm truncate ${n.lida ? 'text-tinta-2' : 'text-tinta font-medium'}`}>
                           {n.titulo}
                         </span>
                         {n.mensagem && (
-                          <span className="block text-xs text-white/40 mt-0.5 line-clamp-2 leading-relaxed">{n.mensagem}</span>
+                          <span className="block text-xs text-cinza mt-0.5 line-clamp-2 leading-relaxed">{n.mensagem}</span>
                         )}
-                        <span className="block text-[11px] text-white/25 mt-1">{tempoRelativo(n.created_at)}</span>
+                        <span className="block text-[11px] text-cinza/80 mt-1">{tempoRelativo(n.created_at)}</span>
                       </span>
                       {!n.lida && (
                         <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: accent }} aria-label="Por ler" />
@@ -339,7 +339,7 @@ export default function NotificacoesSino({ hrefTodas, accent = '#a78bfa' }) {
             <Link
               href={hrefTodas}
               onClick={() => setAberto(false)}
-              className="block px-4 py-2.5 text-center text-xs font-medium border-t border-white/5 hover:bg-white/[0.04] transition"
+              className="block px-4 py-2.5 text-center text-xs font-medium border-t border-linha hover:bg-papel transition"
               style={{ color: accent }}
             >
               Ver todas as notificações

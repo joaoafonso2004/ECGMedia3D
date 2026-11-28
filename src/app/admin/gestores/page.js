@@ -8,11 +8,11 @@ import { FilterContextLine } from "../AdminFilterContext";
 function Modal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-[#13131a] shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
-          <h2 className="text-base font-semibold text-white">{title}</h2>
-          <button onClick={onClose} className="text-white/30 hover:text-white/70 transition text-xl leading-none">×</button>
+      <div className="absolute inset-0 bg-tinta/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-linha bg-superficie shadow-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-linha">
+          <h2 className="text-base font-semibold text-tinta">{title}</h2>
+          <button onClick={onClose} className="text-cinza/80 hover:text-tinta-2 transition text-xl leading-none">×</button>
         </div>
         <div className="px-6 py-5">{children}</div>
       </div>
@@ -23,15 +23,15 @@ function Modal({ title, onClose, children }) {
 function Field({ label, children }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-white/50 mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-cinza mb-1.5">{label}</label>
       {children}
     </div>
   );
 }
 
-const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white
-  placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1
-  focus:ring-[#4f9eff]/30 transition`;
+const inputCls = `w-full rounded-lg border border-linha bg-papel px-3 py-2 text-sm text-tinta
+  placeholder:text-cinza focus:outline-none focus:border-acao/60 focus:ring-1
+  focus:ring-acao/20 transition`;
 
 function GestorForm({ entidades, disciplinas, onSave, onCancel, saving }) {
   const [programas, setProgramas] = useState([]);
@@ -148,8 +148,8 @@ function GestorForm({ entidades, disciplinas, onSave, onCancel, saving }) {
         <button
           type="submit"
           disabled={saving}
-          className="flex-1 rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white
-                     hover:bg-[#3d8aef] transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 rounded-lg bg-acao py-2.5 text-sm font-semibold text-white
+                     hover:bg-acao-escuro transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? "A guardar…" : "Guardar"}
         </button>
@@ -157,8 +157,8 @@ function GestorForm({ entidades, disciplinas, onSave, onCancel, saving }) {
           type="button"
           onClick={onCancel}
           disabled={saving}
-          className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium
-                     text-white/50 hover:bg-white/5 hover:text-white/80 transition"
+          className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium
+                     text-cinza hover:bg-papel hover:text-tinta transition"
         >
           Cancelar
         </button>
@@ -219,31 +219,31 @@ function EditGestorModal({ gestor, entidadeNome, onClose, onRemover, onAdicionar
   return (
     <Modal title={`Editar Módulos — ${gestor.nome}`} onClose={onClose}>
       <div className="space-y-6">
-        <p className="text-xs text-white/40">
-          Entidade: <span className="text-white/70">{entidadeNome || "—"}</span>
+        <p className="text-xs text-cinza">
+          Entidade: <span className="text-tinta-2">{entidadeNome || "—"}</span>
         </p>
 
         {/* Módulos atualmente atribuídos */}
         <div>
-          <h3 className="text-sm font-semibold text-white/80 mb-3">Módulos Atribuídos</h3>
+          <h3 className="text-sm font-semibold text-tinta mb-3">Módulos Atribuídos</h3>
           {gestor.moduloAssociacoes.length === 0 ? (
-            <p className="text-xs text-white/30 py-2">Ainda não tem nenhum módulo atribuído.</p>
+            <p className="text-xs text-cinza/80 py-2">Ainda não tem nenhum módulo atribuído.</p>
           ) : (
             <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
               {gestor.moduloAssociacoes.map(a => (
                 <div
                   key={a.id_tipo_utilizador}
-                  className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+                  className="flex items-center justify-between rounded-lg border border-linha bg-papel px-3 py-2"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm text-white/85 truncate">{a.nome_modulo}</p>
-                    <p className="text-xs text-white/35 truncate">{a.nome_programa}</p>
+                    <p className="text-sm text-tinta truncate">{a.nome_modulo}</p>
+                    <p className="text-xs text-cinza truncate">{a.nome_programa}</p>
                   </div>
                   <button
                     onClick={() => onRemover(a.id_tipo_utilizador)}
                     disabled={removendoId === a.id_tipo_utilizador}
-                    className="shrink-0 text-xs font-medium text-red-400/60 hover:text-red-400 px-3 py-1.5
-                               rounded-md border border-transparent hover:border-red-500/20 hover:bg-red-500/10 transition disabled:opacity-50"
+                    className="shrink-0 text-xs font-medium text-ecgm-r hover:text-ecgm-r px-3 py-1.5
+                               rounded-md border border-transparent hover:border-ecgm-r/30 hover:bg-ecgm-r/10 transition disabled:opacity-50"
                   >
                     {removendoId === a.id_tipo_utilizador ? "A remover…" : "Remover"}
                   </button>
@@ -253,11 +253,11 @@ function EditGestorModal({ gestor, entidadeNome, onClose, onRemover, onAdicionar
           )}
         </div>
 
-        <hr className="border-white/5" />
+        <hr className="border-linha" />
 
         {/* Adicionar novos módulos */}
         <div>
-          <h3 className="text-sm font-semibold text-[#4f9eff] mb-3">Adicionar Módulos</h3>
+          <h3 className="text-sm font-semibold text-acao mb-3">Adicionar Módulos</h3>
           <div className="space-y-3">
             <Field label="Programa">
               <select
@@ -273,9 +273,9 @@ function EditGestorModal({ gestor, entidadeNome, onClose, onRemover, onAdicionar
             </Field>
             <Field label="Módulos disponíveis">
               {!programaId ? (
-                <p className="text-xs text-white/30 py-1">Seleciona primeiro um programa.</p>
+                <p className="text-xs text-cinza/80 py-1">Seleciona primeiro um programa.</p>
               ) : modulosDisponiveis.length === 0 ? (
-                <p className="text-xs text-white/30 py-1">Todos os módulos deste programa já estão atribuídos.</p>
+                <p className="text-xs text-cinza/80 py-1">Todos os módulos deste programa já estão atribuídos.</p>
               ) : (
                 <select
                   className={inputCls}
@@ -292,16 +292,16 @@ function EditGestorModal({ gestor, entidadeNome, onClose, onRemover, onAdicionar
             </Field>
 
             {erro && (
-              <div className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-2.5">
-                <p className="text-xs text-red-400">{erro}</p>
+              <div className="rounded-lg border border-ecgm-r/30 bg-ecgm-r/10 px-4 py-2.5">
+                <p className="text-xs text-ecgm-r">{erro}</p>
               </div>
             )}
 
             <button
               onClick={handleAdicionar}
               disabled={adicionando || !programaId || selecionados.length === 0}
-              className="w-full rounded-lg bg-[#4f9eff] py-2.5 text-sm font-semibold text-white
-                         hover:bg-[#3d8aef] transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-acao py-2.5 text-sm font-semibold text-white
+                         hover:bg-acao-escuro transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {adicionando ? "A adicionar…" : "Adicionar Módulos Selecionados"}
             </button>
@@ -311,8 +311,8 @@ function EditGestorModal({ gestor, entidadeNome, onClose, onRemover, onAdicionar
         <div className="pt-1">
           <button
             onClick={onClose}
-            className="w-full rounded-lg border border-white/10 py-2.5 text-sm font-medium
-                       text-white/50 hover:bg-white/5 hover:text-white/80 transition"
+            className="w-full rounded-lg border border-linha py-2.5 text-sm font-medium
+                       text-cinza hover:bg-papel hover:text-tinta transition"
           >
             Fechar
           </button>
@@ -566,15 +566,15 @@ export default function GestoresPage() {
   const paginatedGest   = filteredGestores.slice(startIndexGest, startIndexGest + ITEMS_PER_PAGE_GEST);
 
   const btnPageCls = (disabled) =>
-    `rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60
-     transition hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed`;
+    `rounded-md border border-linha bg-papel px-3 py-1.5 text-xs font-medium text-tinta-2
+     transition hover:bg-mosaico hover:text-tinta disabled:opacity-30 disabled:cursor-not-allowed`;
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-5 right-5 z-50 rounded-lg border border-white/10 bg-[#13131a]
-                        px-4 py-2.5 text-sm text-white shadow-xl">
+        <div className="fixed top-5 right-5 z-50 rounded-lg border border-linha bg-superficie
+                        px-4 py-2.5 text-sm text-tinta shadow-xl">
           {toast}
         </div>
       )}
@@ -582,16 +582,16 @@ export default function GestoresPage() {
       {/* Cabeçalho */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Gestores</h1>
-          <p className="text-sm text-white/35 mt-1">
+          <h1 className="text-2xl font-bold text-tinta">Gestores</h1>
+          <p className="text-sm text-cinza mt-1">
             {loading ? "…" : `${gestores.length} gestores`}
           </p>
           <FilterContextLine />
         </div>
         <button
           onClick={() => setModal("novo")}
-          className="flex items-center gap-2 rounded-lg bg-[#4f9eff] px-4 py-2.5 text-sm
-                     font-semibold text-white hover:bg-[#3d8aef] transition"
+          className="flex items-center gap-2 rounded-lg bg-acao px-4 py-2.5 text-sm
+                     font-semibold text-white hover:bg-acao-escuro transition"
         >
           <span className="text-lg leading-none">+</span>
           Novo Gestor
@@ -601,7 +601,7 @@ export default function GestoresPage() {
       {/* Barra de Pesquisa */}
       <div className="mb-6">
         <div className="relative">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-white/30">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-cinza/80">
             {/* Ícone de Lupa */}
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -612,28 +612,28 @@ export default function GestoresPage() {
             placeholder="Pesquisar por nome, email, entidade ou programa..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-[#13131a] py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 focus:border-[#4f9eff]/50 focus:outline-none focus:ring-1 focus:ring-[#4f9eff]/30 transition shadow-sm"
+            className="w-full rounded-xl border border-linha bg-superficie py-3 pl-10 pr-4 text-sm text-tinta placeholder:text-cinza focus:border-acao/60 focus:outline-none focus:ring-1 focus:ring-acao/20 transition shadow-sm"
           />
         </div>
       </div>
 
       {/* Tabela */}
-      <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
+      <div className="rounded-xl border border-linha bg-superficie overflow-hidden">
         {loading ? (
-          <div className="py-12 text-center text-sm text-white/25">A carregar…</div>
+          <div className="py-12 text-center text-sm text-cinza/80">A carregar…</div>
         ) : gestores.length === 0 ? (
-          <div className="py-12 text-center text-sm text-white/25">
+          <div className="py-12 text-center text-sm text-cinza/80">
             Nenhum gestor encontrado.
           </div>
         ) : filteredGestores.length === 0 ? (
-          <div className="py-12 text-center text-sm text-white/25">
+          <div className="py-12 text-center text-sm text-cinza/80">
             Nenhum gestor corresponde à pesquisa "{searchQuery}".
           </div>
         ) : (
           <>
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs text-white/30 border-b border-white/5 bg-white/2">
+              <tr className="text-xs text-cinza/80 border-b border-linha bg-papel">
                 <th className="text-left px-5 py-3 font-medium">Nome</th>
                 <th className="text-left px-5 py-3 font-medium">Email</th>
                 <th className="text-left px-5 py-3 font-medium">Entidade</th>
@@ -646,20 +646,20 @@ export default function GestoresPage() {
               {paginatedGest.map((g, i) => (
                 <tr
                   key={g.id_utilizadores}
-                  className={`transition hover:bg-white/2 ${i !== paginatedGest.length - 1 ? "border-b border-white/5" : ""}`}
+                  className={`transition hover:bg-papel ${i !== paginatedGest.length - 1 ? "border-b border-linha" : ""}`}
                 >
-                  <td className="px-5 py-3.5 font-medium text-white/85">{g.nome}</td>
-                  <td className="px-5 py-3.5 text-white/60">{g.email}</td>
-                  <td className="px-5 py-3.5 text-white/60">{g.entidade_nome || "—"}</td>
-                  <td className="px-5 py-3.5 text-white/60">{g.programa_nome || "—"}</td>
-                  <td className="px-5 py-3.5 text-white/60">
+                  <td className="px-5 py-3.5 font-medium text-tinta">{g.nome}</td>
+                  <td className="px-5 py-3.5 text-tinta-2">{g.email}</td>
+                  <td className="px-5 py-3.5 text-tinta-2">{g.entidade_nome || "—"}</td>
+                  <td className="px-5 py-3.5 text-tinta-2">{g.programa_nome || "—"}</td>
+                  <td className="px-5 py-3.5 text-tinta-2">
                     {g.disciplinas.length > 0 ? g.disciplinas.join(", ") : "—"}
                   </td>
                   <td className="px-5 py-3.5 text-right">
                     <button
                       onClick={() => setModal({ tipo: "editar", gestor: g })}
-                      className="rounded-md border border-[#4f9eff]/20 px-3 py-1.5 text-xs font-medium
-                                 text-[#4f9eff]/60 hover:bg-[#4f9eff]/10 hover:text-[#4f9eff] transition"
+                      className="rounded-md border border-acao/30 px-3 py-1.5 text-xs font-medium
+                                 text-acao hover:bg-acao/10 hover:text-acao transition"
                     >
                       Editar Módulos
                     </button>
@@ -669,15 +669,15 @@ export default function GestoresPage() {
             </tbody>
           </table>
           {totalPagesGest > 1 && (
-            <div className="flex items-center justify-between border-t border-white/5 bg-[#0c0c0f] px-6 py-4">
-              <p className="text-xs text-white/40">
-                A mostrar <span className="font-semibold text-white/80">{startIndexGest + 1}</span> a{' '}
-                <span className="font-semibold text-white/80">{Math.min(startIndexGest + ITEMS_PER_PAGE_GEST, filteredGestores.length)}</span>{' '}
-                de <span className="font-semibold text-white/80">{filteredGestores.length}</span> gestores
+            <div className="flex items-center justify-between border-t border-linha bg-papel px-6 py-4">
+              <p className="text-xs text-cinza">
+                A mostrar <span className="font-semibold text-tinta">{startIndexGest + 1}</span> a{' '}
+                <span className="font-semibold text-tinta">{Math.min(startIndexGest + ITEMS_PER_PAGE_GEST, filteredGestores.length)}</span>{' '}
+                de <span className="font-semibold text-tinta">{filteredGestores.length}</span> gestores
               </p>
               <div className="flex items-center gap-2">
                 <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className={btnPageCls(currentPage === 1)}>Anterior</button>
-                <span className="text-xs text-white/40 font-mono px-2">{currentPage} / {totalPagesGest}</span>
+                <span className="text-xs text-cinza font-mono px-2">{currentPage} / {totalPagesGest}</span>
                 <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPagesGest))} disabled={currentPage === totalPagesGest} className={btnPageCls(currentPage === totalPagesGest)}>Próxima</button>
               </div>
             </div>

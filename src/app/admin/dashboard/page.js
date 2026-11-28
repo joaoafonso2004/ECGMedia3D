@@ -16,22 +16,16 @@ function toSlug(str) {
 }
 
 /* ─── Estilos partilhados ───────────────────────────────────────── */
-const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white
-  placeholder-white/20 focus:outline-none focus:border-[#4f9eff]/50 focus:ring-1
-  focus:ring-[#4f9eff]/30 transition`;
+const inputCls = `w-full rounded-lg border border-linha bg-papel px-3 py-2 text-sm text-tinta
+  placeholder:text-cinza focus:outline-none focus:border-acao/60 focus:ring-1
+  focus:ring-acao/20 transition`;
 
 /* ─── StatCard ───────────────────────────────────────────────────── */
-function StatCard({ label, value, icon, color = '#4f9eff' }) {
+function StatCard({ label, value }) {
   return (
-    <div className="rounded-xl border border-white/8 bg-[#13131a] p-5 flex items-center gap-4">
-      <div className="flex items-center justify-center w-11 h-11 rounded-lg text-xl"
-           style={{ background: `${color}18`, color }}>
-        {icon}
-      </div>
-      <div>
-        <p className="text-2xl font-bold text-white">{value === null ? '…' : value}</p>
-        <p className="text-xs text-white/40 mt-0.5">{label}</p>
-      </div>
+    <div className="rounded-xl border border-linha bg-superficie px-6 py-5">
+      <b className="block text-3xl font-semibold tracking-tight tabular-nums text-tinta">{value === null ? '…' : value}</b>
+      <span className="text-sm text-cinza">{label}</span>
     </div>
   );
 }
@@ -210,41 +204,41 @@ export default function DashboardPage() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed top-5 right-5 z-50 rounded-lg border border-white/10 bg-[#13131a]
-                        px-4 py-2.5 text-sm text-white shadow-xl">
+        <div className="fixed top-5 right-5 z-50 rounded-lg border border-linha bg-superficie
+                        px-4 py-2.5 text-sm text-tinta shadow-xl">
           {toast}
         </div>
       )}
 
       {/* Cabeçalho */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-sm text-white/35 mt-1">Visão geral da plataforma media3d</p>
+        <h1 className="text-2xl font-bold text-tinta">Dashboard</h1>
+        <p className="text-sm text-cinza mt-1">Visão geral da plataforma ECGMedia3D</p>
         <FilterContextLine />
       </div>
 
       {/* Cards de estatísticas */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-        <StatCard label="Disciplinas" value={loading ? null : stats.disciplinas} icon="🎓" color="#4f9eff" />
-        <StatCard label="Modelos 3D"  value={loading ? null : stats.modelos}     icon="🧊" color="#a78bfa" />
-        <StatCard label="Associações" value={loading ? null : stats.relacoes}    icon="🔗" color="#34d399" />
+        <StatCard label="Disciplinas" value={loading ? null : stats.disciplinas} />
+        <StatCard label="Modelos 3D"  value={loading ? null : stats.modelos} />
+        <StatCard label="Associações" value={loading ? null : stats.relacoes} />
       </div>
 
       {/* Gestão de Entidades & Programas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
 
         {/* ── Entidades ── */}
-        <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/5">
-            <h2 className="text-sm font-semibold text-white">Entidades</h2>
-            <p className="text-xs text-white/30 mt-0.5">Institutos, universidades e escolas</p>
+        <div className="rounded-xl border border-linha bg-superficie overflow-hidden">
+          <div className="px-5 py-4 border-b border-linha">
+            <h2 className="text-sm font-semibold text-tinta">Entidades</h2>
+            <p className="text-xs text-cinza/80 mt-0.5">Institutos, universidades e escolas</p>
           </div>
           <div className="p-5">
 
             {/* Formulário de criação */}
             <form onSubmit={handleCriarEntidade} className="space-y-3 mb-5">
               <div>
-                <label className="block text-xs text-white/40 mb-1">Nome *</label>
+                <label className="block text-xs text-cinza mb-1">Nome *</label>
                 <input
                   className={inputCls}
                   value={entForm.nome}
@@ -254,7 +248,7 @@ export default function DashboardPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-white/40 mb-1">Tipo</label>
+                  <label className="block text-xs text-cinza mb-1">Tipo</label>
                   <input
                     className={inputCls}
                     value={entForm.tipo}
@@ -263,7 +257,7 @@ export default function DashboardPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-white/40 mb-1">Slug (URL) *</label>
+                  <label className="block text-xs text-cinza mb-1">Slug (URL) *</label>
                   <input
                     className={inputCls}
                     value={entForm.slug}
@@ -272,25 +266,25 @@ export default function DashboardPage() {
                   />
                 </div>
               </div>
-              {entError && <p className="text-xs text-red-400">{entError}</p>}
+              {entError && <p className="text-xs text-ecgm-r">{entError}</p>}
               <button
                 type="submit"
                 disabled={creatingEnt || !entForm.nome.trim() || !entForm.slug.trim()}
-                className="w-full rounded-lg bg-[#4f9eff] py-2 text-sm font-semibold text-white
-                           hover:bg-[#3d8aef] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-lg bg-acao py-2 text-sm font-semibold text-white
+                           hover:bg-acao-escuro transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {creatingEnt ? 'A criar…' : '+ Criar Entidade'}
               </button>
             </form>
 
             {/* Contador + link */}
-            <div className="flex items-center justify-between rounded-lg border border-white/8 bg-white/2 px-4 py-3">
-              <span className="text-sm text-white/50">
+            <div className="flex items-center justify-between rounded-lg border border-linha bg-papel px-4 py-3">
+              <span className="text-sm text-cinza">
                 {totalEntidades === null ? '…' : `${totalEntidades} entidade${totalEntidades !== 1 ? 's' : ''} registada${totalEntidades !== 1 ? 's' : ''}`}
               </span>
               <Link
                 href="/admin/entidades"
-                className="text-xs font-medium text-[#4f9eff]/70 hover:text-[#4f9eff] transition"
+                className="text-xs font-medium text-acao hover:text-acao transition"
               >
                 Gerir entidades →
               </Link>
@@ -299,17 +293,17 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Programas ── */}
-        <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/5">
-            <h2 className="text-sm font-semibold text-white">Programas</h2>
-            <p className="text-xs text-white/30 mt-0.5">Licenciaturas, mestrados e outros</p>
+        <div className="rounded-xl border border-linha bg-superficie overflow-hidden">
+          <div className="px-5 py-4 border-b border-linha">
+            <h2 className="text-sm font-semibold text-tinta">Programas</h2>
+            <p className="text-xs text-cinza/80 mt-0.5">Licenciaturas, mestrados e outros</p>
           </div>
           <div className="p-5">
 
             {/* Formulário de criação */}
             <form onSubmit={handleCriarPrograma} className="space-y-3 mb-5">
               <div>
-                <label className="block text-xs text-white/40 mb-1">Entidade *</label>
+                <label className="block text-xs text-cinza mb-1">Entidade *</label>
                 <select
                   className={inputCls}
                   value={progForm.id_entidade}
@@ -322,7 +316,7 @@ export default function DashboardPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-white/40 mb-1">Nome *</label>
+                <label className="block text-xs text-cinza mb-1">Nome *</label>
                 <input
                   className={inputCls}
                   value={progForm.nome}
@@ -332,7 +326,7 @@ export default function DashboardPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-white/40 mb-1">Código *</label>
+                  <label className="block text-xs text-cinza mb-1">Código *</label>
                   <input
                     className={inputCls}
                     value={progForm.codigo}
@@ -341,7 +335,7 @@ export default function DashboardPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-white/40 mb-1">Tipo</label>
+                  <label className="block text-xs text-cinza mb-1">Tipo</label>
                   <input
                     className={inputCls}
                     value={progForm.tipo}
@@ -351,7 +345,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs text-white/40 mb-1">Descrição</label>
+                <label className="block text-xs text-cinza mb-1">Descrição</label>
                 <textarea
                   className={inputCls + ' resize-none'}
                   rows={2}
@@ -360,25 +354,25 @@ export default function DashboardPage() {
                   placeholder="Breve descrição do programa…"
                 />
               </div>
-              {progError && <p className="text-xs text-red-400">{progError}</p>}
+              {progError && <p className="text-xs text-ecgm-r">{progError}</p>}
               <button
                 type="submit"
                 disabled={creatingProg || !progForm.nome.trim() || !progForm.codigo.trim() || !progForm.id_entidade}
-                className="w-full rounded-lg bg-[#4f9eff] py-2 text-sm font-semibold text-white
-                           hover:bg-[#3d8aef] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-lg bg-acao py-2 text-sm font-semibold text-white
+                           hover:bg-acao-escuro transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {creatingProg ? 'A criar…' : '+ Criar Programa'}
               </button>
             </form>
 
             {/* Contador + link */}
-            <div className="flex items-center justify-between rounded-lg border border-white/8 bg-white/2 px-4 py-3">
-              <span className="text-sm text-white/50">
+            <div className="flex items-center justify-between rounded-lg border border-linha bg-papel px-4 py-3">
+              <span className="text-sm text-cinza">
                 {totalProgramas === null ? '…' : `${totalProgramas} programa${totalProgramas !== 1 ? 's' : ''} registado${totalProgramas !== 1 ? 's' : ''}`}
               </span>
               <Link
                 href="/admin/programas"
-                className="text-xs font-medium text-[#4f9eff]/70 hover:text-[#4f9eff] transition"
+                className="text-xs font-medium text-acao hover:text-acao transition"
               >
                 Gerir programas →
               </Link>
@@ -388,25 +382,25 @@ export default function DashboardPage() {
       </div>
 
       {/* Últimas disciplinas adicionadas */}
-      <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-white">Últimas disciplinas adicionadas</h2>
+      <div className="rounded-xl border border-linha bg-superficie overflow-hidden">
+        <div className="px-5 py-4 border-b border-linha flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-tinta">Últimas disciplinas adicionadas</h2>
           <Link href="/admin/disciplinas"
-             className="text-xs text-[#4f9eff]/70 hover:text-[#4f9eff] transition">
+             className="text-xs text-acao hover:text-acao transition">
             Ver todas →
           </Link>
         </div>
 
         {loading ? (
-          <div className="px-5 py-8 text-center text-sm text-white/25">A carregar…</div>
+          <div className="px-5 py-8 text-center text-sm text-cinza/80">A carregar…</div>
         ) : recentes.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-white/25">
+          <div className="px-5 py-8 text-center text-sm text-cinza/80">
             Nenhuma disciplina encontrada.
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs text-white/30 border-b border-white/5">
+              <tr className="text-xs text-cinza/80 border-b border-linha">
                 <th className="text-left px-5 py-2.5 font-medium">Nome</th>
                 <th className="text-left px-5 py-2.5 font-medium">Código</th>
                 <th className="text-left px-5 py-2.5 font-medium">Ano</th>
@@ -417,12 +411,12 @@ export default function DashboardPage() {
               {recentes.map((d, i) => (
                 <tr
                   key={d.id_modulo}
-                  className={`transition hover:bg-white/3 ${i !== recentes.length - 1 ? 'border-b border-white/5' : ''}`}
+                  className={`transition hover:bg-papel ${i !== recentes.length - 1 ? 'border-b border-linha' : ''}`}
                 >
-                  <td className="px-5 py-3 text-white/80 font-medium">{d.nome}</td>
-                  <td className="px-5 py-3 font-mono text-xs text-white/35">{d.codigo ?? '—'}</td>
-                  <td className="px-5 py-3 text-white/45">{d.ano     != null ? `${d.ano}º Ano`  : '—'}</td>
-                  <td className="px-5 py-3 text-white/45">{d.semestre != null ? `${d.semestre}º Sem` : '—'}</td>
+                  <td className="px-5 py-3 text-tinta font-medium">{d.nome}</td>
+                  <td className="px-5 py-3 font-mono text-xs text-cinza">{d.codigo ?? '—'}</td>
+                  <td className="px-5 py-3 text-cinza">{d.ano     != null ? `${d.ano}º Ano`  : '—'}</td>
+                  <td className="px-5 py-3 text-cinza">{d.semestre != null ? `${d.semestre}º Sem` : '—'}</td>
                 </tr>
               ))}
             </tbody>

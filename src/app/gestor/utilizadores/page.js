@@ -8,11 +8,11 @@ import { useGestorFilter } from '../GestorFilterContext';
 function Modal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-[#13131a] shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
-          <h2 className="text-base font-semibold text-white">{title}</h2>
-          <button onClick={onClose} className="text-white/30 hover:text-white/70 transition text-xl leading-none">
+      <div className="absolute inset-0 bg-tinta/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-linha bg-superficie shadow-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-linha">
+          <h2 className="text-base font-semibold text-tinta">{title}</h2>
+          <button onClick={onClose} className="text-cinza/80 hover:text-tinta-2 transition text-xl leading-none">
             ×
           </button>
         </div>
@@ -22,9 +22,9 @@ function Modal({ title, onClose, children }) {
   );
 }
 
-const inputCls = `w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white
-  placeholder-white/20 focus:outline-none focus:border-[#a78bfa]/50 focus:ring-1
-  focus:ring-[#a78bfa]/30 transition`;
+const inputCls = `w-full rounded-lg border border-linha bg-papel px-3 py-2.5 text-sm text-tinta
+  placeholder:text-cinza focus:outline-none focus:border-acao/60 focus:ring-1
+  focus:ring-acao/20 transition`;
 
 export default function GestorUtilizadoresPage() {
   const { entidadeId, programaId, programas } = useGestorFilter();
@@ -193,8 +193,8 @@ export default function GestorUtilizadoresPage() {
       {/* Cabeçalho */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Gestão de Alunos</h1>
-          <p className="text-sm text-white/35 mt-1">
+          <h1 className="text-2xl font-bold text-tinta">Gestão de Alunos</h1>
+          <p className="text-sm text-cinza mt-1">
             {loading ? "…" : `${alunosNoFiltroGlobal.length} alunos nas suas disciplinas`}
           </p>
         </div>
@@ -203,7 +203,7 @@ export default function GestorUtilizadoresPage() {
       {/* Barra de Pesquisa */}
       <div className="mb-6">
         <div className="relative">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-white/30">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-cinza/80">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
@@ -213,21 +213,21 @@ export default function GestorUtilizadoresPage() {
             placeholder="Pesquisar por nome ou email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-[#13131a] py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 focus:border-[#a78bfa]/50 focus:outline-none focus:ring-1 focus:ring-[#a78bfa]/30 transition shadow-sm"
+            className="w-full rounded-xl border border-linha bg-superficie py-3 pl-10 pr-4 text-sm text-tinta placeholder:text-cinza focus:border-acao/60 focus:outline-none focus:ring-1 focus:ring-acao/20 transition shadow-sm"
           />
         </div>
       </div>
 
       {/* Tabela */}
-      <div className="rounded-xl border border-white/8 bg-[#13131a] overflow-hidden">
+      <div className="rounded-xl border border-linha bg-superficie overflow-hidden">
         {loading ? (
-          <div className="py-12 text-center text-sm text-white/25">A carregar alunos...</div>
+          <div className="py-12 text-center text-sm text-cinza/80">A carregar alunos...</div>
         ) : alunos.length === 0 ? (
-          <div className="py-12 text-center text-sm text-white/25">
+          <div className="py-12 text-center text-sm text-cinza/80">
             Ainda não lhe foi associada nenhuma disciplina, ou não tem alunos nas suas disciplinas.
           </div>
         ) : alunosFiltrados.length === 0 ? (
-          <div className="py-12 text-center text-sm text-white/25">
+          <div className="py-12 text-center text-sm text-cinza/80">
             {search
               ? `Nenhum aluno corresponde à pesquisa "${search}".`
               : 'Nenhum aluno para o filtro selecionado.'}
@@ -235,7 +235,7 @@ export default function GestorUtilizadoresPage() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs text-white/30 border-b border-white/5 bg-white/2">
+              <tr className="text-xs text-cinza/80 border-b border-linha bg-papel">
                 <th className="text-left px-5 py-3 font-medium">Aluno</th>
                 <th className="text-left px-5 py-3 font-medium">Disciplinas Associadas</th>
                 <th className="text-right px-5 py-3 font-medium">Ações</th>
@@ -245,30 +245,30 @@ export default function GestorUtilizadoresPage() {
               {alunosFiltrados.map((aluno, i) => (
                 <tr 
                   key={aluno.id_utilizadores} 
-                  className={`transition hover:bg-white/2 ${i !== alunosFiltrados.length - 1 ? 'border-b border-white/5' : ''}`}
+                  className={`transition hover:bg-papel ${i !== alunosFiltrados.length - 1 ? 'border-b border-linha' : ''}`}
                 >
                   
                   <td className="px-5 py-3.5">
-                    <p className="font-medium text-white/85">{aluno.nome}</p>
-                    <p className="text-xs text-white/40 mt-0.5">{aluno.email}</p>
+                    <p className="font-medium text-tinta">{aluno.nome}</p>
+                    <p className="text-xs text-cinza mt-0.5">{aluno.email}</p>
                   </td>
 
                   <td className="px-5 py-3.5">
                     {aluno.disciplinas.length === 0 ? (
-                      <span className="text-xs text-white/20 italic">Sem associações</span>
+                      <span className="text-xs text-cinza/70 italic">Sem associações</span>
                     ) : (
                       <div className="flex flex-wrap gap-2">
                         {aluno.disciplinas.map(disc => (
                           <div 
                             key={disc.id_tipo_utilizador} 
-                            className="flex items-center gap-1.5 rounded-md bg-[#a78bfa]/10 pl-2.5 pr-1.5 py-1 border border-[#a78bfa]/20"
+                            className="flex items-center gap-1.5 rounded-md bg-acao/10 pl-2.5 pr-1.5 py-1 border border-acao/30"
                           >
-                            <span className="text-[11px] font-medium text-[#a78bfa]">
+                            <span className="text-[11px] font-medium text-acao">
                               {disc.modulo?.codigo || 'MOD'} - {disc.modulo?.nome}
                             </span>
                             <button 
                               onClick={() => confirmRemoverAssociacao(disc.id_tipo_utilizador, aluno.nome, disc.modulo?.nome)}
-                              className="text-[#a78bfa]/60 hover:text-red-400 hover:bg-red-500/20 rounded-md p-0.5 transition"
+                              className="text-acao hover:text-ecgm-r hover:bg-ecgm-r/15 rounded-md p-0.5 transition"
                               title="Remover disciplina"
                             >
                               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -284,7 +284,7 @@ export default function GestorUtilizadoresPage() {
                   <td className="px-5 py-3.5 text-right">
                     <button
                       onClick={() => openModal(aluno)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/10 hover:border-white/20 transition"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-linha bg-papel px-3 py-2 text-xs font-semibold text-tinta hover:text-tinta hover:bg-mosaico hover:border-linha-2 transition"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -303,13 +303,13 @@ export default function GestorUtilizadoresPage() {
       {/* ── Modal de Associação ── */}
       {isModalOpen && (
         <Modal title="Associar Disciplina" onClose={() => setIsModalOpen(false)}>
-          <p className="text-sm text-white/40 mb-5">
-            A dar acesso a <span className="text-white font-medium">{selectedAluno?.nome}</span>
+          <p className="text-sm text-cinza mb-5">
+            A dar acesso a <span className="text-tinta font-medium">{selectedAluno?.nome}</span>
           </p>
 
           <form onSubmit={handleAssociar} className="space-y-5">
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-1.5">Escolher Disciplina *</label>
+              <label className="block text-xs font-medium text-cinza mb-1.5">Escolher Disciplina *</label>
               <select
                 required
                 value={selectedModulo}
@@ -329,7 +329,7 @@ export default function GestorUtilizadoresPage() {
               <button
                 type="submit"
                 disabled={isSubmitting || !selectedModulo}
-                className="flex-1 rounded-lg bg-[#a78bfa] py-2.5 text-sm font-semibold text-white hover:bg-[#8b5cf6] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 rounded-lg bg-acao py-2.5 text-sm font-semibold text-white hover:bg-acao-escuro transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'A associar...' : 'Confirmar'}
               </button>
@@ -337,7 +337,7 @@ export default function GestorUtilizadoresPage() {
                 type="button"
                 onClick={() => setIsModalOpen(false)}
                 disabled={isSubmitting}
-                className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition"
+                className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium text-cinza hover:bg-papel hover:text-tinta transition"
               >
                 Cancelar
               </button>
@@ -349,8 +349,8 @@ export default function GestorUtilizadoresPage() {
       {/* ── Modal de Confirmação de Eliminação ── */}
       {deleteModalData && (
         <Modal title="Remover Disciplina" onClose={() => setDeleteModalData(null)}>
-          <p className="text-sm text-white/60 mb-6 leading-relaxed">
-            Tens a certeza que queres remover o aluno <span className="text-white font-semibold">{deleteModalData.alunoNome}</span> da disciplina de <span className="text-white font-semibold">{deleteModalData.disciplinaNome}</span>?
+          <p className="text-sm text-tinta-2 mb-6 leading-relaxed">
+            Tens a certeza que queres remover o aluno <span className="text-tinta font-semibold">{deleteModalData.alunoNome}</span> da disciplina de <span className="text-tinta font-semibold">{deleteModalData.disciplinaNome}</span>?
             <br/><br/>
             Ele deixará de ter acesso à galeria comunitária desta disciplina.
           </p>
@@ -360,7 +360,7 @@ export default function GestorUtilizadoresPage() {
               type="button"
               onClick={executeRemoverAssociacao}
               disabled={isDeleting}
-              className="flex-1 rounded-lg bg-red-500 hover:bg-red-600 py-2.5 text-sm font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              className="flex-1 rounded-lg bg-ecgm-r hover:bg-ecgm-r py-2.5 text-sm font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               {isDeleting ? 'A remover...' : 'Remover'}
             </button>
@@ -368,7 +368,7 @@ export default function GestorUtilizadoresPage() {
               type="button"
               onClick={() => setDeleteModalData(null)}
               disabled={isDeleting}
-              className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition"
+              className="flex-1 rounded-lg border border-linha py-2.5 text-sm font-medium text-cinza hover:bg-papel hover:text-tinta transition"
             >
               Cancelar
             </button>
