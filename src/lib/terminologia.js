@@ -1,45 +1,64 @@
 /**
  * Terminologia configurável.
  *
- * Os nomes dos níveis da hierarquia (entidade → programa → módulo → projeto)
- * vêm da tabela `terminologia`, por tipo de entidade, e uma entidade pode
+ * As palavras que o site e o painel mostram (os níveis da hierarquia
+ * entidade → programa → módulo → projeto, e ainda trabalho, biblioteca,
+ * agrupamentos, número de identificação e os nomes das funções) vêm da
+ * tabela `terminologia`, por tipo de entidade, e uma entidade pode
  * substituir termos só para si. Precedência: entidade → tipo → predefinição.
  *
  * Uso numa página (servidor):
  *   const termos = await getTermos(supabase, entidade);
  *   contar(termos.programa, 3)  → "3 cursos"
  *   novo(termos.modulo)         → "Nova disciplina"
+ *   termos['funcao.professor']  → { singular: 'Professor', … } (só se o tipo a tiver)
  *
  * Os objetos de termos são simples (podem passar para componentes 'use client').
  * Se a tabela ainda não existir, usa os termos predefinidos e a página não falha.
  */
 
+/** Os quatro níveis da hierarquia. */
 export const NIVEIS = ['entidade', 'programa', 'modulo', 'projeto'];
+/** Todas as chaves fixas do vocabulário (os nomes das funções são `funcao.<slug>`). */
+export const CHAVES = [...NIVEIS, 'trabalho', 'biblioteca', 'grupo1', 'grupo2', 'identificador'];
 export const IDIOMAS = ['pt', 'en'];
 
-/** Termos usados quando não há nada na base de dados (igual à predefinição da migração). */
+const FUNCAO = /^funcao\.[a-z0-9]+(_[a-z0-9]+)*$/;
+
+/** Termos usados quando não há nada na base de dados (igual à predefinição das migrações). */
 export const PADRAO = {
   pt: {
-    entidade: { singular: 'Instituição', plural: 'Instituições', genero: 'f' },
-    programa: { singular: 'Programa',    plural: 'Programas',    genero: 'm' },
-    modulo:   { singular: 'Disciplina',  plural: 'Disciplinas',  genero: 'f' },
-    projeto:  { singular: 'Projeto',     plural: 'Projetos',     genero: 'm' },
+    entidade:      { singular: 'Instituição',      plural: 'Instituições',      genero: 'f' },
+    programa:      { singular: 'Programa',         plural: 'Programas',         genero: 'm' },
+    modulo:        { singular: 'Disciplina',       plural: 'Disciplinas',       genero: 'f' },
+    projeto:       { singular: 'Projeto',          plural: 'Projetos',          genero: 'm' },
+    trabalho:      { singular: 'Trabalho',         plural: 'Trabalhos',         genero: 'm' },
+    biblioteca:    { singular: 'Biblioteca',       plural: 'Bibliotecas',       genero: 'f' },
+    grupo1:        { singular: 'Ano',              plural: 'Anos',              genero: 'm' },
+    grupo2:        { singular: 'Semestre',         plural: 'Semestres',         genero: 'm' },
+    identificador: { singular: 'Número de membro', plural: 'Números de membro', genero: 'm' },
   },
   en: {
-    entidade: { singular: 'Institution', plural: 'Institutions', genero: 'f' },
-    programa: { singular: 'Programme',   plural: 'Programmes',   genero: 'm' },
-    modulo:   { singular: 'Course',      plural: 'Courses',      genero: 'm' },
-    projeto:  { singular: 'Project',     plural: 'Projects',     genero: 'm' },
+    entidade:      { singular: 'Institution',   plural: 'Institutions',   genero: 'f' },
+    programa:      { singular: 'Programme',     plural: 'Programmes',     genero: 'm' },
+    modulo:        { singular: 'Course',        plural: 'Courses',        genero: 'm' },
+    projeto:       { singular: 'Project',       plural: 'Projects',       genero: 'm' },
+    trabalho:      { singular: 'Work',          plural: 'Works',          genero: 'm' },
+    biblioteca:    { singular: 'Library',       plural: 'Libraries',      genero: 'f' },
+    grupo1:        { singular: 'Year',          plural: 'Years',          genero: 'm' },
+    grupo2:        { singular: 'Semester',      plural: 'Semesters',      genero: 'm' },
+    identificador: { singular: 'Member number', plural: 'Member numbers', genero: 'm' },
   },
 };
 
-const COLUNAS = 'tipo_entidade, id_entidade, idioma, nivel, singular, plural, genero';
+const COLUNAS = 'tipo_entidade, id_entidade, idioma, chave, singular, plural, genero';
 
 /* ─── Resolver ─────────────────────────────────────────────────── */
 
 /**
- * Junta as linhas da tabela pela ordem de precedência e devolve
- * { entidade, programa, modulo, projeto }, cada um { singular, plural, genero, idioma }.
+ * Junta as linhas da tabela pela ordem de precedência e devolve um objeto
+ * com todas as CHAVES (e os nomes das funções que existirem), cada uma
+ * { singular, plural, genero, idioma }.
  */
 export function resolverTermos(linhas = [], entidade = null, idioma = 'pt') {
   const lingua = IDIOMAS.includes(idioma) ? idioma : 'pt';
@@ -55,11 +74,11 @@ export function resolverTermos(linhas = [], entidade = null, idioma = 'pt') {
     );
 
   const termos = Object.fromEntries(
-    NIVEIS.map(n => [n, { ...PADRAO[lingua][n], idioma: lingua }])
+    CHAVES.map(c => [c, { ...PADRAO[lingua][c], idioma: lingua }])
   );
   for (const l of linhas.filter(aplica).sort((a, b) => peso(a) - peso(b))) {
-    if (!NIVEIS.includes(l.nivel)) continue;
-    termos[l.nivel] = {
+    if (!CHAVES.includes(l.chave) && !FUNCAO.test(l.chave ?? '')) continue;
+    termos[l.chave] = {
       singular: l.singular,
       plural: l.plural,
       genero: l.genero === 'f' ? 'f' : 'm',

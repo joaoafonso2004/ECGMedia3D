@@ -36,11 +36,20 @@ const GENEROS = [
   { valor: 'f', texto: 'f · feminino' },
 ];
 
-const COLUNAS = 'tipo_entidade, id_entidade, idioma, nivel, singular, plural, genero';
+const COLUNAS = 'tipo_entidade, id_entidade, idioma, chave, singular, plural, genero';
 
 /* ─── Funções auxiliares ────────────────────────────────────────── */
 
 const normalizarTipo = t => (t ? String(t).trim().toLowerCase() : '');
+
+function toSlug(str) {
+  return str
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 function capitalizar(texto = '') {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
@@ -68,7 +77,7 @@ export default function TerminologiaPage() {
   const [tipo,        setTipo]        = useState('');
   const [idEntidade,  setIdEntidade]  = useState('');
   const [idioma,      setIdioma]      = useState('pt');
-  const [tiposNovos,  setTiposNovos]  = useState([]);
+  const [tiposEntidade, setTiposEntidade] = useState([]); // tabela tipos_entidade: { slug, nome }
   const [novoAberto,  setNovoAberto]  = useState(false);
   const [novoTexto,   setNovoTexto]   = useState('');
   const [novoErro,    setNovoErro]    = useState('');
@@ -86,14 +95,15 @@ export default function TerminologiaPage() {
 
   const carregar = useCallback(async () => {
     const supabase = createSupabaseBrowser();
-    const [resLinhas, resEnt] = await Promise.all([
+    const [resLinhas, resEnt, resTipos] = await Promise.all([
       supabase.from('terminologia').select(COLUNAS),
       supabase.from('entidade').select('id_entidade, nome, tipo').order('nome'),
+      supabase.from('tipos_entidade').select('slug, nome').order('nome'),
     ]);
-    return { resLinhas, resEnt };
+    return { resLinhas, resEnt, resTipos };
   }, []);
 
-  const aplicar = useCallback(({ resLinhas, resEnt }) => {
+  const aplicar = useCallback(({ resLinhas, resEnt, resTipos }) => {
 
     if (resLinhas.error) {
       if (tabelaEmFalta(resLinhas.error)) {
@@ -110,6 +120,7 @@ export default function TerminologiaPage() {
       setLinhas(resLinhas.data ?? []);
     }
     setEntidades(resEnt.data ?? []);
+    setTiposEntidade(resTipos?.data ?? []);
     setLoading(false);
   }, []);
 
@@ -121,11 +132,16 @@ export default function TerminologiaPage() {
 
   const tipos = useMemo(() => {
     const conjunto = new Set();
+    tiposEntidade.forEach(t => conjunto.add(t.slug));
     entidades.forEach(e => { const t = normalizarTipo(e.tipo); if (t) conjunto.add(t); });
     linhas.forEach(l => { const t = normalizarTipo(l.tipo_entidade); if (t) conjunto.add(t); });
-    tiposNovos.forEach(t => conjunto.add(t));
     return [...conjunto].sort((a, b) => a.localeCompare(b, 'pt'));
-  }, [entidades, linhas, tiposNovos]);
+  }, [tiposEntidade, entidades, linhas]);
+
+  const nomeTipo = useCallback(
+    t => tiposEntidade.find(x => x.slug === t)?.nome ?? capitalizar(t),
+    [tiposEntidade]
+  );
 
   const contagemPorTipo = useMemo(() => {
     const c = {};
@@ -151,7 +167,7 @@ export default function TerminologiaPage() {
   const chaveEdicao = `${chave}|${idioma}`;
 
   const nomeAlvo = modo === 'predefinicao' ? 'Predefinição'
-    : modo === 'tipo' ? capitalizar(tipo)
+    : modo === 'tipo' ? nomeTipo(tipo)
     : (entidadeSel ? `${entidadeSel.nome}${entidadeSel.tipo ? ` · ${normalizarTipo(entidadeSel.tipo)}` : ''}` : '');
 
   // Linhas que existem para este alvo + idioma
@@ -163,7 +179,7 @@ export default function TerminologiaPage() {
     )
   ), [linhas, idioma, modo, tipo, idEntidade]);
 
-  const definidos = useMemo(() => new Set(linhasAlvo.map(l => l.nivel)), [linhasAlvo]);
+  const definidos = useMemo(() => new Set(linhasAlvo.map(l => l.chave)), [linhasAlvo]);
 
   // Valores que se aplicam ao alvo (os próprios ou os herdados)
   const base = useMemo(() => {
@@ -190,7 +206,7 @@ export default function TerminologiaPage() {
   // De onde vem o valor de um nível que não está definido para este alvo
   function origemHerdada(nivel) {
     const existe = (t, id) => linhas.some(l =>
-      l.idioma === idioma && l.nivel === nivel &&
+      l.idioma === idioma && l.chave === nivel &&
       (l.id_entidade ?? null) === id && normalizarTipo(l.tipo_entidade) === t
     );
     if (modo === 'entidade') {
@@ -235,17 +251,27 @@ export default function TerminologiaPage() {
     setNovoAberto(false);
   }
 
-  function adicionarTipo() {
-    const t = novoTexto.trim().replace(/\s+/g, ' ').toLowerCase();
-    if (!t) { setNovoErro('Indica o nome do tipo.'); return; }
-    if (!/^[\p{L}]+(?:[\s-][\p{L}]+)*$/u.test(t)) {
+  // Cria o tipo na base de dados a partir do preset "vazio" (termos neutros
+  // e uma só função base); o editor de tipos vai permitir escolher outro preset
+  async function adicionarTipo() {
+    const nome = novoTexto.trim().replace(/\s+/g, ' ');
+    if (!nome) { setNovoErro('Indica o nome do tipo.'); return; }
+    if (!/^[\p{L}]+(?:[\s-][\p{L}]+)*$/u.test(nome)) {
       setNovoErro('Usa apenas letras, espaços e hífenes.');
       return;
     }
-    if (!tipos.includes(t)) setTiposNovos(prev => [...prev, t]);
+    const slug = toSlug(nome);
+    if (!tipos.includes(slug)) {
+      const supabase = createSupabaseBrowser();
+      const { error } = await supabase.rpc('aplicar_preset', {
+        p_preset: 'vazio', p_slug: slug, p_nome: capitalizar(nome),
+      });
+      if (error) { setNovoErro(error.message); return; }
+      await fetchData();
+    }
     setNovoTexto('');
     setNovoErro('');
-    escolherTipo(t);
+    escolherTipo(slug);
   }
 
   /* ─── Guardar / Repor ─────────────────────────────────────────── */
@@ -266,7 +292,7 @@ export default function TerminologiaPage() {
       tipo_entidade: modo === 'tipo' ? tipo : null,
       id_entidade:   modo === 'entidade' ? Number(idEntidade) : null,
       idioma,
-      nivel:         n,
+      chave:         n,
       singular:      campos[n].singular.trim(),
       plural:        campos[n].plural.trim(),
       genero:        campos[n].genero === 'f' ? 'f' : 'm',
@@ -274,7 +300,7 @@ export default function TerminologiaPage() {
 
     const { data, error } = await supabase
       .from('terminologia')
-      .upsert(rows, { onConflict: 'tipo_entidade,id_entidade,idioma,nivel' })
+      .upsert(rows, { onConflict: 'tipo_entidade,id_entidade,idioma,chave' })
       .select('id_terminologia');
 
     if (error) {
@@ -303,7 +329,8 @@ export default function TerminologiaPage() {
     setSaving(true);
     setErroForm('');
     const supabase = createSupabaseBrowser();
-    let q = supabase.from('terminologia').delete().eq('idioma', idioma);
+    // Só os quatro níveis que esta página edita (os outros termos e os nomes das funções ficam)
+    let q = supabase.from('terminologia').delete().eq('idioma', idioma).in('chave', NIVEIS);
     q = modo === 'tipo'
       ? q.eq('tipo_entidade', tipo).is('id_entidade', null)
       : q.eq('id_entidade', Number(idEntidade));
@@ -402,7 +429,7 @@ export default function TerminologiaPage() {
                 </button>
                 {tipos.map(t => (
                   <button key={t} className={pillCls(modo === 'tipo' && tipo === t)} onClick={() => escolherTipo(t)}>
-                    {capitalizar(t)} · {plural(contagemPorTipo[t] || 0, 'entidade', 'entidades')}
+                    {nomeTipo(t)} · {plural(contagemPorTipo[t] || 0, 'entidade', 'entidades')}
                   </button>
                 ))}
                 <button className={pillCls(novoAberto)} onClick={() => { setNovoAberto(o => !o); setNovoErro(''); }}>

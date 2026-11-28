@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import {
-  PADRAO, resolverTermos, getTermos,
+  NIVEIS, PADRAO, resolverTermos, getTermos,
   contar, novo, nenhum, nenhumEncontrado, ver, verUm, procurar, publicados, oTermo, doTermo, aoTermo, nesteTermo, minuscula, aindaSem,
 } from '../src/lib/terminologia.js';
 
@@ -80,10 +80,12 @@ describe('Migração da terminologia', () => {
     assert.deepEqual(rows, [{ idioma: 'en', n: 4 }, { idioma: 'pt', n: 4 }]);
   });
 
+  // Esta migração só tem os quatro níveis; os outros termos vêm com a
+  // 20261128_tipos_funcoes.sql (testada em funcoes.test.mjs)
   it('a predefinição da base de dados é igual à do código', async () => {
     for (const idioma of ['pt', 'en']) {
-      for (const [nivel, t] of Object.entries(PADRAO[idioma])) {
-        assert.deepEqual(await termoDb(null, nivel, idioma), t, `${idioma}/${nivel}`);
+      for (const nivel of NIVEIS) {
+        assert.deepEqual(await termoDb(null, nivel, idioma), PADRAO[idioma][nivel], `${idioma}/${nivel}`);
       }
     }
   });
@@ -182,7 +184,9 @@ describe('Permissões da terminologia (RLS)', () => {
   it('o superadmin pode substituir termos só para uma entidade', async () => {
     await como(ADMIN, `insert into terminologia (id_entidade, nivel, singular, plural, genero)
                        values (1, 'programa', 'Licenciatura', 'Licenciaturas', 'f')`);
-    const { rows } = await db.query(`select * from terminologia where idioma = 'pt'`);
+    // Nesta migração a coluna ainda se chama nivel (depois passa a chave)
+    const { rows } = await db.query(
+      `select tipo_entidade, id_entidade, idioma, nivel as chave, singular, plural, genero from terminologia where idioma = 'pt'`);
     const ipvc = resolverTermos(rows, { id_entidade: 1, tipo: 'escola' });
     assert.equal(ipvc.programa.singular, 'Licenciatura');
     assert.equal(ipvc.modulo.singular, 'Disciplina'); // o resto vem do tipo
@@ -200,14 +204,20 @@ describe('Permissões da terminologia (RLS)', () => {
 
 /* ─── src/lib/terminologia.js ──────────────────────────────────── */
 
+// Na base de dados a coluna nivel passou a chave (migração 20261128_tipos_funcoes.sql)
 const LINHAS = [
-  { tipo_entidade: null,      id_entidade: null, idioma: 'pt', nivel: 'programa', singular: 'Programa',     plural: 'Programas',     genero: 'm' },
-  { tipo_entidade: null,      id_entidade: null, idioma: 'pt', nivel: 'modulo',   singular: 'Disciplina',   plural: 'Disciplinas',   genero: 'f' },
-  { tipo_entidade: 'escola',  id_entidade: null, idioma: 'pt', nivel: 'programa', singular: 'Curso',        plural: 'Cursos',        genero: 'm' },
-  { tipo_entidade: 'empresa', id_entidade: null, idioma: 'pt', nivel: 'programa', singular: 'Departamento', plural: 'Departamentos', genero: 'm' },
-  { tipo_entidade: 'empresa', id_entidade: null, idioma: 'pt', nivel: 'modulo',   singular: 'Serviço',      plural: 'Serviços',      genero: 'm' },
-  { tipo_entidade: null,      id_entidade: 7,    idioma: 'pt', nivel: 'modulo',   singular: 'Unidade curricular', plural: 'Unidades curriculares', genero: 'f' },
-  { tipo_entidade: null,      id_entidade: null, idioma: 'en', nivel: 'modulo',   singular: 'Course',       plural: 'Courses',       genero: 'm' },
+  { tipo_entidade: null,      id_entidade: null, idioma: 'pt', chave: 'programa', singular: 'Programa',     plural: 'Programas',     genero: 'm' },
+  { tipo_entidade: null,      id_entidade: null, idioma: 'pt', chave: 'modulo',   singular: 'Disciplina',   plural: 'Disciplinas',   genero: 'f' },
+  { tipo_entidade: 'escola',  id_entidade: null, idioma: 'pt', chave: 'programa', singular: 'Curso',        plural: 'Cursos',        genero: 'm' },
+  { tipo_entidade: 'empresa', id_entidade: null, idioma: 'pt', chave: 'programa', singular: 'Departamento', plural: 'Departamentos', genero: 'm' },
+  { tipo_entidade: 'empresa', id_entidade: null, idioma: 'pt', chave: 'modulo',   singular: 'Serviço',      plural: 'Serviços',      genero: 'm' },
+  { tipo_entidade: null,      id_entidade: 7,    idioma: 'pt', chave: 'modulo',   singular: 'Unidade curricular', plural: 'Unidades curriculares', genero: 'f' },
+  { tipo_entidade: null,      id_entidade: null, idioma: 'en', chave: 'modulo',   singular: 'Course',       plural: 'Courses',       genero: 'm' },
+  { tipo_entidade: 'escola',  id_entidade: null, idioma: 'pt', chave: 'trabalho', singular: 'Trabalho',     plural: 'Trabalhos',     genero: 'm' },
+  { tipo_entidade: 'hospital', id_entidade: null, idioma: 'pt', chave: 'trabalho', singular: 'Submissão',   plural: 'Submissões',    genero: 'f' },
+  { tipo_entidade: 'escola',  id_entidade: null, idioma: 'pt', chave: 'funcao.aluno', singular: 'Aluno',    plural: 'Alunos',        genero: 'm' },
+  { tipo_entidade: null,      id_entidade: 7,    idioma: 'pt', chave: 'funcao.aluno', singular: 'Estudante', plural: 'Estudantes',   genero: 'm' },
+  { tipo_entidade: 'escola',  id_entidade: null, idioma: 'pt', chave: 'outra_coisa', singular: 'X',         plural: 'Xs',            genero: 'm' },
 ];
 
 describe('Precedência dos termos', () => {
@@ -250,6 +260,21 @@ describe('Precedência dos termos', () => {
 
   it('um idioma não suportado usa PT', () => {
     assert.equal(resolverTermos(LINHAS, { tipo: 'escola' }, 'fr').programa.singular, 'Curso');
+  });
+
+  it('os termos novos (trabalho, biblioteca, agrupamentos, número) têm predefinição', () => {
+    const t = resolverTermos([], null);
+    assert.equal(t.biblioteca.singular, 'Biblioteca');
+    assert.equal(t.grupo1.singular, 'Ano');
+    assert.equal(t.identificador.singular, 'Número de membro');
+    assert.equal(resolverTermos(LINHAS, { tipo: 'hospital' }).trabalho.plural, 'Submissões');
+  });
+
+  it('os nomes das funções seguem a mesma precedência, e as chaves desconhecidas ficam de fora', () => {
+    assert.equal(resolverTermos(LINHAS, { tipo: 'escola' })['funcao.aluno'].plural, 'Alunos');
+    assert.equal(resolverTermos(LINHAS, { id_entidade: 7, tipo: 'escola' })['funcao.aluno'].singular, 'Estudante');
+    assert.equal(resolverTermos(LINHAS, { tipo: 'empresa' })['funcao.aluno'], undefined);
+    assert.equal(resolverTermos(LINHAS, { tipo: 'escola' }).outra_coisa, undefined);
   });
 
   it('se a tabela não existir, getTermos devolve a predefinição sem falhar', async () => {

@@ -83,6 +83,7 @@ export default function EntidadesPage() {
   const [toast,        setToast]        = useState(null);
 
   const [form,       setForm]       = useState({ nome: '', tipo: '', slug: '' });
+  const [tipos,      setTipos]      = useState([]); // tipos_entidade: { slug, nome }
   const [slugManual, setSlugManual] = useState(false);
   const [formError,  setFormError]  = useState('');
 
@@ -94,11 +95,13 @@ export default function EntidadesPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const supabase = createSupabaseBrowser();
-    const [{ data: ents }, { data: progs }] = await Promise.all([
+    const [{ data: ents }, { data: progs }, { data: tps }] = await Promise.all([
       supabase.from('entidade').select('id_entidade, nome, tipo, slug').order('nome'),
       supabase.from('programa').select('id_entidade'),
+      supabase.from('tipos_entidade').select('slug, nome').order('nome'),
     ]);
     setEntidades(ents ?? []);
+    setTipos(tps ?? []);
     const cm = {};
     progs?.forEach(p => { cm[p.id_entidade] = (cm[p.id_entidade] || 0) + 1; });
     setProgCounts(cm);
@@ -165,7 +168,7 @@ export default function EntidadesPage() {
     setSaving(true);
     setFormError('');
     const supabase = createSupabaseBrowser();
-    const payload  = { nome: form.nome.trim(), tipo: form.tipo.trim() || null, slug: form.slug.trim().toLowerCase() };
+    const payload  = { nome: form.nome.trim(), tipo: form.tipo || null, slug: form.slug.trim().toLowerCase() };
     let error;
     if (modal === 'nova') {
       ({ error } = await supabase.from('entidade').insert([payload]));
@@ -293,7 +296,7 @@ export default function EntidadesPage() {
                   className={`transition hover:bg-papel ${i !== pageData.length - 1 ? 'border-b border-linha' : ''}`}
                 >
                   <td className="px-5 py-3.5 font-medium text-tinta">{ent.nome}</td>
-                  <td className="px-5 py-3.5 text-cinza text-xs">{ent.tipo ?? '—'}</td>
+                  <td className="px-5 py-3.5 text-cinza text-xs">{tipos.find(t => t.slug === ent.tipo)?.nome ?? ent.tipo ?? '—'}</td>
                   <td className="px-5 py-3.5 font-mono text-xs text-cinza">{ent.slug}</td>
                   <td className="px-5 py-3.5">
                     <span className="inline-flex items-center justify-center min-w-[1.5rem] h-5 rounded-full bg-acao/10 border border-acao/30 text-[10px] font-semibold text-acao px-1.5">
@@ -349,12 +352,18 @@ export default function EntidadesPage() {
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Tipo">
-                <input
-                  className={inputCls}
+                {/* O tipo define os termos e as funções da entidade (criam-se na página Terminologia) */}
+                <select
+                  className={inputCls + ' appearance-none'}
                   value={form.tipo}
                   onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))}
-                  placeholder="ex: instituto"
-                />
+                >
+                  <option value="">Sem tipo</option>
+                  {tipos.map(t => <option key={t.slug} value={t.slug}>{t.nome}</option>)}
+                  {form.tipo && !tipos.some(t => t.slug === form.tipo) && (
+                    <option value={form.tipo}>{form.tipo}</option>
+                  )}
+                </select>
               </Field>
               <Field label="Slug (URL) *">
                 <input
